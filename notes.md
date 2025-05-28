@@ -78,7 +78,30 @@ namespace CircleCollisions {
 				// ...
 ```
 * create a graphics context for dirty-pixel optimization
-* draw the circle for real -- explain that this integration into the graphics context is being built now because this is the second time I wrote thos program. the first time I didn't do that graphics integration until I finished experimenting without it using static functions, including drawing a polygon
+* draw the circle for real 
+```
+		public static void DrawCircle(char letterToPrint, Vec2 pos, float radius, Vec2 pixelSize, Vec2 bufferOrigin) {
+			Vec2 extent = (radius, radius);
+			extent.Scale(pixelSize);
+			Vec2 start = pos.Scaled(pixelSize) - extent;
+			Vec2 end = pos.Scaled(pixelSize) + extent;
+			Vec2 coord = start;
+			float r2 = radius * radius;
+			for (; coord.Y < end.Y; coord.Y += 1) {
+				coord.X = start.X;
+				for (; coord.X < end.X; coord.X += 1) {
+					if (coord.X < 0 || coord.Y < 0) { continue; }
+					float dx = (coord.X / pixelSize.X - pos.X);
+					float dy = (coord.Y / pixelSize.Y - pos.Y);
+					if (dx * dx + dy * dy < r2) {
+						Console.SetCursorPosition((int)(coord.X + bufferOrigin.X), (int)(coord.Y + bufferOrigin.Y));
+						Console.Write(letterToPrint);
+					}
+				}
+			}
+		}
+```
+* integrate into graphcis context --explain that this integration into the graphics context is being built now because this is the second time I wrote thos program. the first time I didn't do that graphics integration until I finished experimenting without it using static functions, including drawing a polygon
 * add zoom in/out to graphics buffer
 * draw the polygon
 ```
