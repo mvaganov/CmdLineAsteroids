@@ -21,10 +21,16 @@ namespace asteroids {
 		public void InverseScale(Vec2 scale) { x /= scale.X; y /= scale.Y; }
 		public void Floor() { x = MathF.Floor(x); y = MathF.Floor(y); }
 		public void Ceil() { x = MathF.Ceiling(x); y = MathF.Ceiling(y); }
-		public float ToRadians() => MathF.Atan2(y, x);
-		public float ToDegrees() => ToRadians() * 180 / MathF.PI;
-		public static Vec2 FromRadians(float radians) => new Vec2(MathF.Cos(radians), MathF.Sin(radians));
-		public static Vec2 FromDegrees(float radians) => FromRadians(radians * MathF.PI / 180);
+		public static float DegreesToRadians(float degrees) => degrees * MathF.PI / 180;
+		public float UnitVectorToRadians() => MathF.Atan2(y, x);
+		public float UnitVectorToDegrees() => UnitVectorToRadians() * 180 / MathF.PI;
+		public static Vec2 UnitVectorFromRadians(float radians) => new Vec2(MathF.Cos(radians), MathF.Sin(radians));
+		public static Vec2 UnitVectorFromDegrees(float degrees) => UnitVectorFromRadians(DegreesToRadians(degrees));
+		public Vec2 RotatedRadians(float radians) {
+			Vec2 rot = UnitVectorFromRadians(radians);
+			return new Vec2(rot.X * X - rot.Y * Y, rot.Y * X + rot.X * Y);
+		}
+		public Vec2 RotatedDegrees(float degrees) => RotatedRadians(DegreesToRadians(degrees));
 		public static Vec2 Zero = (0, 0);
 		public static Vec2 One = (1, 1);
 		public static Vec2 Half = (1f / 2, 1f / 2);

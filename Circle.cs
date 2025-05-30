@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using static asteroids.Program;
-
+﻿
 namespace asteroids {
 	public struct Circle {
 		public Vec2 position;

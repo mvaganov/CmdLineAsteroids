@@ -13,13 +13,14 @@ namespace asteroids {
 		private bool cacheValid;
 		private Vec2 cachedBoundBoxMin, cachedBoundBoxMax;
 		public Vec2 OriginOffset { get => originOffset; set { originOffset = value; cacheValid = false; } }
+		public Vec2 Direction { get => directionUnitVector; set => directionUnitVector = value; }
 		public float RotationRadians {
-			get => directionUnitVector.ToRadians();
-			set { directionUnitVector = Vec2.FromRadians(value); cacheValid = false; }
+			get => directionUnitVector.UnitVectorToRadians();
+			set { directionUnitVector = Vec2.UnitVectorFromRadians(value); cacheValid = false; }
 		}
 		public float RotationDegrees {
-			get => directionUnitVector.ToDegrees();
-			set { directionUnitVector = Vec2.FromDegrees(value); cacheValid = false; }
+			get => directionUnitVector.UnitVectorToDegrees();
+			set { directionUnitVector = Vec2.UnitVectorFromDegrees(value); cacheValid = false; }
 		}
 		public int Count => originalPoints.Length;
 
@@ -52,7 +53,9 @@ namespace asteroids {
 				Vec2 v = originalPoints[i];
 				cachedPoints[i] = new Vec2(ca * v.X - sa * v.Y + originOffset.X, sa * v.X + ca * v.Y + originOffset.Y);
 			}
-			TryGetAABB(out cachedBoundBoxMin, out cachedBoundBoxMax);
+			if (!TryGetAABB(cachedPoints, out cachedBoundBoxMin, out cachedBoundBoxMax)) {
+				throw new Exception("failed to calculate bounding box for polygon");
+			}
 			cachedBoundBoxMin.Floor();
 			cachedBoundBoxMax.Ceil();
 			cacheValid = true;
@@ -66,11 +69,6 @@ namespace asteroids {
 			float ca = directionUnitVector.x;
 			float sa = directionUnitVector.y;
 			originalPoints[index] = new Vec2(ca * point.X - sa * point.Y, sa * point.X + ca * point.Y);
-		}
-		public static Vec2 RotateRadians(Vec2 v, float radians) {
-			float ca = MathF.Cos(radians);
-			float sa = MathF.Sin(radians);
-			return new Vec2(ca * v.X - sa * v.Y, sa * v.X + ca * v.Y);
 		}
 		public static bool IsInPolygon(IList<Vec2> poly, Vec2 p) {
 			Vec2 p1, p2;
@@ -112,7 +110,6 @@ namespace asteroids {
 			return true;
 		}
 		public bool Contains(Vec2 point) => IsInPolygon(cachedPoints, point);
-		public bool TryGetAABB(out Vec2 min, out Vec2 max) => TryGetAABB(cachedPoints, out min, out max);
 
 		int IList<Vec2>.IndexOf(Vec2 item) => Array.IndexOf(cachedPoints, item);
 
@@ -129,11 +126,11 @@ namespace asteroids {
 		bool ICollection<Vec2>.Remove(Vec2 item) => throw new NotImplementedException();
 
 		IEnumerator<Vec2> IEnumerable<Vec2>.GetEnumerator() {
-			throw new NotImplementedException();
+			throw new NotImplementedException(); // TODO
 		}
 
 		public IEnumerator GetEnumerator() {
-			throw new NotImplementedException();
+			throw new NotImplementedException(); // TODO
 		}
 	}
 }

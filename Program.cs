@@ -30,10 +30,10 @@ namespace asteroids {
 						case 'a': player.OriginOffset += Vec2.DirectionMinX / 5; break;
 						case 's': player.OriginOffset += Vec2.DirectionMaxY / 5; break;
 						case 'd': player.OriginOffset += Vec2.DirectionMaxX / 5; break;
-						case 'i': graphics.Offset += Vec2.DirectionMinY / 3; break;
-						case 'j': graphics.Offset += Vec2.DirectionMinX / 3; break;
-						case 'k': graphics.Offset += Vec2.DirectionMaxY / 3; break;
-						case 'l': graphics.Offset += Vec2.DirectionMaxX / 3; break;
+						case 'i': graphics.Offset += graphics.Scale.Scaled(Vec2.DirectionMinY / 2); break;
+						case 'j': graphics.Offset += graphics.Scale.Scaled(Vec2.DirectionMinX / 2); break;
+						case 'k': graphics.Offset += graphics.Scale.Scaled(Vec2.DirectionMaxY / 2); break;
+						case 'l': graphics.Offset += graphics.Scale.Scaled(Vec2.DirectionMaxX / 2); break;
 						case 'r': circle.radius -= moveAdjust / 2; break;
 						case 't': circle.radius += moveAdjust / 2; break;
 						case '=': graphics.Scale /= 1.5f; break;
@@ -47,8 +47,6 @@ namespace asteroids {
 			}
 		}
 
-		public static void ClearConsole() => DrawRectangle(' ', (0, 0), (Console.BufferWidth, 30));
-	
 		public static void DrawRectangle(char letterToPrint, Vec2 position, Vec2 size) {
 			for (int row = 0; row < size.Y; ++row) {
 				Console.SetCursorPosition((int)position.X, (int)position.Y + row);
@@ -57,5 +55,7 @@ namespace asteroids {
 				}
 			}
 		}
+
+		public static void ClearConsole() => DrawRectangle(' ', (0, 0), (Console.BufferWidth, 30));	
 	}
 }
