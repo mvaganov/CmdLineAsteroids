@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 
 namespace asteroids {
 	public class CmdLineBufferGraphicsContext {
@@ -128,10 +125,9 @@ namespace asteroids {
 		}
 
 		public void PrintModifiedCharactersOnly() {
+			//DebugPivot();
 			bool cursorInCorrectPlace;
 			int x, y;
-			DebugPivot();
-
 			for (int row = 0; row < Height; ++row) {
 				cursorInCorrectPlace = false;
 				for (int col = 0; col < Width; ++col) {

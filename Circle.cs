@@ -7,18 +7,31 @@ namespace asteroids {
 			this.position = position;
 			this.radius = radius;
 		}
-		public static void Draw(CmdLineBufferGraphicsContext g, Vec2 pos, float radius) {
+		public static bool TryGetAABB(Vec2 center, float radius, out Vec2 min, out Vec2 max) {
 			Vec2 extent = (radius, radius);
-			Vec2 min = pos - extent;
-			Vec2 max = pos + extent;
-			float r2 = radius * radius, dx, dy;
+			min = center - extent;
+			max = center + extent;
+			return radius > 0;
+		}
+		public static void Draw(CmdLineBufferGraphicsContext g, Vec2 pos, float radius) {
+			if (!TryGetAABB(pos, radius, out Vec2 min, out Vec2 max)) {
+				return;
+			}
+			float dx, dy;
 			g.DrawSupersampledShape(IsInsideCircle, min, max);
 			bool IsInsideCircle(Vec2 point) {
 				dx = point.X - pos.X;
 				dy = point.Y - pos.Y;
-				return (dx * dx + dy * dy <= r2);
+				return (dx * dx + dy * dy <= radius * radius);
 			}
 		}
 		public void Draw(CmdLineBufferGraphicsContext g) => Draw(g, position, radius);
+		public static bool IsColliding(Vec2 centerA, float radiusA, Vec2 centerB, float radiusB) {
+			float dx = centerA.X - centerB.X;
+			float dy = centerA.Y - centerB.Y;
+			float r = radiusA + radiusB;
+			return dx * dx + dy * dy < r * r;
+		}
+		public bool IsColliding(Circle other) => IsColliding(position, radius, other.position, other.radius);
 	}
 }

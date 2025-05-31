@@ -1,9 +1,19 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Drawing;
 
 namespace asteroids {
 	internal class Program {
 		static void Main(string[] args) {
+			ConsoleColor defaultColor = Console.BackgroundColor;
+			int[] colors = { 0, 1, 9, 3, 11,0, 5, 13, 4, 12, 0, 2, 10, 6, 14 };
+			//int[] colors = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 ,14 ,15 };
+			for (int i = 0; i < colors.Length; ++i) {
+				Console.BackgroundColor = (ConsoleColor)colors[i];
+				Console.WriteLine($"testing {colors[i]}");
+			}
+			Console.BackgroundColor = defaultColor;
+			Console.ReadKey();
 			char[] sampleValue = { ' ', ':', '+', 'o', '0' };
 			Vec2 scale = (0.5f, 1);
 			Vec2 offset = (0, 0);
