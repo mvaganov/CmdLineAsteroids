@@ -168,6 +168,20 @@ namespace asteroids {
 			aabbMax.InverseScale(_scale);
 			aabbMin.Floor();
 			aabbMax.Ceil();
+			// TODO clamp aabb min/max to drawing rectangle
+			////if (aabbMin.X < _originOffsetULCorner.X) {
+			////	aabbMin.X += (int)(_originOffsetULCorner.X - aabbMin.X) - 1;
+			////}
+			//if (aabbMin.Y < _originOffsetULCorner.Y) {
+			//	aabbMin.Y += (int)(_originOffsetULCorner.Y - aabbMin.Y) + 1;
+			//}
+			//Vec2 _LRcorner = _originOffsetULCorner + _scale.Scaled(Size);
+			//if (aabbMax.X > _LRcorner.X) {
+			//	aabbMax.X -= (int)(_LRcorner.X - aabbMax.X);
+			//}
+			//if (aabbMax.Y > _LRcorner.Y) {
+			//	aabbMax.Y -= (int)(_LRcorner.Y - aabbMax.Y);
+			//}
 			Vec2 coord = aabbMin;
 			for (; coord.Y < aabbMax.Y; coord.Y += 1) {
 				coord.X = aabbMin.X;

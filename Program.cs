@@ -46,13 +46,14 @@ namespace asteroids {
 						case 'l': graphics.Offset += graphics.Scale.Scaled(Vec2.DirectionMaxX / 2); break;
 						case 'r': circle.radius -= moveAdjust / 2; break;
 						case 't': circle.radius += moveAdjust / 2; break;
-						case '=': graphics.Scale /= 1.5f; break;
-						case '-': graphics.Scale *= 1.5f; break;
+						case '=': if (graphics.Scale.x > 1f / 128) { graphics.Scale /= 1.5f; } break;
+						case '-': if (graphics.Scale.x < 128) { graphics.Scale *= 1.5f; } break;
 						case 'x': circle.position += Vec2.Random - Vec2.Half; break;
 						case (char)27: running = false; break;
 						case 'q': player.RotationDegrees -= playerRotationAngle; break;
 						case 'e': player.RotationDegrees += playerRotationAngle; break;
 					}
+					System.Threading.Thread.Sleep(1);
 				}
 			}
 		}
