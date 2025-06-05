@@ -20,26 +20,43 @@ namespace asteroids {
 			CmdLineBufferGraphicsContext graphics = new CmdLineBufferGraphicsContext(80, 20, (0.5f, 1), (0,0), sampleValue);
 			bool running = true;
 			float moveAdjust = 0.25f;
-			Polygon player = new Polygon(new Vec2[] { (5,0), (-3,3), (0,0), (-3,-3) });
+			Vec2[] playerPoly = new Vec2[] { (5, 0), (-3, 3), (0, 0), (-3, -3) };
+			//Polygon player = new Polygon(playerPoly);
 			Circle circle = new Circle((18, 12), 10);
 			float playerRotationAngle = 1;// MathF.PI / 64;
 			Stopwatch timer = new Stopwatch();
+
+			MobilePolygon player = new MobilePolygon(playerPoly);
+			player.DirectionMatchesVelocity = true;
+			player.Velocity = (1, 1);
+
 			while (running) {
 				timer.Restart();
 				circle.Draw(graphics);
+				Console.SetCursorPosition(0, 20);
+				Console.WriteLine($"c {timer.ElapsedMilliseconds}   ");
+				timer.Restart();
+				player.Update();
 				player.Draw(graphics);
+				Console.SetCursorPosition(0, 21);
+				Console.WriteLine($"p {timer.ElapsedMilliseconds}   {player.Position}");
 				//graphics.PrintUnoptimized();
 				graphics.PrintModifiedCharactersOnly();
 				graphics.FinishedRender();
-				Console.SetCursorPosition(0, 20);
-				Console.WriteLine($"{graphics.PrintOffset}  {timer.ElapsedMilliseconds}   ");
+				Time.Update();
+				Console.SetCursorPosition(0, 22);
+				Console.WriteLine($"t {Time.DeltaTimeMs}   ");
 				while (Console.KeyAvailable) {
 					char c = Console.ReadKey().KeyChar;
 					switch (c) {
-						case 'w': player.OriginOffset += Vec2.DirectionMinY / 5; break;
-						case 'a': player.OriginOffset += Vec2.DirectionMinX / 5; break;
-						case 's': player.OriginOffset += Vec2.DirectionMaxY / 5; break;
-						case 'd': player.OriginOffset += Vec2.DirectionMaxX / 5; break;
+						//case 'w': player.Position += Vec2.DirectionMinY / 5; break;
+						//case 'a': player.Position += Vec2.DirectionMinX / 5; break;
+						//case 's': player.Position += Vec2.DirectionMaxY / 5; break;
+						//case 'd': player.Position += Vec2.DirectionMaxX / 5; break;
+						case 'w': player.Velocity += player.Direction; break;
+						case 'a': player.Position += Vec2.DirectionMinX / 5; break;
+						case 's': player.Position += Vec2.DirectionMaxY / 5; break;
+						case 'd': player.Position += Vec2.DirectionMaxX / 5; break;
 						case 'i': graphics.Offset += graphics.Scale.Scaled(Vec2.DirectionMinY / 2); break;
 						case 'j': graphics.Offset += graphics.Scale.Scaled(Vec2.DirectionMinX / 2); break;
 						case 'k': graphics.Offset += graphics.Scale.Scaled(Vec2.DirectionMaxY / 2); break;
@@ -53,8 +70,8 @@ namespace asteroids {
 						case 'q': player.RotationDegrees -= playerRotationAngle; break;
 						case 'e': player.RotationDegrees += playerRotationAngle; break;
 					}
-					System.Threading.Thread.Sleep(1);
 				}
+				System.Threading.Thread.Sleep(100);
 			}
 		}
 

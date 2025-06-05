@@ -113,6 +113,7 @@ namespace CircleCollisions {
 ```
 * refactor the game loop before adding new functionality
 * create a player class, with draw method
+  - special note be careful about class design! if you do it while you are tired, you can easily regret writing a strict structure that you later need to unmake
 * add velocity to player class and update method
 * create an input queue and input handler
 * change player velocity, triggered by input queue

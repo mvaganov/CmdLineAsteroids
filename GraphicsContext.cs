@@ -11,27 +11,11 @@ namespace asteroids {
 		private Vec2 _scale;
 		private Vec2 _originOffsetULCorner;
 		private Vec2 _printOffset;
-		private Vec2 _pivotAsPercentage; // percentage, for zoom (and rotation?) TODO
+		private Vec2 _pivotAsPercentage; // percentage, for zoom
 		public char[] valueForSamplesFound;
 
 		public int Width;
 		public int Height;
-
-		void DebugPivot() {
-			Console.SetCursorPosition(10, 25);
-			Vec2 currentPivotOffset = new Vec2(_pivotAsPercentage.X * Size.X * _scale.X, _pivotAsPercentage.Y * Size.Y * _scale.Y);
-			Vec2 pivotAbsolute = _originOffsetULCorner + currentPivotOffset;
-			Vec2 nextScale = _scale / 1.5f;
-			Vec2 nextPivotOffset = new Vec2(_pivotAsPercentage.X * Size.X * nextScale.X, _pivotAsPercentage.Y * Size.Y * nextScale.Y);
-			Vec2 nextOriginOffset = pivotAbsolute - nextPivotOffset;
-			Console.WriteLine($"p{_pivotAsPercentage} s{Size}*{_scale} o{_originOffsetULCorner} A{pivotAbsolute} N{nextPivotOffset}     NO{nextOriginOffset}                          ");
-			//Vec2 pivot = new Vec2(_pivot.X * Size.X, _pivot.Y * Size.Y);
-			//int x = (int)pivot.x, y = (int)pivot.y;
-			//SetBuffer(pivot, 'X');
-			//SetBuffer(nextOrigin, '!');
-			SetCharacter(pivotAbsolute, 'X');
-			SetCharacter(nextOriginOffset, '!');
-		}
 
 		public void SetBufferCharacter(Vec2 staticBufferPosition, char value) {
 			int x = (int)staticBufferPosition.x, y = (int)staticBufferPosition.y;
@@ -125,7 +109,6 @@ namespace asteroids {
 		}
 
 		public void PrintModifiedCharactersOnly() {
-			//DebugPivot();
 			bool cursorInCorrectPlace;
 			int x, y;
 			for (int row = 0; row < Height; ++row) {
@@ -160,18 +143,8 @@ namespace asteroids {
 			SwapBuffers();
 			Clear(_currentBuffer, ' ');
 		}
-		private static float IncrementByScale(float delta, float scaleIncrement)
-		{
-			float inc = 0;
-			while (inc < delta)
-			{
-				inc += scaleIncrement;
-			}
-			inc -= scaleIncrement*2;
-			return inc;
-		}
+
 		public void DrawSupersampledShape(Func<Vec2, bool> isInsideShape, Vec2 aabbMin, Vec2 aabbMax) {
-			// convert min/max to render space, so we only write to the dirty rectangle
 			Vec2 renderMin = aabbMin - _originOffsetULCorner;
 			Vec2 renderMax = aabbMax - _originOffsetULCorner;
 			renderMin.InverseScale(_scale);
@@ -182,17 +155,15 @@ namespace asteroids {
 			if (renderMin.Y < 0) { renderMin.X = 0; }
 			if (renderMax.X > Width) { renderMax.X = Width; }
 			if (renderMax.Y > Height) { renderMax.Y = Height; }
-			Vec2 renderCoord = renderMin;
-			for (; renderCoord.Y < renderMax.Y; renderCoord.Y += 1) {
-				renderCoord.X = renderMin.X;
-				for (; renderCoord.X < renderMax.X; renderCoord.X += 1) {
+			for (int y = (int)renderMin.y; y < renderMax.y; ++y) {
+				for (int x = (int)renderMin.x; x < renderMax.x; ++x) {
 					Vec2 supersample = Vec2.Zero;
 					const int SUPERSAMPLE = 2;
 					int samplesFound = 0;
 					for (int row = 0; row < SUPERSAMPLE; ++row) {
 						supersample.X = 0;
 						for (int col = 0; col < SUPERSAMPLE; ++col) {
-							Vec2 point = ((renderCoord.X + supersample.X) * _scale.X, (renderCoord.Y + supersample.Y) * _scale.Y);
+							Vec2 point = ((x + supersample.x) * _scale.x, (y + supersample.y) * _scale.y);
 							point += _originOffsetULCorner;
 							if (isInsideShape.Invoke(point)) {
 								samplesFound++;
@@ -202,8 +173,6 @@ namespace asteroids {
 						supersample.Y += 1f / SUPERSAMPLE;
 					}
 					if (samplesFound > 0) {
-						int x = (int)(renderCoord.X);
-						int y = (int)(renderCoord.Y);
 						if (x >= 0 && y >= 0 && x < Width && y < Height) {
 							this[x, y] = valueForSamplesFound[samplesFound];
 						}

@@ -20,15 +20,15 @@ namespace asteroids {
 			float dx, dy;
 			g.DrawSupersampledShape(IsInsideCircle, min, max);
 			bool IsInsideCircle(Vec2 point) {
-				dx = point.X - pos.X;
-				dy = point.Y - pos.Y;
+				dx = point.x - pos.x;
+				dy = point.y - pos.y;
 				return (dx * dx + dy * dy <= radius * radius);
 			}
 		}
 		public void Draw(CmdLineBufferGraphicsContext g) => Draw(g, position, radius);
 		public static bool IsColliding(Vec2 centerA, float radiusA, Vec2 centerB, float radiusB) {
-			float dx = centerA.X - centerB.X;
-			float dy = centerA.Y - centerB.Y;
+			float dx = centerA.x - centerB.x;
+			float dy = centerA.y - centerB.y;
 			float r = radiusA + radiusB;
 			return dx * dx + dy * dy < r * r;
 		}
