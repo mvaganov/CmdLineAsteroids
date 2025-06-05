@@ -160,40 +160,39 @@ namespace asteroids {
 			SwapBuffers();
 			Clear(_currentBuffer, ' ');
 		}
-
+		private static float IncrementByScale(float delta, float scaleIncrement)
+		{
+			float inc = 0;
+			while (inc < delta)
+			{
+				inc += scaleIncrement;
+			}
+			inc -= scaleIncrement*2;
+			return inc;
+		}
 		public void DrawSupersampledShape(Func<Vec2, bool> isInsideShape, Vec2 aabbMin, Vec2 aabbMax) {
-			aabbMin -= _originOffsetULCorner;
-			aabbMax -= _originOffsetULCorner;
-			aabbMin.InverseScale(_scale);
-			aabbMax.InverseScale(_scale);
-			aabbMin.Floor();
-			aabbMax.Ceil();
-			// TODO clamp aabb min/max to drawing rectangle
-			////if (aabbMin.X < _originOffsetULCorner.X) {
-			////	aabbMin.X += (int)(_originOffsetULCorner.X - aabbMin.X) - 1;
-			////}
-			//if (aabbMin.Y < _originOffsetULCorner.Y) {
-			//	aabbMin.Y += (int)(_originOffsetULCorner.Y - aabbMin.Y) + 1;
-			//}
-			//Vec2 _LRcorner = _originOffsetULCorner + _scale.Scaled(Size);
-			//if (aabbMax.X > _LRcorner.X) {
-			//	aabbMax.X -= (int)(_LRcorner.X - aabbMax.X);
-			//}
-			//if (aabbMax.Y > _LRcorner.Y) {
-			//	aabbMax.Y -= (int)(_LRcorner.Y - aabbMax.Y);
-			//}
-			Vec2 coord = aabbMin;
-			for (; coord.Y < aabbMax.Y; coord.Y += 1) {
-				coord.X = aabbMin.X;
-				for (; coord.X < aabbMax.X; coord.X += 1) {
-					if (coord.X < 0 || coord.Y < 0) { continue; }
+			// convert min/max to render space, so we only write to the dirty rectangle
+			Vec2 renderMin = aabbMin - _originOffsetULCorner;
+			Vec2 renderMax = aabbMax - _originOffsetULCorner;
+			renderMin.InverseScale(_scale);
+			renderMax.InverseScale(_scale);
+			renderMin.Floor();
+			renderMax.Ceil();
+			if (renderMin.X < 0) { renderMin.X = 0; }
+			if (renderMin.Y < 0) { renderMin.X = 0; }
+			if (renderMax.X > Width) { renderMax.X = Width; }
+			if (renderMax.Y > Height) { renderMax.Y = Height; }
+			Vec2 renderCoord = renderMin;
+			for (; renderCoord.Y < renderMax.Y; renderCoord.Y += 1) {
+				renderCoord.X = renderMin.X;
+				for (; renderCoord.X < renderMax.X; renderCoord.X += 1) {
 					Vec2 supersample = Vec2.Zero;
 					const int SUPERSAMPLE = 2;
 					int samplesFound = 0;
 					for (int row = 0; row < SUPERSAMPLE; ++row) {
 						supersample.X = 0;
 						for (int col = 0; col < SUPERSAMPLE; ++col) {
-							Vec2 point = ((coord.X + supersample.X) * _scale.X, (coord.Y + supersample.Y) * _scale.Y);
+							Vec2 point = ((renderCoord.X + supersample.X) * _scale.X, (renderCoord.Y + supersample.Y) * _scale.Y);
 							point += _originOffsetULCorner;
 							if (isInsideShape.Invoke(point)) {
 								samplesFound++;
@@ -203,8 +202,8 @@ namespace asteroids {
 						supersample.Y += 1f / SUPERSAMPLE;
 					}
 					if (samplesFound > 0) {
-						int x = (int)(coord.X);
-						int y = (int)(coord.Y);
+						int x = (int)(renderCoord.X);
+						int y = (int)(renderCoord.Y);
 						if (x >= 0 && y >= 0 && x < Width && y < Height) {
 							this[x, y] = valueForSamplesFound[samplesFound];
 						}
