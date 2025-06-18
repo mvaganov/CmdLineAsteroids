@@ -3,7 +3,7 @@
 namespace asteroids {
 	public interface IGameObject {
 		public Vec2 Direction { get; set; }
-		public void Draw(CmdLineBufferGraphicsContext graphicsContext);
+		public void Draw(CommandLineGraphicsContext graphicsContext);
 		public void Update();
 	}
 	public interface IMobileEntity {
@@ -19,7 +19,7 @@ namespace asteroids {
 		public override Vec2 Position { get => circle.position; set => circle.position = value; }
 		public override Vec2 Direction { get => Velocity.ToUnitVector(); set => throw new NotImplementedException(); }
 
-		public override void Draw(CmdLineBufferGraphicsContext graphicsContext) {
+		public override void Draw(CommandLineGraphicsContext graphicsContext) {
 			circle.Draw(graphicsContext);
 		}
 	}
@@ -46,7 +46,7 @@ namespace asteroids {
 			polygon = new Polygon(playerPoly);
 		}
 
-		public override void Draw(CmdLineBufferGraphicsContext graphicsContext) {
+		public override void Draw(CommandLineGraphicsContext graphicsContext) {
 			polygon.Draw(graphicsContext);
 		}
 	}
@@ -57,7 +57,7 @@ namespace asteroids {
 		public abstract Vec2 Direction { get; set; }
 
 		private Vec2 _velocity;
-		public abstract void Draw(CmdLineBufferGraphicsContext graphicsContext);
+		public abstract void Draw(CommandLineGraphicsContext graphicsContext);
 		public virtual void Update() {
 			Vec2 moveThisFrame = _velocity * Time.DeltaTimeSeconds;
 			float dx = _velocity.x * Time.DeltaTimeSeconds;

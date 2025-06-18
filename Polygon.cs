@@ -25,7 +25,7 @@ namespace asteroids {
 
 		public bool IsReadOnly => false;
 
-		public void Draw(CmdLineBufferGraphicsContext g) {
+		public void Draw(CommandLineGraphicsContext g) {
 			UpdateCacheAsNeeded();
 			g.DrawSupersampledShape(IsInsidePolygon, cachedBoundBoxMin, cachedBoundBoxMax);
 		}

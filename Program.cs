@@ -14,10 +14,16 @@ namespace asteroids {
 			}
 			Console.BackgroundColor = defaultColor;
 			Console.ReadKey();
-			char[] sampleValue = { ' ', ':', '+', 'o', '0' };
+			ConsoleGlyph[] sampleValue = {
+				new ConsoleGlyph(' ', ConsoleColor.Gray, ConsoleColor.Black),
+				new ConsoleGlyph(':', ConsoleColor.Gray, ConsoleColor.DarkBlue),
+				new ConsoleGlyph('+', ConsoleColor.Gray, ConsoleColor.Blue),
+				new ConsoleGlyph('o', ConsoleColor.Gray, ConsoleColor.DarkCyan),
+				new ConsoleGlyph('0', ConsoleColor.Gray, ConsoleColor.Cyan)
+			};
 			Vec2 scale = (0.5f, 1);
 			Vec2 offset = (0, 0);
-			CmdLineBufferGraphicsContext graphics = new CmdLineBufferGraphicsContext(80, 20, (0.5f, 1), (0,0), sampleValue);
+			CommandLineGraphicsContext graphics = new CommandLineGraphicsContext(80, 20, (0.5f, 1), (0,0), sampleValue);
 			bool running = true;
 			float moveAdjust = 0.25f;
 			Vec2[] playerPoly = new Vec2[] { (5, 0), (-3, 3), (0, 0), (-3, -3) };

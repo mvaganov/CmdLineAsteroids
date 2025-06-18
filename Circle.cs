@@ -13,7 +13,7 @@ namespace asteroids {
 			max = center + extent;
 			return radius > 0;
 		}
-		public static void Draw(CmdLineBufferGraphicsContext g, Vec2 pos, float radius) {
+		public static void Draw(CommandLineGraphicsContext g, Vec2 pos, float radius) {
 			if (!TryGetAABB(pos, radius, out Vec2 min, out Vec2 max)) {
 				return;
 			}
@@ -25,7 +25,7 @@ namespace asteroids {
 				return (dx * dx + dy * dy <= radius * radius);
 			}
 		}
-		public void Draw(CmdLineBufferGraphicsContext g) => Draw(g, position, radius);
+		public void Draw(CommandLineGraphicsContext g) => Draw(g, position, radius);
 		public static bool IsColliding(Vec2 centerA, float radiusA, Vec2 centerB, float radiusB) {
 			float dx = centerA.x - centerB.x;
 			float dy = centerA.y - centerB.y;

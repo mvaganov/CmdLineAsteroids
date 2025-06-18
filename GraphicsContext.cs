@@ -2,22 +2,19 @@
 using System.Drawing;
 
 namespace asteroids {
-	public class CmdLineBufferGraphicsContext {
-		/// <summary>
-		/// X, Y
-		/// </summary>
-		private char[,] _currentBuffer;
-		private char[,] _previousBuffer;
+	public class CommandLineGraphicsContext {
+		private ConsoleGlyph[,] _currentBuffer;
+		private ConsoleGlyph[,] _previousBuffer;
 		private Vec2 _scale;
 		private Vec2 _originOffsetULCorner;
 		private Vec2 _printOffset;
 		private Vec2 _pivotAsPercentage; // percentage, for zoom
-		public char[] valueForSamplesFound;
+		public ConsoleGlyph[] valueForSamplesFound;
 
 		public int Width;
 		public int Height;
 
-		public void SetBufferCharacter(Vec2 staticBufferPosition, char value) {
+		public void SetBufferCharacter(Vec2 staticBufferPosition, ConsoleGlyph value) {
 			int x = (int)staticBufferPosition.x, y = (int)staticBufferPosition.y;
 			if (x < 0 || y < 0 || x >= Size.X || y >= Size.Y) {
 				return;
@@ -25,7 +22,11 @@ namespace asteroids {
 			_currentBuffer[x, y] = value;
 		}
 
-		public void SetCharacter(Vec2 position, char value) {
+		public void WriteAt(string text, int row, int col) {
+
+		}
+
+		public void SetCharacter(Vec2 position, ConsoleGlyph value) {
 			Vec2 relativeToBufferPosition = (position - _originOffsetULCorner).InverseScaled(_scale);
 			SetBufferCharacter(relativeToBufferPosition, value);
 		}
@@ -47,11 +48,11 @@ namespace asteroids {
 		public Point Size => new Point(Width, Height);
 		public Vec2 PrintOffset { get => _printOffset; set => _printOffset = value; }
 		public Vec2 Offset { get => _originOffsetULCorner; set => _originOffsetULCorner = value; }
-		public char this[int x, int y] {
+		public ConsoleGlyph this[int x, int y] {
 			get => _currentBuffer[x, y];
 			set => _currentBuffer[x, y] = value;
 		}
-		public CmdLineBufferGraphicsContext(int width, int height, Vec2 scale, Vec2 offset, char[] valueForSamplesFound) {
+		public CommandLineGraphicsContext(int width, int height, Vec2 scale, Vec2 offset, ConsoleGlyph[] valueForSamplesFound) {
 			SetSize(width, height);
 			_pivotAsPercentage = new Vec2(0.5f, 0.5f);
 			_scale = scale;
@@ -62,13 +63,13 @@ namespace asteroids {
 			SetSize(ref _previousBuffer, width, height);
 			SetSize(ref _currentBuffer, width, height);
 		}
-		private void SetSize(ref char[,] buffer, int width, int height) {
+		private void SetSize(ref ConsoleGlyph[,] buffer, int width, int height) {
 			int oldW = Width;
 			int oldH = Height;
-			char[,] oldBuffer = buffer;
+			ConsoleGlyph[,] oldBuffer = buffer;
 			Width = width;
 			Height = height;
-			buffer = new char[Width, Height];
+			buffer = new ConsoleGlyph[Width, Height];
 			if (oldBuffer != null) {
 				for (int x = 0; x < Width && x < oldW; ++x) {
 					for (int y = 0; y < Height && y < oldH; ++y) {
@@ -77,7 +78,7 @@ namespace asteroids {
 				}
 			}
 		}
-		public void Clear(char[,] buffer, char background) {
+		public void Clear(ConsoleGlyph[,] buffer, ConsoleGlyph background) {
 			for (int row = 0; row < Height; ++row) {
 				for (int col = 0; col < Width; ++col) {
 					buffer[col, row] = background;
@@ -88,22 +89,28 @@ namespace asteroids {
 			for (int row = 0; row < Height; ++row) {
 				Console.SetCursorPosition(minX, minY + row);
 				for (int col = 0; col < Width; ++col) {
-					Console.Write(buffer[col, row]);
+					ConsoleGlyph g = _currentBuffer[col, row];
+					g.ApplyColor();
+					Console.Write(g);
 				}
 			}
+			ConsoleGlyph.Default.ApplyColor();
 		}
 		public void PrintUnoptimized() {
 			for (int row = 0; row < Height; ++row) {
 				Console.SetCursorPosition((int)_printOffset.X, (int)_printOffset.Y + row);
 				for (int col = 0; col < Width; ++col) {
-					Console.Write(_currentBuffer[col, row]);
+					ConsoleGlyph g = _currentBuffer[col, row];
+					g.ApplyColor();
+					Console.Write(g);
 				}
 			}
+			ConsoleGlyph.Default.ApplyColor();
 		}
 		public void SetDirty() {
 			for (int x = 0; x < Width; ++x) {
 				for (int y = 0; y < Height; ++y) {
-					_previousBuffer[x, y] = (char)0;
+					_previousBuffer[x, y] = ConsoleGlyph.Empty;
 				}
 			}
 		}
@@ -123,7 +130,10 @@ namespace asteroids {
 							if (!cursorInCorrectPlace) {
 								Console.SetCursorPosition(x, y);
 							}
-							Console.Write(_currentBuffer[col, row]);
+							//Console.Write(_currentBuffer[col, row]);
+							ConsoleGlyph g = _currentBuffer[col, row];
+							g.ApplyColor();
+							Console.Write(g);
 							cursorInCorrectPlace = true;
 						}
 					} else {
@@ -134,14 +144,14 @@ namespace asteroids {
 		}
 
 		public void SwapBuffers() {
-			char[,] swap = _currentBuffer;
+			ConsoleGlyph[,] swap = _currentBuffer;
 			_currentBuffer = _previousBuffer;
 			_previousBuffer = swap;
 		}
 
 		public void FinishedRender() {
 			SwapBuffers();
-			Clear(_currentBuffer, ' ');
+			Clear(_currentBuffer, ConsoleGlyph.Default);
 		}
 
 		public void DrawSupersampledShape(Func<Vec2, bool> isInsideShape, Vec2 aabbMin, Vec2 aabbMax) {
