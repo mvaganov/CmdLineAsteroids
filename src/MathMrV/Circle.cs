@@ -1,5 +1,6 @@
-﻿
-namespace asteroids {
+﻿using ConsoleMrV;
+
+namespace MathMrV {
 	public struct Circle {
 		public Vec2 position;
 		public float radius;
@@ -22,7 +23,7 @@ namespace asteroids {
 			bool IsInsideCircle(Vec2 point) {
 				dx = point.x - pos.x;
 				dy = point.y - pos.y;
-				return (dx * dx + dy * dy <= radius * radius);
+				return dx * dx + dy * dy <= radius * radius;
 			}
 		}
 		public void Draw(CommandLineGraphicsContext g) => Draw(g, position, radius);

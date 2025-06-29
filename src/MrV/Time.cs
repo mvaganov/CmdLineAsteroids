@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace asteroids
-{
+namespace MrV {
 	public class Time {
 		private static Time _instance;
 		private long _deltaTimeMs;
@@ -18,7 +17,7 @@ namespace asteroids
 		}
 		public void UpdateSelf() {
 			_deltaTimeMs = _timer.ElapsedMilliseconds;
-			_deltaTimeSeconds = _deltaTimeMs / 1000f;
+			_deltaTimeSeconds = (float)_timer.Elapsed.TotalSeconds;
 			_timer.Restart();
 			System.Console.SetCursorPosition(20, 20);
 			System.Console.WriteLine($".......... {_deltaTimeSeconds}");

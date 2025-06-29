@@ -1,7 +1,8 @@
-﻿using System;
+﻿using MathMrV;
+using System;
 using System.Drawing;
 
-namespace asteroids {
+namespace ConsoleMrV {
 	public class CommandLineGraphicsContext {
 		private ConsoleGlyph[,] _currentBuffer;
 		private ConsoleGlyph[,] _previousBuffer;
@@ -22,8 +23,31 @@ namespace asteroids {
 			_currentBuffer[x, y] = value;
 		}
 
-		public void WriteAt(string text, int row, int col) {
+		public Point WriteAt(ConsoleGlyph[] text, int row, int col) {
+			for (int i = 0; i < text.Length; i++) {
+				ConsoleGlyph g = text[i];
+				switch (g.Letter) {
+					case '\n':
+						col = 0;
+						++row;
+						break;
+					default:
+						if (IsValidCoordinate(col, row)) {
+							_currentBuffer[col, row] = g;
+						}
+						++col;
+						break;
+				}
+			}
+			return new Point(col, row);
+		}
 
+		public Point WriteAt(string text, int row, int col) {
+			return WriteAt(ConsoleGlyph.Convert(text), row, col);
+		}
+
+		bool IsValidCoordinate(int x, int y) {
+			return x >= 0 && x < Width && y >= 0 && y < Height;
 		}
 
 		public void SetCharacter(Vec2 position, ConsoleGlyph value) {
@@ -52,7 +76,8 @@ namespace asteroids {
 			get => _currentBuffer[x, y];
 			set => _currentBuffer[x, y] = value;
 		}
-		public CommandLineGraphicsContext(int width, int height, Vec2 scale, Vec2 offset, ConsoleGlyph[] valueForSamplesFound) {
+		public CommandLineGraphicsContext(int width, int height, Vec2 scale = default, Vec2 offset = default, ConsoleGlyph[] valueForSamplesFound = null) {
+			if (scale == default) { scale = Vec2.One; }
 			SetSize(width, height);
 			_pivotAsPercentage = new Vec2(0.5f, 0.5f);
 			_scale = scale;
@@ -84,6 +109,9 @@ namespace asteroids {
 					buffer[col, row] = background;
 				}
 			}
+		}
+		public void Clear() {
+			Clear(_currentBuffer, ConsoleGlyph.Default);
 		}
 		public void Print(char[,] buffer, int minX, int minY) {
 			for (int row = 0; row < Height; ++row) {
@@ -130,7 +158,6 @@ namespace asteroids {
 							if (!cursorInCorrectPlace) {
 								Console.SetCursorPosition(x, y);
 							}
-							//Console.Write(_currentBuffer[col, row]);
 							ConsoleGlyph g = _currentBuffer[col, row];
 							g.ApplyColor();
 							Console.Write(g);
@@ -191,5 +218,4 @@ namespace asteroids {
 			}
 		}
 	}
-
 }

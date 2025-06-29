@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing;
 
-namespace asteroids {
+namespace MathMrV {
 	public struct Vec2 {
 		public float x, y;
 		public float X { get => x; set => x = value; }
@@ -14,6 +14,10 @@ namespace asteroids {
 		public static Vec2 operator -(Vec2 a, Vec2 b) => new Vec2(a.x - b.x, a.y - b.y);
 		public static Vec2 operator *(Vec2 a, float scalar) => new Vec2(a.x * scalar, a.y * scalar);
 		public static Vec2 operator /(Vec2 a, float scalar) => new Vec2(a.x / scalar, a.y / scalar);
+		public static bool operator ==(Vec2 a, Vec2 b) => a.x == b.x && a.y == b.y;
+		public static bool operator !=(Vec2 a, Vec2 b) => a.x != b.x || a.y != b.y;
+		public override bool Equals(object obj) => obj is Vec2 v && this == v;
+		public override int GetHashCode() => x.GetHashCode() ^ y.GetHashCode();
 		public override string ToString() => $"({x},{y})";
 		public float Magnitude => MathF.Sqrt(X * X + Y * Y);
 		public Vec2 Scaled(Vec2 scale) => new Vec2(x * scale.x, y * scale.y);

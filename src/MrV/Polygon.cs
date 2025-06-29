@@ -1,8 +1,9 @@
-﻿using System;
+﻿using ConsoleMrV;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace asteroids {
+namespace MathMrV {
 	public struct Polygon : IList<Vec2> {
 		private Vec2[] originalPoints;
 		private Vec2 directionUnitVector;

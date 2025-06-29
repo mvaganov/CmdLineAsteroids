@@ -1,0 +1,45 @@
+﻿using MathMrV;
+using System.Collections.Generic;
+
+namespace ConsoleMrV {
+	public class ProgressBar {
+		public float progress;
+		public ConsoleGlyph back;
+		public ConsoleGlyph fore;
+		public Vec2 start;
+		public Vec2 end;
+		public List<float> specialMarkers = new List<float>();
+		public ProgressBar(Vec2 start, Vec2 end) {
+			this.start = start;
+			this.end = end;
+			back = new ConsoleGlyph('.', System.ConsoleColor.Black, System.ConsoleColor.DarkBlue);
+			fore = new ConsoleGlyph('.', System.ConsoleColor.Green, System.ConsoleColor.DarkGreen);
+		}
+		public void Draw(CommandLineGraphicsContext graphics) {
+			Vec2 delta = end - start;
+			int width = (int)(delta.x > delta.y ? delta.x : delta.y);
+			Vec2 increment = delta / width;
+			Vec2 cursor = start;
+			int progressInt = (int)(progress * width);
+			int[] specialPositions = new int[specialMarkers.Count];
+			for (int i = 0; i < specialMarkers.Count; i++) {
+				specialPositions[i] = (int)(specialMarkers[i] * width);
+			}
+			int specialIndex = 0;
+			ConsoleGlyph glyph = back;
+			for(int i = 0; i < width; ++i) {
+				if (i < progressInt) {
+					glyph = fore;
+				} else {
+					glyph = back;
+				}
+				if (specialIndex < specialPositions.Length && i >= specialPositions[specialIndex]) {
+					glyph.Letter = '|';
+					++specialIndex;
+				}
+				graphics.SetCharacter(cursor, glyph);
+				cursor += increment;
+			}
+		}
+	}
+}

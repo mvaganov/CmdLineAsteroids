@@ -1,4 +1,7 @@
-﻿using System;
+﻿using ConsoleMrV;
+using MathMrV;
+using MrV;
+using System;
 
 namespace asteroids {
 	public interface IGameObject {
