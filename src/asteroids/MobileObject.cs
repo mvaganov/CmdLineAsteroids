@@ -29,17 +29,21 @@ namespace asteroids {
 
 	public class MobilePolygon : MobileObject {
 		private Polygon polygon;
+		private float _rotationRadiansPerSecond;
+		private float _targetDirection = float.NaN;
 		private bool _directionMatchesVelocity;
 		public override Vec2 Position { get => polygon.Position; set => polygon.Position = value; }
 		public override Vec2 Direction { get => polygon.Direction; set => polygon.Direction = value; }
 
 		public float RotationDegrees { get => polygon.RotationDegrees; set => polygon.RotationDegrees = value; }
+		public float RotationRadians { get => polygon.RotationRadians; set => polygon.RotationRadians = value; }
+		public float RotationRadiansPerSecond { get => _rotationRadiansPerSecond; set => _rotationRadiansPerSecond = value; }
 		public bool DirectionMatchesVelocity { get => _directionMatchesVelocity; set => _directionMatchesVelocity = value; }
 		public override Vec2 Velocity {
 			get => base.Velocity;
 			set {
 				base.Velocity = value;
-				if (DirectionMatchesVelocity) {
+				if (DirectionMatchesVelocity && value != Vec2.Zero) {
 					polygon.Direction = base.Velocity.ToUnitVector();
 				}
 			}
@@ -51,6 +55,45 @@ namespace asteroids {
 
 		public override void Draw(CommandLineGraphicsContext graphicsContext) {
 			polygon.Draw(graphicsContext);
+		}
+		public override void Update() {
+			if (_rotationRadiansPerSecond != 0) {
+				float currentRadians = Direction.UnitVectorToRadians();
+				float rotationThisMoment = _rotationRadiansPerSecond * Time.DeltaTimeSeconds;
+				if (!float.IsNaN(_targetDirection)) {
+					UpdateTargetRotationLogic(currentRadians, rotationThisMoment);
+				} else {
+					RotationRadians += rotationThisMoment;
+				}
+			}
+			base.Update();
+		}
+		private void UpdateTargetRotationLogic(float currentRadians, float rotationThisMoment) {
+			float deltaToTarget = GetRealDeltaRotationAccountingForWrap(_targetDirection, currentRadians);
+			if (MathF.Abs(rotationThisMoment) > MathF.Abs(deltaToTarget)) {
+				RotationRadians = _targetDirection;
+				_rotationRadiansPerSecond = 0;
+				return;
+			}
+			RotationRadians += rotationThisMoment;
+		}
+		private float GetRealDeltaRotationAccountingForWrap(float aRad, float bRad) {
+			aRad = Vec2.WrapRadian(aRad);
+			bRad = Vec2.WrapRadian(bRad);
+			float delta = aRad - bRad;
+			delta = Vec2.WrapRadian(delta);
+			if (delta == 0) { return 0; }
+			if (MathF.Abs(delta) > MathF.PI) {
+				bool isNegative = delta < 0;
+				delta = isNegative ? -(MathF.PI + delta) : -(MathF.PI - delta);
+			}
+			return delta;
+		}
+		public void SmoothRotateTarget(float targetRadians, float speed) {
+			_targetDirection = targetRadians;
+			float currentAngle = Direction.UnitVectorToRadians();
+			float deltaToTarget = GetRealDeltaRotationAccountingForWrap(_targetDirection, currentAngle);
+			_rotationRadiansPerSecond = (deltaToTarget < 0)  ? - speed : speed;
 		}
 	}
 
@@ -68,8 +111,8 @@ namespace asteroids {
 
 			moveThisFrame = new Vec2(dx, dy);
 			Position += moveThisFrame;
-			Console.SetCursorPosition(40, 21);
-			Console.WriteLine($"V:{_velocity} * T:{Time.DeltaTimeSeconds} = M:{moveThisFrame}({dx},{dy})            ");
+			//Console.SetCursorPosition(40, 21);
+			//Console.WriteLine($"V:{_velocity} * T:{Time.DeltaTimeSeconds} = M:{moveThisFrame}({dx},{dy})            ");
 		}
 	}
 }

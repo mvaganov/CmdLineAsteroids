@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 
 namespace MrV {
 	public class Time {
@@ -19,8 +20,12 @@ namespace MrV {
 			_deltaTimeMs = _timer.ElapsedMilliseconds;
 			_deltaTimeSeconds = (float)_timer.Elapsed.TotalSeconds;
 			_timer.Restart();
-			System.Console.SetCursorPosition(20, 20);
-			System.Console.WriteLine($".......... {_deltaTimeSeconds}");
+		}
+		public static void SleepWithoutConsoleKeyPress(int ms) {
+			long soon = Environment.TickCount + ms;
+			while(!Console.KeyAvailable && Environment.TickCount < soon) {
+				System.Threading.Thread.Sleep(1);
+			}
 		}
 	}
 }

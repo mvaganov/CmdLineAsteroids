@@ -146,6 +146,7 @@ namespace ConsoleMrV {
 		public void PrintModifiedCharactersOnly() {
 			bool cursorInCorrectPlace;
 			int x, y;
+			ConsoleColorPair oldColors = ConsoleColorPair.Current;
 			for (int row = 0; row < Height; ++row) {
 				cursorInCorrectPlace = false;
 				for (int col = 0; col < Width; ++col) {
@@ -168,6 +169,7 @@ namespace ConsoleMrV {
 					}
 				}
 			}
+			oldColors.Apply();
 		}
 
 		public void SwapBuffers() {

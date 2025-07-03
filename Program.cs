@@ -3,7 +3,6 @@ using MathMrV;
 using MrV;
 using System;
 using System.Diagnostics;
-using System.Drawing;
 
 namespace asteroids {
 	internal class Program {
@@ -32,7 +31,7 @@ namespace asteroids {
 			Vec2[] playerPoly = new Vec2[] { (5, 0), (-3, 3), (0, 0), (-3, -3) };
 			//Polygon player = new Polygon(playerPoly);
 			Circle circle = new Circle((18, 12), 10);
-			float playerRotationAngle = 1;// MathF.PI / 64;
+			float playerRotationAngle = 5;// MathF.PI / 64;
 			Stopwatch timer = new Stopwatch();
 
 			MobilePolygon player = new MobilePolygon(playerPoly);
@@ -54,7 +53,9 @@ namespace asteroids {
 				graphics.FinishedRender();
 				Time.Update();
 				Console.SetCursorPosition(0, 22);
-				Console.WriteLine($"t {Time.DeltaTimeMs}   ");
+				Console.WriteLine($"t {Time.DeltaTimeMs}   {player.Direction.UnitVectorToRadians()} ");
+				float playerSpeed = 5;
+				float playerRotationRadianSpeed = MathF.PI * 4;
 				while (Console.KeyAvailable) {
 					char c = Console.ReadKey().KeyChar;
 					switch (c) {
@@ -62,10 +63,15 @@ namespace asteroids {
 						//case 'a': player.Position += Vec2.DirectionMinX / 5; break;
 						//case 's': player.Position += Vec2.DirectionMaxY / 5; break;
 						//case 'd': player.Position += Vec2.DirectionMaxX / 5; break;
-						case 'w': player.Velocity += player.Direction; break;
-						case 'a': player.Position += Vec2.DirectionMinX / 5; break;
-						case 's': player.Position += Vec2.DirectionMaxY / 5; break;
-						case 'd': player.Position += Vec2.DirectionMaxX / 5; break;
+						case 'w': player.Velocity = player.Direction * playerSpeed; break;
+						case 's': player.Velocity = player.Direction * -playerSpeed; break;
+						case ' ': player.Velocity = Vec2.Zero; break;
+						case 'a':
+							player.RotationRadiansPerSecond = player.RotationRadiansPerSecond != 0 ? 0 : -playerRotationRadianSpeed;
+							break;
+						case 'd':
+							player.RotationRadiansPerSecond = player.RotationRadiansPerSecond != 0 ? 0 : playerRotationRadianSpeed;
+							break;
 						case 'i': graphics.Offset += graphics.Scale.Scaled(Vec2.DirectionMinY / 2); break;
 						case 'j': graphics.Offset += graphics.Scale.Scaled(Vec2.DirectionMinX / 2); break;
 						case 'k': graphics.Offset += graphics.Scale.Scaled(Vec2.DirectionMaxY / 2); break;
@@ -78,9 +84,17 @@ namespace asteroids {
 						case (char)27: running = false; break;
 						case 'q': player.RotationDegrees -= playerRotationAngle; break;
 						case 'e': player.RotationDegrees += playerRotationAngle; break;
+						case '9': player.SmoothRotateTarget(MathF.PI * -1 / 4, playerRotationRadianSpeed); break;
+						case '1': player.SmoothRotateTarget(MathF.PI * 3 / 4, playerRotationRadianSpeed); break;
+						case '2': player.SmoothRotateTarget(MathF.PI * 2 / 4, playerRotationRadianSpeed); break;
+						case '3': player.SmoothRotateTarget(MathF.PI * 1 / 4, playerRotationRadianSpeed); break;
+						case '4': player.SmoothRotateTarget(MathF.PI * 4 / 4, playerRotationRadianSpeed); break;
+						case '6': player.SmoothRotateTarget(MathF.PI * 0 / 4, playerRotationRadianSpeed); break;
+						case '7': player.SmoothRotateTarget(MathF.PI * -3 / 4, playerRotationRadianSpeed); break;
+						case '8': player.SmoothRotateTarget(MathF.PI * -2 / 4, playerRotationRadianSpeed); break;
 					}
 				}
-				System.Threading.Thread.Sleep(100);
+				Time.SleepWithoutConsoleKeyPress(10);
 			}
 		}
 

@@ -12,6 +12,7 @@ namespace MathMrV {
 		public static implicit operator Vec2(Point v) => new Vec2(v.X, v.Y);
 		public static Vec2 operator +(Vec2 a, Vec2 b) => new Vec2(a.x + b.x, a.y + b.y);
 		public static Vec2 operator -(Vec2 a, Vec2 b) => new Vec2(a.x - b.x, a.y - b.y);
+		public static Vec2 operator -(Vec2 a) => new Vec2(-a.x, -a.y);
 		public static Vec2 operator *(Vec2 a, float scalar) => new Vec2(a.x * scalar, a.y * scalar);
 		public static Vec2 operator /(Vec2 a, float scalar) => new Vec2(a.x / scalar, a.y / scalar);
 		public static bool operator ==(Vec2 a, Vec2 b) => a.x == b.x && a.y == b.y;
@@ -32,7 +33,12 @@ namespace MathMrV {
 			float mag = Magnitude;
 			return new Vec2(x / mag, y / mag);
 		}
-		public float UnitVectorToRadians() => MathF.Atan2(y, x);
+		public static float WrapRadian(float f) {
+			while (f > MathF.PI) { f -= 2*MathF.PI; }
+			while (f <= -MathF.PI) { f += 2*MathF.PI; }
+			return f;
+		}
+		public float UnitVectorToRadians() => WrapRadian(MathF.Atan2(y, x));
 		public float UnitVectorToDegrees() => UnitVectorToRadians() * 180 / MathF.PI;
 		public static Vec2 UnitVectorFromRadians(float radians) => new Vec2(MathF.Cos(radians), MathF.Sin(radians));
 		public static Vec2 UnitVectorFromDegrees(float degrees) => UnitVectorFromRadians(DegreesToRadians(degrees));

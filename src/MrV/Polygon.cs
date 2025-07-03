@@ -1,10 +1,9 @@
 ﻿using ConsoleMrV;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace MathMrV {
-	public struct Polygon : IList<Vec2> {
+	public struct Polygon {
 		private Vec2[] originalPoints;
 		private Vec2 directionUnitVector;
 		private Vec2 position;
@@ -31,7 +30,6 @@ namespace MathMrV {
 			g.DrawSupersampledShape(IsInsidePolygon, cachedBoundBoxMin, cachedBoundBoxMax);
 		}
 		bool IsInsidePolygon(Vec2 point) => IsInPolygon(cachedPoints, point);
-		Vec2 IList<Vec2>.this[int index] { get => GetPoint(index); set => SetPoint(index, value); }
 		public Polygon(IList<Vec2> points) {
 			originalPoints = new Vec2[points.Count];
 			for (int i = 0; i < points.Count; ++i) {
@@ -98,26 +96,6 @@ namespace MathMrV {
 		}
 		public bool Contains(Vec2 point) => IsInPolygon(cachedPoints, point);
 
-		int IList<Vec2>.IndexOf(Vec2 item) => Array.IndexOf(cachedPoints, item);
-
-		void IList<Vec2>.Insert(int index, Vec2 item) => throw new NotImplementedException();
-
-		public void RemoveAt(int index) => throw new NotImplementedException();
-
-		void ICollection<Vec2>.Add(Vec2 item) => throw new NotImplementedException();
-
-		public void Clear() => throw new NotImplementedException();
-
 		public void CopyTo(Vec2[] array, int arrayIndex) => Array.Copy(originalPoints, 0, array, arrayIndex, Count);
-
-		bool ICollection<Vec2>.Remove(Vec2 item) => throw new NotImplementedException();
-
-		IEnumerator<Vec2> IEnumerable<Vec2>.GetEnumerator() {
-			throw new NotImplementedException(); // TODO
-		}
-
-		public IEnumerator GetEnumerator() {
-			throw new NotImplementedException(); // TODO
-		}
 	}
 }
