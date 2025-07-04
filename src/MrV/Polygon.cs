@@ -11,30 +11,29 @@ namespace MathMrV {
 		private Vec2[] cachedPoints;
 		private bool cacheValid;
 		private Vec2 cachedBoundBoxMin, cachedBoundBoxMax;
-		public Vec2 Position { get => position; set { position = value; cacheValid = false; } }
-		public Vec2 Direction { get => directionUnitVector; set => directionUnitVector = value; }
+		public Vec2 Position { get => position; set { position = value; SetDirty(); } }
+		public Vec2 Direction { get => directionUnitVector; set { directionUnitVector = value; SetDirty(); } }
 		public float RotationRadians {
 			get => directionUnitVector.UnitVectorToRadians();
-			set { directionUnitVector = Vec2.UnitVectorFromRadians(value); cacheValid = false; }
+			set { directionUnitVector = Vec2.UnitVectorFromRadians(value); SetDirty(); }
 		}
 		public float RotationDegrees {
 			get => directionUnitVector.UnitVectorToDegrees();
-			set { directionUnitVector = Vec2.UnitVectorFromDegrees(value); cacheValid = false; }
+			set { directionUnitVector = Vec2.UnitVectorFromDegrees(value); SetDirty(); }
 		}
+		public Vec2[] OriginalPoints { get => originalPoints; set { originalPoints = value; SetDirty(); } }
 		public int Count => originalPoints.Length;
 
 		public bool IsReadOnly => false;
+		public void SetDirty() => cacheValid = false;
 
 		public void Draw(CommandLineGraphicsContext g) {
 			UpdateCacheAsNeeded();
 			g.DrawSupersampledShape(IsInsidePolygon, cachedBoundBoxMin, cachedBoundBoxMax);
 		}
 		bool IsInsidePolygon(Vec2 point) => IsInPolygon(cachedPoints, point);
-		public Polygon(IList<Vec2> points) {
-			originalPoints = new Vec2[points.Count];
-			for (int i = 0; i < points.Count; ++i) {
-				originalPoints[i] = points[i];
-			}
+		public Polygon(Vec2[] points) {
+			originalPoints = points;
 			directionUnitVector = Vec2.DirectionMaxX;
 			cachedBoundBoxMax = cachedBoundBoxMin = position = Vec2.Zero;
 			cacheValid = false;

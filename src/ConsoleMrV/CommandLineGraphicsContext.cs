@@ -10,7 +10,7 @@ namespace ConsoleMrV {
 		private Vec2 _originOffsetULCorner;
 		private Vec2 _printOffset;
 		private Vec2 _pivotAsPercentage; // percentage, for zoom
-		public ConsoleGlyph[] valueForSamplesFound;
+		public ConsoleGlyph[] ColorPerSample;
 
 		public int Width;
 		public int Height;
@@ -23,7 +23,8 @@ namespace ConsoleMrV {
 			_currentBuffer[x, y] = value;
 		}
 
-		public Point WriteAt(ConsoleGlyph[] text, int row, int col) {
+		public Point WriteAt(ConsoleGlyph[] text, int row, int col) => WriteAt(text, row, col, false);
+		public Point WriteAt(ConsoleGlyph[] text, int row, int col, bool alsoUseBackground) {
 			for (int i = 0; i < text.Length; i++) {
 				ConsoleGlyph g = text[i];
 				switch (g.Letter) {
@@ -33,6 +34,9 @@ namespace ConsoleMrV {
 						break;
 					default:
 						if (IsValidCoordinate(col, row)) {
+							if (!alsoUseBackground) {
+								g.back = _currentBuffer[col, row].back;
+							}
 							_currentBuffer[col, row] = g;
 						}
 						++col;
@@ -42,8 +46,13 @@ namespace ConsoleMrV {
 			return new Point(col, row);
 		}
 
-		public Point WriteAt(string text, int row, int col) {
-			return WriteAt(ConsoleGlyph.Convert(text), row, col);
+		public Point WriteAt(string text, int row, int col) => WriteAt(ConsoleGlyph.Convert(text), row, col);
+		public void WriteAt(string text, Vec2 position, bool alsoUseBackground = false) =>
+			WriteAt(ConsoleGlyph.Convert(text), position, alsoUseBackground);
+		public void WriteAt(ConsoleGlyph[] text, Vec2 position, bool alsoUseBackground = false) {
+			Vec2 realPosition = position - _originOffsetULCorner;
+			realPosition.InverseScale(_scale);
+			WriteAt(text, (int)realPosition.y, (int)realPosition.x, alsoUseBackground);
 		}
 
 		bool IsValidCoordinate(int x, int y) {
@@ -69,7 +78,7 @@ namespace ConsoleMrV {
 			Vec2 nextOriginOffset = pivotAbsolute - nextPivotOffset;
 			return nextOriginOffset;
 		}
-		public Point Size => new Point(Width, Height);
+		public Vec2 Size => new Point(Width, Height);
 		public Vec2 PrintOffset { get => _printOffset; set => _printOffset = value; }
 		public Vec2 Offset { get => _originOffsetULCorner; set => _originOffsetULCorner = value; }
 		public ConsoleGlyph this[int x, int y] {
@@ -82,7 +91,7 @@ namespace ConsoleMrV {
 			_pivotAsPercentage = new Vec2(0.5f, 0.5f);
 			_scale = scale;
 			_printOffset = offset;
-			this.valueForSamplesFound = valueForSamplesFound;
+			this.ColorPerSample = valueForSamplesFound;
 		}
 		public void SetSize(int width, int height) {
 			SetSize(ref _previousBuffer, width, height);
@@ -213,7 +222,11 @@ namespace ConsoleMrV {
 					}
 					if (samplesFound > 0) {
 						if (x >= 0 && y >= 0 && x < Width && y < Height) {
-							this[x, y] = valueForSamplesFound[samplesFound];
+							int sampleIndex = samplesFound;
+							if (sampleIndex >= ColorPerSample.Length) {
+								sampleIndex = ColorPerSample.Length - 1;
+							}
+							this[x, y] = ColorPerSample[sampleIndex];
 						}
 					}
 				}

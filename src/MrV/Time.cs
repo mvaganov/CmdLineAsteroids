@@ -11,6 +11,7 @@ namespace MrV {
 		public static long DeltaTimeMs => Instance._deltaTimeMs;
 		public static float DeltaTimeSeconds => Instance._deltaTimeSeconds;
 		public static void Update() => Instance.UpdateSelf();
+		public static void SleepWithoutConsoleKeyPress(int ms) => Instance.SelfSleepWithoutConsoleKeyPress(ms);
 		public Time() {
 			_timer = new Stopwatch();
 			_timer.Start();
@@ -21,9 +22,9 @@ namespace MrV {
 			_deltaTimeSeconds = (float)_timer.Elapsed.TotalSeconds;
 			_timer.Restart();
 		}
-		public static void SleepWithoutConsoleKeyPress(int ms) {
-			long soon = Environment.TickCount + ms;
-			while(!Console.KeyAvailable && Environment.TickCount < soon) {
+		public void SelfSleepWithoutConsoleKeyPress(int ms) {
+			long soon = _timer.ElapsedMilliseconds + ms;
+			while(!Console.KeyAvailable && _timer.ElapsedMilliseconds < soon) {
 				System.Threading.Thread.Sleep(1);
 			}
 		}

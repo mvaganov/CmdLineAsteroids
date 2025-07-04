@@ -4,6 +4,8 @@ namespace MathMrV {
 	public struct Circle {
 		public Vec2 position;
 		public float radius;
+		public Vec2 Position { get => position; set => position = value; }
+		public float Radius { get => radius; set => radius = value; }
 		public Circle(Vec2 position, float radius) {
 			this.position = position;
 			this.radius = radius;

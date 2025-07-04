@@ -21,6 +21,7 @@ namespace MathMrV {
 		public override int GetHashCode() => x.GetHashCode() ^ y.GetHashCode();
 		public override string ToString() => $"({x},{y})";
 		public float Magnitude => MathF.Sqrt(X * X + Y * Y);
+		public Vec2 Normal => this / Magnitude;
 		public Vec2 Scaled(Vec2 scale) => new Vec2(x * scale.x, y * scale.y);
 		public Vec2 InverseScaled(Vec2 scale) => new Vec2(x / scale.x, y / scale.y);
 		public void Scale(Vec2 scale) { x *= scale.x; y *= scale.y; }
