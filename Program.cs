@@ -36,9 +36,8 @@ namespace asteroids {
 
 			Vec2 scale = (0.5f, 1);
 			Vec2 offset = (0, 0);
-			CommandLineGraphicsContext graphics = new CommandLineGraphicsContext(80, 20, (0.5f, 1), (0,0), blueSamples);
+			CommandLineGraphicsContext graphics = new CommandLineGraphicsContext(80, 25, (0.5f, 1), (0,0), blueSamples);
 			bool running = true;
-			float moveAdjust = 0.25f;
 			float sqrt3 = MathF.Sqrt(3);
 			float projScale = 3;
 			float projRotation = 10;
@@ -63,7 +62,7 @@ namespace asteroids {
 			player.MaxSpeed = 5;
 			float playerAutoRotationSpeedRadianPerSecond = MathF.PI * 4;
 			float playerFreeRotationSpeedRadianPerSecond = MathF.PI * 2;
-			float minThrustDuration = 1f / 4;
+			float minThrustDuration = 1f / 2;
 			float lineWidth = 1f/2;
 			float lineLength = 20;
 			float projectileSpeed = 15;
@@ -79,10 +78,6 @@ namespace asteroids {
 				linePoly.SetDirty();
 			}
 
-			List<IGameObject> objects = new List<IGameObject>();
-			objects.Add(player);
-			objects.Add(circle);
-			objects.AddRange(projectiles);
 			List<Action> extraUpdates = new List<Action>();
 			List<Action> preDraw = new List<Action>();
 			List<Action> postDraw = new List<Action>();
@@ -97,6 +92,10 @@ namespace asteroids {
 				graphics.ColorPerSample = darkGraySamples;
 				linePoly.Draw(graphics);
 			});
+			preDraw.Add(() => {
+				Vec2 halfScreen = graphics.Size / 2;
+				graphics.Offset = player.Position - halfScreen.Scaled(graphics.Scale);
+			});
 			postDraw.Add(() => {
 				for (int i = 0; i < projectiles.Length; i++) {
 					if (!projectiles[i].IsActive) {
@@ -108,10 +107,31 @@ namespace asteroids {
 				graphics.WriteAt(ConsoleGlyph.Convert("t0", ConsoleColor.Red), circle.Position);
 			});
 
-			keyInput.BindKey((char)27, ki => running = false);
 			keyInput.BindKey('w', playerForward);
 			keyInput.BindKey('s', playerBrakes);
+			keyInput.BindKey('a', playerTurnLeft);
+			keyInput.BindKey('d', playerTurnRight);
+			keyInput.BindKey('q', playerSpinLeft);
+			keyInput.BindKey('e', playerSpinRight);
 			keyInput.BindKey(' ', playerShoot);
+			keyInput.BindKey('1', ki => MovePlayer(3 / 4f));
+			keyInput.BindKey('2', ki => MovePlayer(2 / 4f));
+			keyInput.BindKey('3', ki => MovePlayer(1 / 4f));
+			keyInput.BindKey('4', ki => MovePlayer(4 / 4f));
+			keyInput.BindKey('5', playerBrakes);
+			keyInput.BindKey('6', ki => MovePlayer(0 / 4f));
+			keyInput.BindKey('7', ki => MovePlayer(-3 / 4f));
+			keyInput.BindKey('8', ki => MovePlayer(-2 / 4f));
+			keyInput.BindKey('9', ki => MovePlayer(-1 / 4f));
+			void MovePlayer(float normalizedRadian) {
+				player.SmoothRotateTarget(MathF.PI * normalizedRadian, playerAutoRotationSpeedRadianPerSecond);
+				Thrust();
+				player.AutoStopWithoutThrust = true;
+			}
+			void Thrust() {
+				player.AutoStopWithoutThrust = false;
+				player.ThrustDuration = minThrustDuration;
+			}
 			void playerForward(KeyInput ki) {
 				Thrust();
 				player.RotationRadiansPerSecond = 0;
@@ -119,6 +139,16 @@ namespace asteroids {
 			void playerBrakes(KeyInput ki) {
 				player.Brakes();
 				player.RotationRadiansPerSecond = 0;
+			}
+			void playerTurnLeft(KeyInput keyInput) { player.RotationDegrees -= playerRotationAngle; }
+			void playerTurnRight(KeyInput keyInput) { player.RotationDegrees += playerRotationAngle; }
+			void playerSpinLeft(KeyInput keyInput) {
+				player.RotationRadiansPerSecond = player.RotationRadiansPerSecond != 0 ? 0 : -playerFreeRotationSpeedRadianPerSecond;
+				player.TargetRotation = float.NaN;
+			}
+			void playerSpinRight(KeyInput keyInput) {
+				player.RotationRadiansPerSecond = player.RotationRadiansPerSecond != 0 ? 0 : playerFreeRotationSpeedRadianPerSecond;
+				player.TargetRotation = float.NaN;
 			}
 			void playerShoot(KeyInput ki) {
 				MobileObject projectile = projectiles[currentProjectile];
@@ -131,6 +161,7 @@ namespace asteroids {
 					currentProjectile = 0;
 				}
 			}
+			keyInput.BindKey((char)27, ki => running = false);
 			keyInput.BindKey('-', zoomOut);
 			keyInput.BindKey('=', zoomIn);
 			void zoomIn(KeyInput ki) {
@@ -144,90 +175,30 @@ namespace asteroids {
 				RefreshLine();
 			}
 
-			RefreshLine();
+			List<IGameObject> objects = new List<IGameObject>() { player, circle };
+			objects.AddRange(projectiles);
+
 			while (running) {
+				// input
+				keyInput.UpdateKeyInput();
+
+				// update
 				Time.Update();
-				//keyInput.Update();
+				keyInput.TriggerKeyBinding();
 				objects.ForEach(o => o.Update());
 				extraUpdates.ForEach(a => a.Invoke());
 
 				// draw
-				Vec2 halfScreen = graphics.Size / 2;
-				graphics.Offset = player.Position - halfScreen.Scaled(graphics.Scale);
 				preDraw.ForEach(a => a.Invoke());
 				objects.ForEach(o => {
 					o.DrawSetup?.Invoke(graphics);
 					o.Draw(graphics);
 				});
 				postDraw.ForEach(a => a.Invoke());
-
 				graphics.PrintModifiedCharactersOnly();
 				graphics.FinishedRender();
-				Console.SetCursorPosition(0, 22);
-				Console.WriteLine($"t {Time.DeltaTimeMs}   {player.Direction.UnitVectorToRadians()} {player._brake}   {player.Speed}");
-				while (Console.KeyAvailable) {
-					char c = Console.ReadKey().KeyChar;
-					switch (c) {
-						case 'w':
-							Thrust();
-							player.RotationRadiansPerSecond = 0;
-							break;
-						case 's':
-							player.Brakes();
-							player.RotationRadiansPerSecond = 0;
-							break;
-						case 'a': player.RotationDegrees -= playerRotationAngle; break;
-						case 'd': player.RotationDegrees += playerRotationAngle; break;
-						case 'q':
-							player.RotationRadiansPerSecond = player.RotationRadiansPerSecond != 0 ? 0 : -playerFreeRotationSpeedRadianPerSecond;
-							player.TargetRotation = float.NaN;
-							break;
-						case 'e':
-							player.RotationRadiansPerSecond = player.RotationRadiansPerSecond != 0 ? 0 : playerFreeRotationSpeedRadianPerSecond;
-							player.TargetRotation = float.NaN;
-							break;
-						case '9': MovePlayer(-1 / 4f); break;
-						case '1': MovePlayer(3 / 4f); break;
-						case '2': MovePlayer(2 / 4f); break;
-						case '3': MovePlayer(1 / 4f); break;
-						case '4': MovePlayer(4 / 4f); break;
-						case '6': MovePlayer(0 / 4f); break;
-						case '7': MovePlayer(-3 / 4f); break;
-						case '8': MovePlayer(-2 / 4f); break;
-						case ' ':
-							MobileObject projectile = projectiles[currentProjectile];
-							projectile.Position = player.Position + player.Direction * playerPoly[0].x;
-							projectile.Direction = player.Direction;
-							projectile.Velocity = player.Velocity + player.Direction * projectileSpeed;
-							projectile.IsActive = true;
-							++currentProjectile;
-							if (currentProjectile >= projectiles.Length) {
-								currentProjectile = 0;
-							}
-							break;
-						case 'i': graphics.Offset += graphics.Scale.Scaled(Vec2.DirectionMinY / 2); break;
-						case 'j': graphics.Offset += graphics.Scale.Scaled(Vec2.DirectionMinX / 2); break;
-						case 'k': graphics.Offset += graphics.Scale.Scaled(Vec2.DirectionMaxY / 2); break;
-						case 'l': graphics.Offset += graphics.Scale.Scaled(Vec2.DirectionMaxX / 2); break;
-						case 'r': circle.Radius -= moveAdjust / 2; break;
-						case 't': circle.Radius += moveAdjust / 2; break;
-						case '=': if (graphics.Scale.x > 1f / 128) { graphics.Scale /= 1.5f; RefreshLine(); } break;
-						case '-': if (graphics.Scale.x < 128) { graphics.Scale *= 1.5f; RefreshLine(); } break;
-						case 'x': circle.Position += Vec2.Random - Vec2.Half; break;
-						case (char)27: running = false; break;
-					}
-				}
+				Console.SetCursorPosition(0, (int)graphics.Size.y);
 				Time.SleepWithoutConsoleKeyPress(5);
-			}
-
-			void MovePlayer(float normalizedRadian) {
-				player.SmoothRotateTarget(MathF.PI * normalizedRadian, playerAutoRotationSpeedRadianPerSecond);
-				Thrust();
-				player.AutoStopWithoutThrust = true;
-			}
-			void Thrust() {
-				player.AutoStopWithoutThrust = false;
-				player.ThrustDuration = minThrustDuration;
 			}
 		}
 

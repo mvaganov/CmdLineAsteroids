@@ -24,18 +24,26 @@ namespace ConsoleMrV {
       return Instance;
     }
     public void Update() {
-      this.ClearKeys();
-      while (Console.KeyAvailable) {
-        ConsoleKeyInfo key = Console.ReadKey();
-        this.keys.Add(key.KeyChar);
-        if (this.keyBinding.TryGetValue(key.KeyChar, out List<Action<KeyInput>> actions)) {
-          this.toExecuteThisFrame.Add(actions);
-        }
-      }
-      this.toExecuteThisFrame.ForEach(actions => actions.ForEach(a => a.Invoke(this)));
-      this.toExecuteThisFrame.Clear();
-    }
-    public void ClearKeys() { this.keys.Clear(); }
+      UpdateKeyInput();
+      TriggerKeyBinding();
+		}
+    public void UpdateKeyInput() {
+			this.ClearKeys();
+			while (Console.KeyAvailable) {
+				ConsoleKeyInfo key = Console.ReadKey();
+				this.keys.Add(key.KeyChar);
+			}
+		}
+    public void TriggerKeyBinding() {
+      for(int i = 0; i < this.keys.Count; i++) {
+				if (this.keyBinding.TryGetValue(this.keys[i], out List<Action<KeyInput>> actions)) {
+					this.toExecuteThisFrame.Add(actions);
+				}
+			}
+			this.toExecuteThisFrame.ForEach(actions => actions.ForEach(a => a.Invoke(this)));
+			this.toExecuteThisFrame.Clear();
+		}
+		public void ClearKeys() { this.keys.Clear(); }
     public bool HasKey(char keyChar) {
       return GetKeyIndex(keyChar) != -1;
     }
