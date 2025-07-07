@@ -49,6 +49,7 @@ namespace MathMrV {
 		}
 		public Vec2 RotatedDegrees(float degrees) => RotatedRadians(DegreesToRadians(degrees));
 
+		internal Vec2 FlippedXY() => new Vec2(y, x);
 
 		public static Vec2 Zero = (0, 0);
 		public static Vec2 One = (1, 1);

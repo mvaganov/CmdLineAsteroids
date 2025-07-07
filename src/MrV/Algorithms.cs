@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 
 namespace MrV {
-	public static class Algorithms {
+	public static partial class Algorithms {
 		public static long current_milli_time() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 		public static bool LessThanLong(long a, long b) => a < b;
 		public static int binary_search_with_insertion_point<T,V>(

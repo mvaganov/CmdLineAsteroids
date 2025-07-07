@@ -11,7 +11,7 @@ namespace asteroids {
 		private float _targetDirection = float.NaN;
 		private bool _directionMatchesVelocity;
 		private bool _autoStopWithoutThrust = false;
-		public bool _brake;
+		private bool _brake;
 		public ControlledPolygon(Vec2[] playerPoly) : base(playerPoly) { }
 		public float Speed { get => Velocity.Magnitude; set => Velocity = _directionMatchesVelocity ? Direction * value : Velocity.Normal; }
 		public float MaxSpeed { get => _maxSpeed; set => _maxSpeed = value; }
