@@ -22,6 +22,7 @@ namespace MathMrV {
 			float dy = point.y - position.y;
 			return dx * dx + dy * dy <= radius * radius;
 		}
+		public bool Contains(Vec2 point) => IsInsideCircle(position, radius, point);
 
 		public void Draw(CommandLineGraphicsContext g) => Draw(g, position, radius);
 		public bool IsColliding(Circle other) => IsColliding(position, radius, other.position, other.radius);

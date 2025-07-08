@@ -3,17 +3,74 @@ using System;
 using System.Drawing;
 
 namespace ConsoleMrV {
+	// TODO refactor... make a simple double buffer, and child class that does scale/offset/supersample
 	public class CommandLineGraphicsContext {
 		private ConsoleGlyph[,] _currentBuffer;
 		private ConsoleGlyph[,] _previousBuffer;
+		public int Width;
+		public int Height;
 		private Vec2 _scale;
 		private Vec2 _originOffsetULCorner;
 		private Vec2 _printOffset;
 		private Vec2 _pivotAsPercentage; // percentage, for zoom
 		public ConsoleGlyph[] AntiAliasedGradient;
+		/// <summary>
+		/// map of color gradients per console color, for antialiased drawing
+		/// </summary>
+		public static ConsoleGlyph[][] AntiAliasedGradientPerColor;
 
-		public int Width;
-		public int Height;
+		static CommandLineGraphicsContext() {
+			AntiAliasedGradientPerColor = GenerateAntiAliasedGradientPerColorMapForConsoleColors();
+		}
+
+		private static ConsoleGlyph[][] GenerateAntiAliasedGradientPerColorMapForConsoleColors() {
+			ConsoleGlyph[][] colorMap = new ConsoleGlyph[16][];
+			ConsoleGlyph[] colors = new ConsoleGlyph[16];
+			for (int i = 0; i < 16; ++i) {
+				colors[i] = new ConsoleGlyph((ConsoleColor)i);
+			}
+			colorMap[(int)ConsoleColor.Black] = new ConsoleGlyph[]{
+				colors[(int)ConsoleColor.Black]
+			};
+			for (int i = 1; i <= 6; ++i) {
+				colorMap[i] = new ConsoleGlyph[] {
+					colors[(int)ConsoleColor.Black],
+					colors[i]
+				};
+			}
+			colorMap[(int)ConsoleColor.Gray] = new ConsoleGlyph[] {
+				colors[(int)ConsoleColor.Black],
+				colors[(int)ConsoleColor.DarkGray],
+				colors[(int)ConsoleColor.DarkGray],
+				colors[(int)ConsoleColor.Gray],
+				colors[(int)ConsoleColor.Gray],
+			};
+			colorMap[(int)ConsoleColor.DarkGray] = new ConsoleGlyph[] {
+				colors[(int)ConsoleColor.Black],
+				colors[(int)ConsoleColor.DarkGray]
+			};
+			for (int i = 1 + 8; i <= 6 + 8; ++i) {
+				colorMap[i] = new ConsoleGlyph[] {
+					colors[(int)ConsoleColor.Black],
+					colors[i-8],
+					colors[i-8],
+					colors[i-8],
+					colors[i],
+				};
+			}
+			colorMap[(int)ConsoleColor.White] = new ConsoleGlyph[] {
+				colors[(int)ConsoleColor.Black],
+				colors[(int)ConsoleColor.DarkGray],
+				colors[(int)ConsoleColor.Gray],
+				colors[(int)ConsoleColor.Gray],
+				colors[(int)ConsoleColor.White],
+			};
+			return colorMap;
+		}
+
+		public void UseColorGradient(ConsoleColor color) {
+			AntiAliasedGradient = AntiAliasedGradientPerColor[(int)color];
+		}
 
 		public void SetBufferCharacter(Vec2 staticBufferPosition, ConsoleGlyph value) {
 			int x = (int)staticBufferPosition.x, y = (int)staticBufferPosition.y;
@@ -85,13 +142,13 @@ namespace ConsoleMrV {
 			get => _currentBuffer[x, y];
 			set => _currentBuffer[x, y] = value;
 		}
-		public CommandLineGraphicsContext(int width, int height, Vec2 scale = default, Vec2 offset = default, ConsoleGlyph[] valueForSamplesFound = null) {
+		public CommandLineGraphicsContext(int width, int height, Vec2 scale = default, Vec2 offset = default) {
 			if (scale == default) { scale = Vec2.One; }
 			SetSize(width, height);
 			_pivotAsPercentage = new Vec2(0.5f, 0.5f);
 			_scale = scale;
 			_printOffset = offset;
-			this.AntiAliasedGradient = valueForSamplesFound;
+			UseColorGradient(ConsoleColor.White);
 		}
 		public void SetSize(int width, int height) {
 			SetSize(ref _previousBuffer, width, height);

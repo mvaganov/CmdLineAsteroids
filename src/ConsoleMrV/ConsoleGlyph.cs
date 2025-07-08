@@ -18,6 +18,9 @@ namespace ConsoleMrV {
 		public ConsoleGlyph(char letter, ConsoleColorPair colorPair) {
 			this.letter = letter; this.colorPair = colorPair;
 		}
+		public ConsoleGlyph(ConsoleColor color) {
+			this.letter = ' '; this.colorPair = new ConsoleColorPair(Default.fore, color);
+		}
 		public ConsoleGlyph(char letter, ConsoleColor fore, ConsoleColor back) {
 			this.letter = letter; this.colorPair = new ConsoleColorPair(fore, back);
 		}

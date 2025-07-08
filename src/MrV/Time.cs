@@ -14,6 +14,7 @@ namespace MrV {
 		public static long DeltaTimeMs => Instance._deltaTimeMs;
 		public static float DeltaTimeSeconds => Instance._deltaTimeSeconds;
 		public static double TimeSeconds => Instance._timer.Elapsed.TotalSeconds;
+		public static long TimeMs => (long)Instance._timer.Elapsed.TotalMilliseconds;
 		public static void Update() => Instance.UpdateSelf();
 		public static void SleepWithoutConsoleKeyPress(int ms) => Instance.ThrottleWithoutConsoleKeyPress(ms);
 		public Time() {

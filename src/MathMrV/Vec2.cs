@@ -28,6 +28,7 @@ namespace MathMrV {
 		public void InverseScale(Vec2 scale) { x /= scale.x; y /= scale.y; }
 		public void Floor() { x = MathF.Floor(x); y = MathF.Floor(y); }
 		public void Ceil() { x = MathF.Ceiling(x); y = MathF.Ceiling(y); }
+		public float Distance(Vec2 other) => (this - other).Magnitude;
 		public static float DegreesToRadians(float degrees) => degrees * MathF.PI / 180;
 		internal Vec2 ToUnitVector() {
 			if (x == 0 && y == 0) return DirectionMaxX;
@@ -46,6 +47,9 @@ namespace MathMrV {
 		public Vec2 RotatedRadians(float radians) {
 			Vec2 rot = UnitVectorFromRadians(radians);
 			return new Vec2(rot.x * X - rot.y * Y, rot.y * X + rot.x * Y);
+		}
+		public void RotateRadians(float radians) {
+			this = RotatedRadians(radians);
 		}
 		public Vec2 RotatedDegrees(float degrees) => RotatedRadians(DegreesToRadians(degrees));
 

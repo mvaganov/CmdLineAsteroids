@@ -65,13 +65,13 @@ namespace ConsoleMrV {
 		public static void GenerateVisiblities() {
 			Visibilities = new Visibility[] {
 				new Visibility(Code.None, ConsoleColorPair.Default, '\x01'),
-				new Visibility(Code.Critical, ConsoleColorPair.Default + ConsoleColor.Magenta, '\x02'),
-				new Visibility(Code.Error, ConsoleColorPair.Default + ConsoleColor.Red, '\x03'),
-				new Visibility(Code.Warning, ConsoleColorPair.Default + ConsoleColor.Yellow, '\x04'),
-				new Visibility(Code.Info, ConsoleColorPair.Default + ConsoleColor.White, '\x05'),
-				new Visibility(Code.Debug, ConsoleColorPair.Default + ConsoleColor.Gray, '\x06'),
-				new Visibility(Code.Verbose, ConsoleColorPair.Default + ConsoleColor.DarkGray, '\x0b'),
-				new Visibility(Code.SuccessfulAsserts, ConsoleColorPair.Default + ConsoleColor.DarkMagenta, '\x0c'),
+				new Visibility(Code.Critical, ConsoleColorPair.Default.WithFore(ConsoleColor.Magenta), '\x02'),
+				new Visibility(Code.Error, ConsoleColorPair.Default.WithFore(ConsoleColor.Red), '\x03'),
+				new Visibility(Code.Warning, ConsoleColorPair.Default.WithFore(ConsoleColor.Yellow), '\x04'),
+				new Visibility(Code.Info, ConsoleColorPair.Default.WithFore(ConsoleColor.White), '\x05'),
+				new Visibility(Code.Debug, ConsoleColorPair.Default.WithFore(ConsoleColor.Gray), '\x06'),
+				new Visibility(Code.Verbose, ConsoleColorPair.Default.WithFore(ConsoleColor.DarkGray), '\x0b'),
+				new Visibility(Code.SuccessfulAsserts, ConsoleColorPair.Default.WithFore(ConsoleColor.DarkMagenta), '\x0c'),
 			};
 			StringBuilder sb = new StringBuilder();
 			for(int i = 0; i < Visibilities.Length; i++) {

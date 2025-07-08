@@ -10,6 +10,7 @@ namespace asteroids {
 		public abstract Vec2 Position { get; set; }
 		public abstract Vec2 Direction { get; set; }
 		public Action<CommandLineGraphicsContext> DrawSetup { get => _preDraw; set => _preDraw = value; }
+		public byte TypeId { get; set; }
 		protected bool _active = true;
 		protected Vec2 _velocity;
 		protected Action<CommandLineGraphicsContext> _preDraw;
