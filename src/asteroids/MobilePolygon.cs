@@ -1,7 +1,6 @@
 ﻿using ConsoleMrV;
 using MathMrV;
 using MrV;
-using System;
 
 namespace asteroids {
 	public class MobilePolygon : MobileObject, ICollidable {
@@ -17,7 +16,7 @@ namespace asteroids {
 		public Circle[] CollisionCircles { get => _detailedCollisionCircles; set => _detailedCollisionCircles = value; }
 		public MobilePolygon(Vec2[] playerPoly) {
 			polygon = new Polygon(playerPoly);
-			BoundingCircle = Welzl.MakeCircle(playerPoly);
+			BoundingCircle = Welzl.GetMinimumCircle(playerPoly);
 		}
 
 		public override void Draw(CommandLineGraphicsContext graphicsContext) {

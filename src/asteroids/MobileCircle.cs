@@ -1,7 +1,6 @@
 ﻿using ConsoleMrV;
 using MathMrV;
 using System;
-using System.Collections.Generic;
 
 namespace asteroids {
 	public class MobileCircle : MobileObject, ICollidable {
@@ -13,9 +12,21 @@ namespace asteroids {
 		public MobileCircle(Circle circle) {
 			this.circle = circle;
 		}
+		public virtual void Copy(MobileCircle other) {
+			base.Copy(other);
+			circle = other.circle;
+		}
+
 		public override void Draw(CommandLineGraphicsContext graphicsContext) {
 			if (!_active) return;
 			circle.Draw(graphicsContext);
+			float speed = Velocity.Magnitude;
+			if (speed > 0) {
+				Vec2 dir = Velocity / speed;
+				Vec2 start = Position + dir * Radius;
+				Vec2 end = start + Velocity;
+				graphicsContext.DrawLine(start, end);
+			}
 		}
 
 		public bool IsColliding(ICollidable collidable) {

@@ -14,6 +14,7 @@ namespace MathMrV {
 		public static Vec2 operator -(Vec2 a, Vec2 b) => new Vec2(a.x - b.x, a.y - b.y);
 		public static Vec2 operator -(Vec2 a) => new Vec2(-a.x, -a.y);
 		public static Vec2 operator *(Vec2 a, float scalar) => new Vec2(a.x * scalar, a.y * scalar);
+		public static Vec2 operator *(float scalar, Vec2 a) => new Vec2(a.x * scalar, a.y * scalar);
 		public static Vec2 operator /(Vec2 a, float scalar) => new Vec2(a.x / scalar, a.y / scalar);
 		public static bool operator ==(Vec2 a, Vec2 b) => a.x == b.x && a.y == b.y;
 		public static bool operator !=(Vec2 a, Vec2 b) => a.x != b.x || a.y != b.y;
@@ -44,16 +45,27 @@ namespace MathMrV {
 		public float UnitVectorToDegrees() => UnitVectorToRadians() * 180 / MathF.PI;
 		public static Vec2 UnitVectorFromRadians(float radians) => new Vec2(MathF.Cos(radians), MathF.Sin(radians));
 		public static Vec2 UnitVectorFromDegrees(float degrees) => UnitVectorFromRadians(DegreesToRadians(degrees));
-		public Vec2 RotatedRadians(float radians) {
-			Vec2 rot = UnitVectorFromRadians(radians);
-			return new Vec2(rot.x * X - rot.y * Y, rot.y * X + rot.x * Y);
-		}
-		public void RotateRadians(float radians) {
-			this = RotatedRadians(radians);
-		}
-		public Vec2 RotatedDegrees(float degrees) => RotatedRadians(DegreesToRadians(degrees));
+		public Vec2 RotatedRadians(float radians) => Rotated(UnitVectorFromRadians(radians));
 
-		internal Vec2 FlippedXY() => new Vec2(y, x);
+		public Vec2 Rotated(Vec2 dir) => new Vec2(dir.x * x - dir.y * y, dir.y * x + dir.x * y);
+		public void Rotate(Vec2 dir) => this = Rotated(dir);
+
+		public void RotateRadians(float radians) => this = RotatedRadians(radians);
+		public Vec2 RotatedDegrees(float degrees) => RotatedRadians(DegreesToRadians(degrees));
+		public void RotateDegrees(float degrees) => this = RotatedDegrees(degrees);
+		public bool IsWithin(Vec2 minInclusive, Vec2 maxExclusive) {
+			return x >= minInclusive.x && y >= minInclusive.y && x < maxExclusive.x && y < maxExclusive.y;
+		}
+		public Vec2 FlippedXY() => new Vec2(y, x);
+		internal Vec2 Perpendicular() => new Vec2(-y, x);
+
+		public static float Dot(Vec2 a, Vec2 b) {
+			return a.x * b.x + a.y * b.y;
+		}
+		public static Vec2 Reflect(Vec2 incomingVector, Vec2 normalVector) {
+			normalVector = normalVector.FlippedXY();
+			return incomingVector - (normalVector * 2 * Vec2.Dot(incomingVector, normalVector));
+		}
 
 		public static Vec2 Zero = (0, 0);
 		public static Vec2 One = (1, 1);

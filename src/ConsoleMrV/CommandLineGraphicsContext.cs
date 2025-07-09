@@ -289,5 +289,20 @@ namespace ConsoleMrV {
 				}
 			}
 		}
+
+		public void DrawLine(Vec2 start, Vec2 end, float lineWidth = 0.5f) {
+			lineWidth *= Scale.y;
+			DrawLineUnscaled(start, end, lineWidth);
+		}
+		public void DrawLineUnscaled(Vec2 start, Vec2 end, float lineWidth = 0.5f) {
+			Vec2 delta = end - start;
+			float lineLength = delta.Magnitude;
+			Vec2 direction = delta / lineLength;
+			Vec2 perp = direction.Perpendicular() * (lineWidth / 2);
+			Vec2[] line = new Vec2[4] { start + perp, start - perp, end - perp, end + perp, };
+			Polygon.TryGetAABB(line, out Vec2 min, out Vec2 max);
+			DrawSupersampledShape(IsInsideLine, min, max);
+			bool IsInsideLine(Vec2 point) => Polygon.IsInPolygon(line, point);
+		}
 	}
 }

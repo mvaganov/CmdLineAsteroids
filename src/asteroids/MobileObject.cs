@@ -7,6 +7,7 @@ namespace asteroids {
 	public abstract class MobileObject : IGameObject {
 		public virtual Vec2 Velocity { get => _velocity; set => _velocity = value; }
 		public virtual bool IsActive { get => _active; set => _active = value; }
+		public virtual bool IsVisible { get => IsActive; set => IsActive = value; }
 		public abstract Vec2 Position { get; set; }
 		public abstract Vec2 Direction { get; set; }
 		public Action<CommandLineGraphicsContext> DrawSetup { get => _preDraw; set => _preDraw = value; }
@@ -25,6 +26,12 @@ namespace asteroids {
 
 			moveThisFrame = new Vec2(dx, dy);
 			Position += moveThisFrame;
+		}
+		public virtual void Copy(MobileObject other) {
+			TypeId = other.TypeId;
+			_active = other._active;
+			_velocity = other._velocity;
+			_preDraw = other._preDraw;
 		}
 	}
 }

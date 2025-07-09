@@ -25,25 +25,40 @@ namespace asteroids {
 	}
 
 	public static class CollisionLogic {
-		public delegate void Function(ICollidable a, ICollidable b);
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="a"></param>
+		/// <param name="b"></param>
+		/// <returns>collision resolution function, null if no collision happened or collision was trivial</returns>
+		public delegate Action Function(ICollidable a, ICollidable b);
 		public static void DoCollisionLogic(IList<ICollidable> collidables,
 			Dictionary<CollisionPair, List<Function>> rules) {
+			List<Action> collisionResolutions = new List<Action>();
 			for (int i = 0; i < collidables.Count; i++) {
 				ICollidable ci = collidables[i];
 				for (int j = i + 1; j < collidables.Count; j++) {
 					ICollidable cj = collidables[j];
-					DoCollisionLogicOnPair(ci, cj, rules);
-					DoCollisionLogicOnPair(cj, ci, rules);
+					DoCollisionLogicOnPair(ci, cj, rules, collisionResolutions);
+					DoCollisionLogicOnPair(cj, ci, rules, collisionResolutions);
 				}
 			}
+			collisionResolutions.ForEach(r => r.Invoke());
 		}
 		private static void DoCollisionLogicOnPair(ICollidable a, ICollidable b,
-			Dictionary<CollisionPair, List<Function>> rules) {
+			Dictionary<CollisionPair, List<Function>> rules, List<Action> collisionResolutions) {
 			if (!rules.TryGetValue(new CollisionPair(a, b), out List<Function> collisionFunctions)) {
 				return;
 			}
-			if (a.IsColliding(b)) {
-				collisionFunctions.ForEach(f => f.Invoke(a, b));
+			if (!a.IsColliding(b)) {
+				return;
+			}
+			for (int i = 0; i < collisionFunctions.Count; i++) {
+				Function f = collisionFunctions[i];
+				Action collisionResult = f.Invoke(a, b);
+				if (collisionResult != null) {
+					collisionResolutions.Add(collisionResult);
+				}
 			}
 		}
 	}
