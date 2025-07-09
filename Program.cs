@@ -14,30 +14,12 @@ namespace asteroids {
 			CommandLineGraphicsContext graphics = new CommandLineGraphicsContext(80, 25, (0.5f, 1), (0, 0));
 			KeyInput keyInput = new KeyInput();
 			List<IGameObject> objects = new List<IGameObject>();
-			List<IGameObject> updateList = new List<IGameObject>();
-			List<IDrawable> drawList = new List<IDrawable>();
 			List<ICollidable> collideList = new List<ICollidable>();
 			List<Action> preDraw = new List<Action>();
 			List<Action> postDraw = new List<Action>();
 			List<Action> postUpdate = new List<Action>();
 			bool running = true;
 			bool updating = true;
-			void PopulateUpdateLists() {
-				updateList.Clear();
-				drawList.Clear();
-				collideList.Clear();
-				for (int i = 0; i < objects.Count; ++i) {
-					IGameObject obj = objects[i];
-					if (!obj.IsActive) {
-						continue;
-					}
-					drawList.Add(obj);
-					updateList.Add(obj);
-					if (obj is ICollidable collidable) {
-						collideList.Add(collidable);
-					}
-				}
-			}
 
 			// initialize player
 			Vec2[] playerPoly = new Vec2[] { (5, 0), (-3, 3), (0, 0), (-3, -3) };
@@ -47,7 +29,7 @@ namespace asteroids {
 			long playerScore = 0;
 			ControlledPolygon player = new ControlledPolygon(playerPoly);
 			player.TypeId = (int)AsteroidType.Player;
-			player.DrawSetup = g => g.UseColorGradient(ConsoleColor.Blue);
+			player.DrawSetup = g => g.SetColor(ConsoleColor.Blue);
 			player.DirectionMatchesVelocity = true;
 			player.MaxSpeed = 5;
 			player.CollisionCircles = new Circle[] {
@@ -63,6 +45,8 @@ namespace asteroids {
 				Vec2 halfScreen = graphics.Size / 2;
 				graphics.Offset = player.Position - halfScreen.Scaled(graphics.Scale);
 			});
+			objects.Add(player);
+			collideList.Add(player);
 
 			// initialize projectiles
 			float projectileScale = 3;
@@ -74,51 +58,64 @@ namespace asteroids {
 				(-projectileScale / (2 * sqrt3), -projectileScale / 2),
 				(-projectileScale / (2 * sqrt3), projectileScale / 2)
 			};
-			int currentProjectile = 0;
-			MobilePolygon[] projectiles = new MobilePolygon[100];
-			for (int i = 0; i < projectiles.Length; ++i) {
-				MobilePolygon projectile = projectiles[i] = new MobilePolygon(projectilePoly);
+			ObjectPool<MobilePolygon> projectilePool = new ObjectPool<MobilePolygon>();
+			projectilePool.Setup(() => {
+				MobilePolygon projectile = new MobilePolygon(projectilePoly);
 				projectile.TypeId = (int)AsteroidType.Projectile;
-				projectile.Direction = Vec2.DirectionMaxX;
+				projectile.DrawSetup = DrawSetupProjectile;
+				return projectile;
+			}, projectile => {
+				projectile.IsActive = true;
+				objects.Add(projectile);
+				collideList.Add(projectile);
+			}, projectile => {
 				projectile.IsActive = false;
-				projectile.DrawSetup = g => g.UseColorGradient(ConsoleColor.Red);
-			}
+				objects.Remove(projectile);
+				collideList.Remove(projectile);
+			}, projectile => {
+				projectile.DrawSetup = null;
+				projectile.TypeId = (int)AsteroidType.None;
+			});
+			void DrawSetupProjectile(CommandLineGraphicsContext g) => g.SetColor(ConsoleColor.Red);
 			postUpdate.Add(() => {
-				for (int i = 0; i < projectiles.Length; i++) {
-					projectiles[i].RotationRadians += Time.DeltaTimeSeconds * projectileRotation;
+				for (int i = 0; i < projectilePool.Count; i++) {
+					projectilePool[i].RotationRadians += Time.DeltaTimeSeconds * projectileRotation;
 				}
 			});
 
 			// initialize asteroids / powerups
-			MobileCircle[] asteroids = new MobileCircle[100];
-			int activeAsteroidCount = 10;
 			float asteroidStartRadius = 10;
+			ObjectPool<MobileCircle> asteroidPool = new ObjectPool<MobileCircle>();
+			asteroidPool.Setup(() => new MobileCircle(new Circle()), asteroid => {
+				asteroid.DrawSetup = AsteroidDrawSetup;
+				asteroid.TypeId = (int)AsteroidType.Asteroid;
+				asteroid.Radius = asteroidStartRadius;
+				asteroid.IsActive = true;
+				objects.Add(asteroid);
+				collideList.Add(asteroid);
+			}, asteroid => {
+				asteroid.IsActive = false;
+				objects.Remove(asteroid);
+				collideList.Remove(asteroid);
+			}, asteroid => {
+				asteroid.DrawSetup = null;
+				asteroid.TypeId = (int)AsteroidType.None;
+			});
+			int activeAsteroidCount = 10;
 			float asteroidMinimumRadius = 2;
 			float asteroidBreakupCount = 3;
 			Vec2 asteroidStartPosition = new Vec2(40, 0);
-			for (int i = 0; i < asteroids.Length; ++i) {
-				MobileCircle asteroid = new MobileCircle(new Circle(asteroidStartPosition, asteroidStartRadius));
-				asteroid.DrawSetup = AsteroidDrawSetup;
-				asteroid.TypeId = (int)AsteroidType.Asteroid;
-				asteroids[i] = asteroid;
-				asteroid.IsActive = i < activeAsteroidCount;
-				if (asteroid.IsActive) {
-					asteroidStartPosition.RotateRadians(MathF.PI * 2 / activeAsteroidCount);
-				}
+			for(int i = 0; i < activeAsteroidCount; i++) {
+				MobileCircle asteroid = asteroidPool.Alloc();
+				asteroid.Position = asteroidStartPosition;
+				asteroidStartPosition.RotateRadians(MathF.PI * 2 / activeAsteroidCount);
 			}
 			void AsteroidDrawSetup(CommandLineGraphicsContext context) {
-				context.UseColorGradient(ConsoleColor.Yellow);
+				context.SetColor(ConsoleColor.Yellow);
 			}
 			void BreakApartAsteroid(MobileCircle asteroid, MobileObject projectile) {
 				if (asteroid.Radius <= asteroidMinimumRadius*2) {
-					if (asteroids[activeAsteroidCount-1] != asteroid) {
-						MobileCircle lastAsteroid = asteroids[activeAsteroidCount - 1];
-						asteroid.Copy(lastAsteroid);
-						lastAsteroid.IsActive = false;
-					} else {
-						asteroid.IsActive = false;
-					}
-					--activeAsteroidCount;
+					asteroidPool.Free(asteroid);
 					CreatePowerup(projectile);
 				} else {
 					Vec2 deltaFromCenter = projectile.Position - asteroid.Position;
@@ -127,47 +124,46 @@ namespace asteroids {
 					float newRadius = asteroid.Radius / 2;
 					Vec2 positionRadius = direction * newRadius;
 					positionRadius.RotateDegrees(degreesSeperatingFragments/2);
-					for(int i = 0; i < asteroidBreakupCount -1; ++i) {
-						if (activeAsteroidCount < asteroids.Length) {
-							MobileCircle newAsteroid = asteroids[activeAsteroidCount];
-							++activeAsteroidCount;
-							newAsteroid.IsActive = true;
-							newAsteroid.Radius = newRadius;
-							newAsteroid.Position = asteroid.Position + positionRadius;
-							newAsteroid.Velocity = asteroid.Velocity + positionRadius;
-						}
+					for(int i = 0; i < asteroidBreakupCount; ++i) {
+						MobileCircle newAsteroid = asteroidPool.Alloc();
+						newAsteroid.IsActive = true;
+						newAsteroid.Radius = newRadius;
+						newAsteroid.Position = asteroid.Position + positionRadius;
+						newAsteroid.Velocity = asteroid.Velocity + positionRadius;
 						positionRadius.RotateDegrees(degreesSeperatingFragments);
 					}
-					asteroid.IsActive = true;
-					asteroid.Radius = newRadius;
-					asteroid.Position = asteroid.Position + positionRadius;
-					asteroid.Velocity = asteroid.Velocity + positionRadius;
+					asteroidPool.Free(asteroid);
 				}
 			}
 
 			// initialize powerups
-			MobileCircle[] powerups = new MobileCircle[100];
-			int activePowerupCount = 0;
 			float powerupRadius = asteroidMinimumRadius / 2;
-			for (int i = 0; i < asteroids.Length; ++i) {
+			ObjectPool<MobileCircle> powerupPool = new ObjectPool<MobileCircle>();
+			powerupPool.Setup(() => {
 				MobileCircle powerup = new MobileCircle(new Circle(Vec2.Zero, powerupRadius));
 				powerup.DrawSetup = PowerupDrawSetup;
 				powerup.TypeId = (int)AsteroidType.Powerup;
-				powerups[i] = powerup;
+				return powerup;
+			}, powerup => {
+				powerup.IsActive = true;
+				objects.Add(powerup);
+				collideList.Add(powerup);
+			}, powerup => {
 				powerup.IsActive = false;
-			}
+				objects.Remove(powerup);
+				collideList.Remove(powerup);
+			}, powerup => {
+				powerup.TypeId = (int)AsteroidType.None;
+				powerup.DrawSetup = null;
+			});
 			void PowerupDrawSetup(CommandLineGraphicsContext context) {
-				context.UseColorGradient(ConsoleColor.Cyan);
+				context.SetColor(ConsoleColor.Cyan);
 			}
 			void CreatePowerup(MobileObject projectile) {
-				if (activePowerupCount >= powerups.Length) {
-					return;
-				}
-				MobileCircle powerup = powerups[activePowerupCount];
+				MobileCircle powerup = powerupPool.Alloc();
 				powerup.IsActive = true;
 				powerup.Position = projectile.Position;
 				powerup.Velocity = -projectile.Velocity.Normal;
-				activePowerupCount++;
 			}
 
 			// add acceleration force to bring objects back to center if they stray too far
@@ -200,7 +196,7 @@ namespace asteroids {
 			float lineWidth = 1f/2;
 			float lineLength = 20;
 			preDraw.Add(() => {
-				graphics.UseColorGradient(ConsoleColor.DarkGray);
+				graphics.SetColor(ConsoleColor.DarkGray);
 				Vec2 lineEnd = player.Position + player.Direction * (lineLength * graphics.Scale.y);
 				graphics.DrawLine(player.Position, lineEnd, lineWidth);
 			});
@@ -211,13 +207,13 @@ namespace asteroids {
 			void DrawScore() {
 				graphics.WriteAt($"score: {playerScore}", (int)graphics.Size.y - 1, 0);
 			}
-			void DebugDraw(){
-				LabelList(projectiles, "p", ConsoleColor.Magenta);
+			void DebugDraw() {
+				LabelList(projectilePool, "p", ConsoleColor.Magenta);
 				graphics.WriteAt(ConsoleGlyph.Convert("player", ConsoleColor.Green), player.Position);
-				LabelList(asteroids, "a", ConsoleColor.DarkYellow);
-				LabelList(powerups, "+", ConsoleColor.Green);
+				LabelList(asteroidPool, "a", ConsoleColor.DarkYellow);
+				LabelList(powerupPool, "*", ConsoleColor.Green);
 			}
-			void LabelList(IList<IGameObject> objects, string prefix, ConsoleColor textColor) {
+			void LabelList<T>(IList<T> objects, string prefix, ConsoleColor textColor) where T : IGameObject {
 				for (int i = 0; i < objects.Count; i++) {
 					if (!objects[i].IsActive) {
 						continue;
@@ -295,15 +291,12 @@ namespace asteroids {
 				if (Time.TimeMs < playerShootNextPossibleMs) {
 					return;
 				}
-				MobileObject projectile = projectiles[currentProjectile];
+				//MobileObject projectile = projectiles[currentProjectile];
+				MobileObject projectile = projectilePool.Alloc();
 				projectile.Position = player.Position + player.Direction * playerPoly[0].x;
 				projectile.Direction = player.Direction;
 				projectile.Velocity = player.Velocity + player.Direction * projectileSpeed;
 				projectile.IsActive = true;
-				++currentProjectile;
-				if (currentProjectile >= projectiles.Length) {
-					currentProjectile = 0;
-				}
 				playerShootNextPossibleMs = Time.TimeMs + playerShootCooldownMs;
 			}
 
@@ -350,11 +343,6 @@ namespace asteroids {
 				}
 			};
 
-			objects.Add(player);
-			objects.AddRange(projectiles);
-			objects.AddRange(asteroids);
-			objects.AddRange(powerups);
-
 			while (running) {
 				// input
 				keyInput.UpdateKeyInput();
@@ -364,14 +352,15 @@ namespace asteroids {
 				keyInput.TriggerKeyBinding();
 				if (updating) {
 					CollisionLogic.DoCollisionLogic(collideList, collisionRules);
-					PopulateUpdateLists();
-					updateList.ForEach(o => o.Update());
+					//PopulateUpdateLists();
+					//updateList.ForEach(o => o.Update());
+					objects.ForEach(o => o.Update());
 					postUpdate.ForEach(a => a.Invoke());
 				}
 
 				// draw
 				preDraw.ForEach(a => a.Invoke());
-				drawList.ForEach(o => {
+				objects.ForEach(o => {
 					o.DrawSetup?.Invoke(graphics);
 					o.Draw(graphics);
 				});

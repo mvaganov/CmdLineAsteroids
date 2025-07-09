@@ -68,7 +68,7 @@ namespace ConsoleMrV {
 			return colorMap;
 		}
 
-		public void UseColorGradient(ConsoleColor color) {
+		public void SetColor(ConsoleColor color) {
 			AntiAliasedGradient = AntiAliasedGradientPerColor[(int)color];
 		}
 
@@ -148,7 +148,7 @@ namespace ConsoleMrV {
 			_pivotAsPercentage = new Vec2(0.5f, 0.5f);
 			_scale = scale;
 			_printOffset = offset;
-			UseColorGradient(ConsoleColor.White);
+			SetColor(ConsoleColor.White);
 		}
 		public void SetSize(int width, int height) {
 			SetSize(ref _previousBuffer, width, height);

@@ -25,6 +25,7 @@ namespace asteroids {
 				Vec2 dir = Velocity / speed;
 				Vec2 start = Position + dir * Radius;
 				Vec2 end = start + Velocity;
+				graphicsContext.SetColor(ConsoleColor.White);
 				graphicsContext.DrawLine(start, end);
 			}
 		}

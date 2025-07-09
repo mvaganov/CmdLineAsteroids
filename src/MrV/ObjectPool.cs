@@ -3,6 +3,7 @@
 #if UNITY_5_3_OR_NEWER
 using UnityEngine;
 #endif
+using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
@@ -19,10 +20,9 @@ using System.Collections.Generic;
 /// <para>objPool.Free(gobj); // deallocate object in pool</para>
 /// <para>ObjectPoolItem.Destroy(gobj); // deallocate object in pool OR Object.Destroy non-ObjectPool object (for GameObjects only)</para>
 /// </summary>
-public class ObjectPool<T> where T : class {
-	private List<T> allObjects = null;
+public class ObjectPool<T> : IList<T> where T : class {
+	private List<T> allObjects = new List<T>();
 	private int freeObjectCount = 0;
-
 	/// <summary>
 	/// Used to memory-allocate/marshall a new object
 	/// </summary>
@@ -52,6 +52,24 @@ public class ObjectPool<T> where T : class {
 	public DelegateCommission Commission;
 	/// <inheritdoc cref="DelegateDecommission"/>
 	public DelegateDecommission Decommission;
+
+	public int Count => allObjects.Count - freeObjectCount;
+
+	public bool IsReadOnly => false;
+
+	public T this[int index] { get => allObjects[index]; set => throw new System.NotImplementedException(); }
+
+	public int Capacity {
+		get { return allObjects.Count; }
+		set {
+			allObjects.Capacity = value;
+			for (int i = allObjects.Count; i < allObjects.Capacity; ++i) {
+				T obj = Alloc();
+				allObjects.Add(obj);
+				Free(obj);
+			}
+		}
+	}
 
 	/// <summary></summary>
 	/// <returns>True if Setup was called with all non-null methods</returns>
@@ -159,6 +177,31 @@ public class ObjectPool<T> where T : class {
 		if (Death != null) { ForEach((item) => Death(item)); }
 		allObjects.Clear();
 	}
+
+	public void Clear() {
+		for (int i = allObjects.Count - freeObjectCount - 1; i >= 0; --i) {
+			Free(allObjects[i]);
+		}
+	}
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+	public int IndexOf(T item) => allObjects.IndexOf(item);
+	public void Insert(int index, T item) => throw new System.NotImplementedException();
+	public void RemoveAt(int index) => throw new System.NotImplementedException();
+	public void Add(T item) => throw new System.NotImplementedException();
+	public bool Contains(T item) => IndexOf(item) != -1;
+	public bool Remove(T item) => throw new System.NotImplementedException();
+	public void CopyTo(T[] array, int arrayIndex) {
+		for(int i = arrayIndex, index = 0; i < array.Length && index < Count; ++i, ++index) {
+			array[i] = this[index];
+		}
+	}
+	private class ObjectPoolEnumerator : IEnumerator<T> {
+		private int index = -1, max = 0; private IList<T> list;
+		public T Current => list[index]; object IEnumerator.Current => Current;
+		public void Dispose() {} public bool MoveNext() => ++index < max; public void Reset() => index = -1;
+		public ObjectPoolEnumerator(IList<T> list, int max) { this.list = list; this.max = max; }
+	}
+	public IEnumerator<T> GetEnumerator() => new ObjectPoolEnumerator(allObjects, Count);
 }
 
 #if UNITY_5_3_OR_NEWER

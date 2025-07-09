@@ -32,8 +32,8 @@ namespace asteroids {
 		/// <param name="b"></param>
 		/// <returns>collision resolution function, null if no collision happened or collision was trivial</returns>
 		public delegate Action Function(ICollidable a, ICollidable b);
-		public static void DoCollisionLogic(IList<ICollidable> collidables,
-			Dictionary<CollisionPair, List<Function>> rules) {
+		public static void DoCollisionLogic<T>(IList<T> collidables,
+			Dictionary<CollisionPair, List<Function>> rules) where T : ICollidable {
 			List<Action> collisionResolutions = new List<Action>();
 			for (int i = 0; i < collidables.Count; i++) {
 				ICollidable ci = collidables[i];
