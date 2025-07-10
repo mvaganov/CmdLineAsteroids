@@ -72,7 +72,7 @@ namespace MathMrV {
 			bool inside = false;
 			for (int i = 0, j = poly.Count - 1; i < poly.Count; j = i++) {
 				Vec2 pi = poly[i], pj = poly[j];
-				bool intersect = ((pi.y > p.y) != (pj.y > p.y)) && (p.x < (pj.x - pi.x) * (p.y - pi.y) / (pj.y - pi.y) + pi.x);
+				bool intersect = pi.y > p.y != pj.y > p.y && p.x < (pj.x - pi.x) * (p.y - pi.y) / (pj.y - pi.y) + pi.x;
 				if (intersect) inside = !inside;
 			}
 			return inside;
@@ -96,5 +96,18 @@ namespace MathMrV {
 		public bool Contains(Vec2 point) => IsInPolygon(cachedPoints, point);
 
 		public void CopyTo(Vec2[] array, int arrayIndex) => Array.Copy(originalPoints, 0, array, arrayIndex, Count);
+		public static Vec2[] CreateRegular(int sides, Vec2 startingPoint = default) {
+			if (startingPoint == default) {
+				startingPoint = Vec2.DirectionMaxX;
+			}
+			Vec2[] points = new Vec2[sides];
+			Vec2 point = startingPoint;
+			float radianTurn = MathF.PI * 2 / sides;
+			for (int i = 0; i < sides; ++i) {
+				points[i] = point;
+				point.RotateRadians(radianTurn);
+			}
+			return points;
+		}
 	}
 }

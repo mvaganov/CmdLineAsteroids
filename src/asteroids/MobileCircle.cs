@@ -9,6 +9,7 @@ namespace asteroids {
 		public override Vec2 Direction { get => Velocity.ToUnitVector(); set => throw new NotImplementedException(); }
 		public float Radius { get => circle.Radius; set => circle.Radius = value; }
 		public Circle Circle {  get => circle; set => circle = value; }
+		public static bool DebugShowVelocity = false;
 		public MobileCircle(Circle circle) {
 			this.circle = circle;
 		}
@@ -20,14 +21,21 @@ namespace asteroids {
 		public override void Draw(CommandLineGraphicsContext graphicsContext) {
 			if (!_active) return;
 			circle.Draw(graphicsContext);
-			float speed = Velocity.Magnitude;
-			if (speed > 0) {
-				Vec2 dir = Velocity / speed;
-				Vec2 start = Position + dir * Radius;
-				Vec2 end = start + Velocity;
-				graphicsContext.SetColor(ConsoleColor.White);
-				graphicsContext.DrawLine(start, end);
+			if (DebugShowVelocity) {
+				ShowDebugVelocity(graphicsContext);
 			}
+		}
+
+		private void ShowDebugVelocity(CommandLineGraphicsContext graphicsContext) {
+			float speed = Velocity.Magnitude;
+			if (speed == 0) {
+				return;
+			}
+			Vec2 dir = Velocity / speed;
+			Vec2 start = Position + dir * Radius;
+			Vec2 end = start + Velocity;
+			graphicsContext.SetColor(ConsoleColor.White);
+			graphicsContext.DrawLine(start, end);
 		}
 
 		public bool IsColliding(ICollidable collidable) {

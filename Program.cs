@@ -1,5 +1,4 @@
-﻿using asteroids.src.asteroids;
-using ConsoleMrV;
+﻿using ConsoleMrV;
 using MathMrV;
 using MrV;
 using System;
@@ -27,6 +26,7 @@ namespace asteroids {
 			long playerShootCooldownMs = 50;
 			long playerShootNextPossibleMs = Time.TimeMs + playerShootCooldownMs;
 			long playerScore = 0;
+			int playerAmmo = 10;
 			ControlledPolygon player = new ControlledPolygon(playerPoly);
 			player.TypeId = (int)AsteroidType.Player;
 			player.DrawSetup = g => g.SetColor(ConsoleColor.Blue);
@@ -102,8 +102,8 @@ namespace asteroids {
 				asteroid.TypeId = (int)AsteroidType.None;
 			});
 			int activeAsteroidCount = 10;
-			float asteroidMinimumRadius = 2;
-			float asteroidBreakupCount = 3;
+			float asteroidMinimumRadiusThatDivides = 3;
+			int asteroidBreakupCount = 3;
 			Vec2 asteroidStartPosition = new Vec2(40, 0);
 			for(int i = 0; i < activeAsteroidCount; i++) {
 				MobileCircle asteroid = asteroidPool.Alloc();
@@ -111,33 +111,35 @@ namespace asteroids {
 				asteroidStartPosition.RotateRadians(MathF.PI * 2 / activeAsteroidCount);
 			}
 			void AsteroidDrawSetup(CommandLineGraphicsContext context) {
-				context.SetColor(ConsoleColor.Yellow);
+				context.SetColor(ConsoleColor.Gray);
 			}
 			void BreakApartAsteroid(MobileCircle asteroid, MobileObject projectile) {
-				if (asteroid.Radius <= asteroidMinimumRadius*2) {
+				if (asteroid.Radius <= asteroidMinimumRadiusThatDivides) {
 					asteroidPool.Free(asteroid);
 					CreatePowerup(projectile);
 				} else {
 					Vec2 deltaFromCenter = projectile.Position - asteroid.Position;
 					Vec2 direction = deltaFromCenter.Normal;
 					float degreesSeperatingFragments = 360f / asteroidBreakupCount;
-					float newRadius = asteroid.Radius / 2;
-					Vec2 positionRadius = direction * newRadius;
+					Vec2 positionRadius = direction * (asteroid.Radius / 2);
 					positionRadius.RotateDegrees(degreesSeperatingFragments/2);
-					for(int i = 0; i < asteroidBreakupCount; ++i) {
+					Vec2[] points = Polygon.CreateRegular(asteroidBreakupCount, positionRadius);
+					float subAsteroidRadius = points[0].Distance(points[1]) / 2;
+					for(int i = 0; i < points.Length; ++i) {
 						MobileCircle newAsteroid = asteroidPool.Alloc();
-						newAsteroid.IsActive = true;
-						newAsteroid.Radius = newRadius;
-						newAsteroid.Position = asteroid.Position + positionRadius;
-						newAsteroid.Velocity = asteroid.Velocity + positionRadius;
-						positionRadius.RotateDegrees(degreesSeperatingFragments);
+						newAsteroid.Radius = subAsteroidRadius;
+						newAsteroid.Position = asteroid.Position + points[i];
+						newAsteroid.Velocity = asteroid.Velocity + points[i];
 					}
 					asteroidPool.Free(asteroid);
+				}
+				if (projectile.IsActive) {
+					projectilePool.Free(projectile as MobilePolygon);
 				}
 			}
 
 			// initialize powerups
-			float powerupRadius = asteroidMinimumRadius / 2;
+			float powerupRadius = asteroidMinimumRadiusThatDivides / 2;
 			ObjectPool<MobileCircle> powerupPool = new ObjectPool<MobileCircle>();
 			powerupPool.Setup(() => {
 				MobileCircle powerup = new MobileCircle(new Circle(Vec2.Zero, powerupRadius));
@@ -161,7 +163,6 @@ namespace asteroids {
 			}
 			void CreatePowerup(MobileObject projectile) {
 				MobileCircle powerup = powerupPool.Alloc();
-				powerup.IsActive = true;
 				powerup.Position = projectile.Position;
 				powerup.Velocity = -projectile.Velocity.Normal;
 			}
@@ -205,7 +206,7 @@ namespace asteroids {
 			postDraw.Add(DrawScore);
 			postDraw.Add(DebugDraw);
 			void DrawScore() {
-				graphics.WriteAt($"score: {playerScore}", (int)graphics.Size.y - 1, 0);
+				graphics.WriteAt($"score: {playerScore}\nammo: {playerAmmo}", (int)graphics.Size.y - 2, 0);
 			}
 			void DebugDraw() {
 				LabelList(projectilePool, "p", ConsoleColor.Magenta);
@@ -287,17 +288,15 @@ namespace asteroids {
 				player.TargetRotation = float.NaN;
 			}
 			void playerShoot(KeyInput ki) {
-				// TODO ammo limit
-				if (Time.TimeMs < playerShootNextPossibleMs) {
+				if (playerAmmo <= 0 || Time.TimeMs < playerShootNextPossibleMs) {
 					return;
 				}
-				//MobileObject projectile = projectiles[currentProjectile];
 				MobileObject projectile = projectilePool.Alloc();
 				projectile.Position = player.Position + player.Direction * playerPoly[0].x;
 				projectile.Direction = player.Direction;
 				projectile.Velocity = player.Velocity + player.Direction * projectileSpeed;
-				projectile.IsActive = true;
 				playerShootNextPossibleMs = Time.TimeMs + playerShootCooldownMs;
+				--playerAmmo;
 			}
 
 			var collisionRules = new Dictionary<CollisionPair, List<CollisionLogic.Function>>() {
@@ -307,11 +306,16 @@ namespace asteroids {
 							MobileCircle astA = (MobileCircle)a;
 							MobileCircle astB = (MobileCircle)b;
 							Vec2 delta = astB.Position - astA.Position;
-							Vec2 dir = delta.Normal;
+							float distance = delta.Magnitude;
+							Vec2 dir = delta / distance;
 							Vec2 center = delta / 2 + astA.Position;
+							float totalIdealDist = astA.Radius + astB.Radius;
+							float overlap = totalIdealDist - distance;
+							Vec2 bumpMove = dir * overlap/2;
 							Action postCollisionReflection = () => {
 								astA.Velocity = Vec2.Reflect(astA.Velocity, dir);
-								astB.Velocity = Vec2.Reflect(astB.Velocity, dir);
+								astA.Position -= bumpMove;
+								//astB.Velocity = Vec2.Reflect(astB.Velocity, dir);
 							};
 							return postCollisionReflection;
 						}
@@ -324,17 +328,21 @@ namespace asteroids {
 							MobilePolygon projectile = (MobilePolygon)poly;
 							MobileCircle asteroid = (MobileCircle)circle;
 							BreakApartAsteroid(asteroid, projectile);
-							projectile.IsActive= false;
 							++playerScore;
-							return null;
 						}
-						if (poly.TypeId == (byte)AsteroidType.Player) {
+						return null;
+					}
+				},
+				[(typeof(ControlledPolygon), typeof(MobileCircle))] = new List<CollisionLogic.Function>() {
+					(player, circle) => {
+						if (player.TypeId == (byte)AsteroidType.Player) {
 							switch(circle.TypeId) {
 								case (byte)AsteroidType.Asteroid:
 									Log.i("TODO small asteroids bounce, and turn into powerups moving away. big asteroids cause damage");
 									break;
 								case (byte)AsteroidType.Powerup:
-									Log.i("TODO powerup");
+									powerupPool.Free(circle as MobileCircle);
+									++playerAmmo;
 									break;
 							}
 						}
@@ -352,8 +360,6 @@ namespace asteroids {
 				keyInput.TriggerKeyBinding();
 				if (updating) {
 					CollisionLogic.DoCollisionLogic(collideList, collisionRules);
-					//PopulateUpdateLists();
-					//updateList.ForEach(o => o.Update());
 					objects.ForEach(o => o.Update());
 					postUpdate.ForEach(a => a.Invoke());
 				}

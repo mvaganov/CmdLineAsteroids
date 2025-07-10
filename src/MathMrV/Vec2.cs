@@ -63,7 +63,7 @@ namespace MathMrV {
 			return a.x * b.x + a.y * b.y;
 		}
 		public static Vec2 Reflect(Vec2 incomingVector, Vec2 normalVector) {
-			normalVector = normalVector.FlippedXY();
+			//normalVector = normalVector.FlippedXY();
 			return incomingVector - (normalVector * 2 * Vec2.Dot(incomingVector, normalVector));
 		}
 

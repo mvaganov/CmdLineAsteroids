@@ -20,7 +20,7 @@ using System.Collections.Generic;
 /// <para>objPool.Free(gobj); // deallocate object in pool</para>
 /// <para>ObjectPoolItem.Destroy(gobj); // deallocate object in pool OR Object.Destroy non-ObjectPool object (for GameObjects only)</para>
 /// </summary>
-public class ObjectPool<T> : IList<T> where T : class {
+public class ObjectPool<T> : IList<T> {
 	private List<T> allObjects = new List<T>();
 	private int freeObjectCount = 0;
 	/// <summary>
@@ -108,7 +108,7 @@ public class ObjectPool<T> : IList<T> where T : class {
 
 	/// <summary>Returns an object from the memory pool, which may have just been created</summary>
 	public T Alloc() {
-		T freeObject = null;
+		T freeObject = default;
 		if (freeObjectCount == 0) {
 #if FAIL_FAST
 			if (Birth == null) { throw new System.Exception("Call .Setup(), and provide a create method!"); }
