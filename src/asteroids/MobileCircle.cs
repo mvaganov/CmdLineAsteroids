@@ -38,12 +38,18 @@ namespace asteroids {
 			graphicsContext.DrawLine(start, end);
 		}
 
-		public bool IsColliding(ICollidable collidable) {
+		public CollisionData IsColliding(ICollidable collidable) {
 			switch (collidable) {
-				case MobileCircle c: return circle.IsColliding(c.circle);
-				case MobilePolygon mp: return mp.IsColliding(circle);
+				case MobileCircle c:
+					if (circle.IsColliding(c.circle)) {
+						CollisionData data = CollisionData.ForCircles(circle, c.circle);
+						data.SetParticipants(this, collidable);
+						return data;
+					}
+					return null;
+				case MobilePolygon mp: return mp.GetCollision(circle);
 			}
-			return false;
+			return null;
 		}
 	}
 }

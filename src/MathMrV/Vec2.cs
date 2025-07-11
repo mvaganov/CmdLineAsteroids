@@ -76,6 +76,7 @@ namespace MathMrV {
 		public static Vec2 DirectionMaxX = (1, 0);
 		public static Vec2 DirectionMinY = (0, -1);
 		public static Vec2 DirectionMaxY = (0, 1);
+		public static Vec2 NaN = (float.NaN, float.NaN);
 
 		public static Vec2 Random => ((float)randomGenerator.NextDouble(), (float)randomGenerator.NextDouble());
 		public static System.Random randomGenerator = new System.Random();

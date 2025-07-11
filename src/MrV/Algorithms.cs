@@ -7,6 +7,22 @@ namespace MrV {
 	public static partial class Algorithms {
 		public static long current_milli_time() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 		public static bool LessThanLong(long a, long b) => a < b;
+		public static bool LessThanInt(int a, int b) => a < b;
+		public static bool LessThanFloat(float a, float b) => a < b;
+		public static bool LessThanDouble(double a, double b) => a < b;
+		public static bool LessThanByte(byte a, byte b) => a < b;
+
+		public static int binary_search_with_insertion_point<T>(IList<T> arr, long target, Func<T, long> getValue)
+			=> binary_search_with_insertion_point(arr, target, getValue, LessThanLong);
+		public static int binary_search_with_insertion_point<T>(IList<T> arr, int target, Func<T, int> getValue)
+			=> binary_search_with_insertion_point(arr, target, getValue, LessThanInt);
+		public static int binary_search_with_insertion_point<T>(IList<T> arr, float target, Func<T, float> getValue)
+			=> binary_search_with_insertion_point(arr, target, getValue, LessThanFloat);
+		public static int binary_search_with_insertion_point<T>(IList<T> arr, double target, Func<T, double> getValue)
+			=> binary_search_with_insertion_point(arr, target, getValue, LessThanDouble);
+		public static int binary_search_with_insertion_point<T>(IList<T> arr, byte target, Func<T, byte> getValue)
+			=> binary_search_with_insertion_point(arr, target, getValue, LessThanByte);
+
 		public static int binary_search_with_insertion_point<T,V>(
 		IList<T> arr, V target, Func<T, V> getValue, Func<V,V,bool> lessThan) {
 			int low = 0, high = arr.Count - 1;

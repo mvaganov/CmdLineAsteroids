@@ -22,12 +22,13 @@ using System.Collections.Generic;
 /// </summary>
 public class ObjectPool<T> : IList<T> {
 	private List<T> allObjects = new List<T>();
+	private List<int> delayedDecommission = new List<int>();
 	private int freeObjectCount = 0;
 	/// <summary>
 	/// Used to memory-allocate/marshall a new object
 	/// </summary>
 	/// <returns>a fresh object</returns>
-	public delegate T DelegateBeginLife();
+	public delegate T DelegateCreate();
 	/// <summary>
 	/// Used to clean an object before use as a newly allocated object
 	/// </summary>
@@ -42,16 +43,16 @@ public class ObjectPool<T> : IList<T> {
 	/// Used to memory-free an object, when the memory is no longer needed, in final stages of lifecycle
 	/// </summary>
 	/// <param name="obj"></param>
-	public delegate void DelegateEndLife(T obj);
+	public delegate void DelegateDestroy(T obj);
 
-	/// <inheritdoc cref="DelegateBeginLife"/>
-	public DelegateBeginLife Birth;
-	/// <inheritdoc cref="DelegateEndLife"/>
-	public DelegateEndLife Death;
+	/// <inheritdoc cref="DelegateCreate"/>
+	public DelegateCreate CreateDelegate;
+	/// <inheritdoc cref="DelegateDestroy"/>
+	public DelegateDestroy DestroyDelegate;
 	/// <inheritdoc cref="DelegateCommission"/>
-	public DelegateCommission Commission;
+	public DelegateCommission CommissionDelegate;
 	/// <inheritdoc cref="DelegateDecommission"/>
-	public DelegateDecommission Decommission;
+	public DelegateDecommission DecommissionDelegate;
 
 	public int Count => allObjects.Count - freeObjectCount;
 
@@ -64,9 +65,9 @@ public class ObjectPool<T> : IList<T> {
 		set {
 			allObjects.Capacity = value;
 			for (int i = allObjects.Count; i < allObjects.Capacity; ++i) {
-				T obj = Alloc();
+				T obj = Commission();
 				allObjects.Add(obj);
-				Free(obj);
+				Decommission(obj);
 			}
 		}
 	}
@@ -74,7 +75,7 @@ public class ObjectPool<T> : IList<T> {
 	/// <summary></summary>
 	/// <returns>True if Setup was called with all non-null methods</returns>
 	public bool IsFullySetup() {
-		return Birth != null && Commission != null && Decommission != null && Death != null;
+		return CreateDelegate != null && CommissionDelegate != null && DecommissionDelegate != null && DestroyDelegate != null;
 	}
 
 	/// <summary>
@@ -87,34 +88,34 @@ public class ObjectPool<T> : IList<T> {
 	/// );</para>
 	/// </summary>
 	/// <param name="create">callback function or delegate used to create a new object of type T</param>
-	/// <param name="activate">(optional) callback function or delegate used to activate an object of type T</param>
-	/// <param name="deactivate">(optional) callback function or delegate used to de-activate an object of type T</param>
+	/// <param name="commission">(optional) callback function or delegate used to activate an object of type T</param>
+	/// <param name="decommission">(optional) callback function or delegate used to de-activate an object of type T</param>
 	/// <param name="destroy">(optional) callback function or delegate used to destroy an object of type T</param>
-	public void Setup(DelegateBeginLife create, DelegateCommission activate, DelegateDecommission deactivate, DelegateEndLife destroy) {
-		Birth = create; Commission = activate; Decommission = deactivate; Death = destroy;
+	public void Setup(DelegateCreate create, DelegateCommission commission, DelegateDecommission decommission, DelegateDestroy destroy) {
+		CreateDelegate = create; CommissionDelegate = commission; DecommissionDelegate = decommission; DestroyDelegate = destroy;
 	}
 
 	/// <summary>Constructs and calls <see cref="Setup"/></summary>
 	public ObjectPool(
-		DelegateBeginLife create,
-		DelegateCommission activate,
-		DelegateDecommission deactivate,
-		DelegateEndLife destroy) {
-		Setup(create, activate, deactivate, destroy);
+		DelegateCreate create,
+		DelegateCommission commission,
+		DelegateDecommission decommission,
+		DelegateDestroy destroy) {
+		Setup(create, commission, decommission, destroy);
 	}
 
 	/// <summary> Be sure to call <see cref="Setup"/>!</summary>
 	public ObjectPool() { }
 
 	/// <summary>Returns an object from the memory pool, which may have just been created</summary>
-	public T Alloc() {
+	public T Commission() {
 		T freeObject = default;
 		if (freeObjectCount == 0) {
 #if FAIL_FAST
-			if (Birth == null) { throw new System.Exception("Call .Setup(), and provide a create method!"); }
+			if (CreateDelegate == null) { throw new System.Exception("Call .Setup(), and provide a create method!"); }
 #endif
 			if (allObjects == null) { allObjects = new List<T>(); }
-			freeObject = Birth();
+			freeObject = CreateDelegate();
 			allObjects.Add(freeObject);
 #if UNITY_5_3_OR_NEWER
 			if (typeof(T) == typeof(GameObject)) {
@@ -126,22 +127,49 @@ public class ObjectPool<T> : IList<T> {
 			freeObject = allObjects[allObjects.Count - freeObjectCount];
 			--freeObjectCount;
 		}
-		if (Commission != null) { Commission(freeObject); }
+		if (CommissionDelegate != null) { CommissionDelegate(freeObject); }
 		return freeObject;
 	}
 
 	/// <summary>Which object to mark as free in the memory pool</summary>
-	public void Free(T obj) {
-		int indexOfObject = allObjects.IndexOf(obj);
+	public void Decommission(T obj) => Decommission(allObjects.IndexOf(obj));
+
+	/// <inheritdoc cref="Decommission(T)"/>
+	public void Decommission(int indexOfObject) {
 #if FAIL_FAST
 		if (indexOfObject < 0) { throw new System.Exception("woah, this isn't one of mine..."); }
 		if (indexOfObject >= (allObjects.Count - freeObjectCount)) { throw new System.Exception("hey, you're freeing this twice..."); }
 #endif
+		T obj = allObjects[indexOfObject];
 		freeObjectCount++;
 		int beginningOfFreeList = allObjects.Count - freeObjectCount;
 		allObjects[indexOfObject] = allObjects[beginningOfFreeList];
 		allObjects[beginningOfFreeList] = obj;
-		if (Decommission != null) { Decommission(obj); }
+		if (DecommissionDelegate != null) { DecommissionDelegate(obj); }
+	}
+
+	/// <summary>
+	/// Be sure to call <see cref="Update"/>
+	/// </summary>
+	/// <param name="obj"></param>
+	public void DecommissionDelayed(T obj) => DecommissionDelayed(allObjects.IndexOf(obj));
+
+	/// <inheritdoc cref="DecommissionDelayed(T)"/>
+	public void DecommissionDelayed(int indexOfObject) {
+#if FAIL_FAST
+		if (indexOfObject < 0) { throw new System.Exception("woah, this isn't one of mine..."); }
+		if (indexOfObject >= (allObjects.Count - freeObjectCount)) { throw new System.Exception("hey, you're freeing this twice..."); }
+#endif
+		delayedDecommission.Add(indexOfObject);
+	}
+
+	public virtual void Update() {
+		if (delayedDecommission.Count == 0) { return; }
+		delayedDecommission.Sort();
+		for(int i = delayedDecommission.Count - 1; i >= 0; --i) {
+			Decommission(delayedDecommission[i]);
+		}
+		delayedDecommission.Clear();
 	}
 
 	/// <summary>performs the given delegate on each object in the memory pool</summary>
@@ -165,7 +193,7 @@ public class ObjectPool<T> : IList<T> {
 
 	/// <summary>Destroys all objects in the pool, after deactivating each one.</summary>
 	public void DeallocateAll() {
-		ForEachCommissioned((item) => Decommission(item));
+		ForEachCommissioned((item) => DecommissionDelegate(item));
 #if UNITY_5_3_OR_NEWER
 		if (typeof(T) == typeof(GameObject)) {
 			ForEach((item) => {
@@ -174,13 +202,13 @@ public class ObjectPool<T> : IList<T> {
 			});
 		}
 #endif
-		if (Death != null) { ForEach((item) => Death(item)); }
+		if (DestroyDelegate != null) { ForEach((item) => DestroyDelegate(item)); }
 		allObjects.Clear();
 	}
 
 	public void Clear() {
 		for (int i = allObjects.Count - freeObjectCount - 1; i >= 0; --i) {
-			Free(allObjects[i]);
+			Decommission(allObjects[i]);
 		}
 	}
 	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

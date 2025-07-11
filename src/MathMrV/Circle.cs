@@ -27,6 +27,20 @@ namespace MathMrV {
 		public void Draw(CommandLineGraphicsContext g) => Draw(g, position, radius);
 		public bool IsColliding(Circle other) => IsColliding(position, radius, other.position, other.radius);
 		public bool TryGetAABB(out Vec2 min, out Vec2 max) => TryGetAABB(position, radius, out min, out max);
+		public static bool TryGetCircleCollisionPoints(Circle a, Circle b, out Vec2 pointA, out Vec2 pointB) {
+			Vec2 delta = b.position - a.position;
+			float dist = delta.Magnitude;
+			float totalRad = a.radius + b.radius;
+			if (dist > totalRad) {
+				pointA = a.position;
+				pointB = b.position;
+				return false;
+			}
+			Vec2 dir = delta / dist;
+			pointA = a.position + dir * a.radius;
+			pointB = b.position - dir * b.radius;
+			return true;
+		}
 		public static bool IsColliding(Vec2 centerA, float radiusA, Vec2 centerB, float radiusB) {
 			float dx = centerA.x - centerB.x;
 			float dy = centerA.y - centerB.y;
