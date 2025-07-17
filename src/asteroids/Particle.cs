@@ -19,7 +19,7 @@ namespace asteroids {
 		public bool IsActive { get => !Disabled; set => Disabled = !value; }
 		public bool IsVisible { get => IsActive; set => IsActive = value; }
 		public ConsoleColor Color { get => _color; set => _color = value; }
-		public Action<CommandLineGraphicsContext> DrawSetup { get => null; set { } }
+		public Action<CommandLineCanvas> DrawSetup { get => null; set { } }
 		public byte TypeId { get; set; }
 		public Particle(ParticleSystem parent, Vec2 position, float size, Vec2 velocity, ConsoleColor color, float lifetime) {
 			_particleSystem = parent;
@@ -32,9 +32,9 @@ namespace asteroids {
 			Disabled = false;
 			TypeId = 0;
 		}
-		public void Draw(CommandLineGraphicsContext graphicsContext) {
-			graphicsContext.SetColor(Color);
-			circle.Draw(graphicsContext);
+		public void Draw(CommandLineCanvas canvas) {
+			canvas.SetColor(Color);
+			circle.Draw(canvas);
 		}
 		public void Update() {
 			if (Disabled) {

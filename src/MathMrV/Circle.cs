@@ -10,11 +10,11 @@ namespace MathMrV {
 			this.position = position;
 			this.radius = radius;
 		}
-		public static void Draw(CommandLineGraphicsContext g, Vec2 pos, float radius) {
+		public static void Draw(CommandLineCanvas canvas, Vec2 pos, float radius) {
 			if (!TryGetAABB(pos, radius, out Vec2 min, out Vec2 max)) {
 				return;
 			}
-			g.DrawSupersampledShape(IsInsideCircle, min, max);
+			canvas.DrawSupersampledShape(IsInsideCircle, min, max);
 			bool IsInsideCircle(Vec2 point) => Circle.IsInsideCircle(pos, radius, point);
 		}
 		public static bool IsInsideCircle(Vec2 position, float radius, Vec2 point) {
@@ -24,7 +24,7 @@ namespace MathMrV {
 		}
 		public bool Contains(Vec2 point) => IsInsideCircle(position, radius, point);
 
-		public void Draw(CommandLineGraphicsContext g) => Draw(g, position, radius);
+		public void Draw(CommandLineCanvas canvas) => Draw(canvas, position, radius);
 		public bool IsColliding(Circle other) => IsColliding(position, radius, other.position, other.radius);
 		public bool TryGetAABB(out Vec2 min, out Vec2 max) => TryGetAABB(position, radius, out min, out max);
 		public static bool TryGetCircleCollisionPoints(Circle a, Circle b, out Vec2 pointA, out Vec2 pointB) {

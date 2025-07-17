@@ -27,9 +27,9 @@ namespace MathMrV {
 		public bool IsReadOnly => false;
 		public void SetDirty() => cacheValid = false;
 
-		public void Draw(CommandLineGraphicsContext g) {
+		public void Draw(CommandLineCanvas canvas) {
 			UpdateCacheAsNeeded();
-			g.DrawSupersampledShape(IsInsidePolygon, cachedBoundBoxMin, cachedBoundBoxMax);
+			canvas.DrawSupersampledShape(IsInsidePolygon, cachedBoundBoxMin, cachedBoundBoxMax);
 		}
 		bool IsInsidePolygon(Vec2 point) => IsInPolygon(cachedPoints, point);
 		public Polygon(Vec2[] points) {

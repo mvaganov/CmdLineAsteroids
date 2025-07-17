@@ -18,11 +18,11 @@ namespace asteroids {
 			circle = other.circle;
 		}
 
-		public override void Draw(CommandLineGraphicsContext graphicsContext) {
+		public override void Draw(CommandLineCanvas canvas) {
 			if (!_active) return;
-			circle.Draw(graphicsContext);
+			circle.Draw(canvas);
 			if (DebugShowVelocity) {
-				ShowDebugVelocity(graphicsContext);
+				ShowDebugVelocity(canvas);
 			}
 		}
 

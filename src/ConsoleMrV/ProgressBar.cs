@@ -15,7 +15,7 @@ namespace ConsoleMrV {
 			back = new ConsoleGlyph('.', System.ConsoleColor.Black, System.ConsoleColor.DarkBlue);
 			fore = new ConsoleGlyph('.', System.ConsoleColor.Green, System.ConsoleColor.DarkGreen);
 		}
-		public void Draw(CommandLineGraphicsContext graphics) {
+		public void Draw(CommandLineCanvas canvas) {
 			Vec2 delta = end - start;
 			int width = (int)(delta.x > delta.y ? delta.x : delta.y);
 			Vec2 increment = delta / width;
@@ -37,7 +37,7 @@ namespace ConsoleMrV {
 					glyph.Letter = '|';
 					++specialIndex;
 				}
-				graphics.SetCharacter(cursor, glyph);
+				canvas.SetCharacter(cursor, glyph);
 				cursor += increment;
 			}
 		}

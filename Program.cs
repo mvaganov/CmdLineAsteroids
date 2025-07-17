@@ -5,30 +5,34 @@ using System;
 using System.Collections.Generic;
 
 namespace asteroids {
+	// TODO asteroids should move
+	// TODO objects leaving the play area should be nudged back
+	// TODO player should be able to die
+	// TODO game should be able to restart
 	internal class Program {
 		enum AsteroidType { None, Player, Asteroid, Projectile, Powerup }
-		public static ParticleSystem marker = new ParticleSystem(.25f, .5f, 0,
-			ParticleSystem.Kind.None, ConsoleColor.Magenta, 0, null);
 		static void Main(string[] args) {
 			// initialize system
 			Random random = new Random();
-			CommandLineGraphicsContext graphics = new CommandLineGraphicsContext(80, 25, (0.5f, 1), (0, 0));
+			CommandLineCanvas graphics = new CommandLineCanvas(80, 25, (0.5f, 1), (0, 0));
 			KeyInput keyInput = new KeyInput();
 			List<IGameObject> objects = new List<IGameObject>();
+			ParticleSystem.OnParticleCommission = particle => objects.Add(particle);
+			ParticleSystem.OnParticleDecommission = particle => objects.Remove(particle);
 			List<ICollidable> collideList = new List<ICollidable>();
 			List<Action> preDraw = new List<Action>();
 			List<Action> postDraw = new List<Action>();
 			List<Action> postUpdate = new List<Action>();
 			bool running = true;
 			bool updating = true;
-			ParticleSystem.OnParticleCommission = particle => objects.Add(particle);
-			ParticleSystem.OnParticleDecommission = particle => objects.Remove(particle);
 			float targetFps = 30;
 			int targetMsDelay = (int)(1000 / targetFps);
 
 			// particle systems
 			ParticleSystem explosion = new ParticleSystem((.25f, .5f), (1, 2), (2, 3),
 				ParticleSystem.Kind.Explosion, ConsoleColor.Red, 0, ValueOverTime.GrowAndShrink);
+			ParticleSystem marker = new ParticleSystem(.25f, .5f, 0,
+				ParticleSystem.Kind.None, ConsoleColor.Magenta, 0, null);
 			List<ParticleSystem> particleSystems = new List<ParticleSystem>() { marker, explosion };
 
 			// initialize player
@@ -54,6 +58,19 @@ namespace asteroids {
 			float playerAutoRotationSpeedRadianPerSecond = MathF.PI * 4;
 			float playerFreeRotationSpeedRadianPerSecond = MathF.PI * 2;
 			float playerMinThrustDuration = 1f / 2;
+			objects.Add(player);
+			collideList.Add(player);
+			postUpdate.Add(PlayerDeathWatch);
+			void PlayerDeathWatch() {
+				if (playerHp <= 0 && player.IsActive) {
+					playerHp = 0;
+					player.IsActive = false;
+					explosion.Emit(100, player.Position, ConsoleColor.Blue, (1, 4), (1, 2));
+					ActionQueue.Instance.EnqueueDelayed(1, () => quit(null));
+				}
+			}
+
+			// camera
 			bool cameraLookAhead = false;
 			preDraw.Add(() => {
 				Vec2 halfScreen = graphics.Size / 2;
@@ -72,8 +89,6 @@ namespace asteroids {
 					graphics.Offset = screenAnchor;
 				}
 			});
-			objects.Add(player);
-			collideList.Add(player);
 
 			// initialize projectiles
 			float projectileScale = 3;
@@ -103,7 +118,7 @@ namespace asteroids {
 				projectile.DrawSetup = null;
 				projectile.TypeId = (int)AsteroidType.None;
 			});
-			void DrawSetupProjectile(CommandLineGraphicsContext g) => g.SetColor(ConsoleColor.Red);
+			void DrawSetupProjectile(CommandLineCanvas canvas) => canvas.SetColor(ConsoleColor.Red);
 			postUpdate.Add(() => {
 				for (int i = 0; i < projectilePool.Count; i++) {
 					projectilePool[i].RotationRadians += Time.DeltaTimeSeconds * projectileRotation;
@@ -137,8 +152,8 @@ namespace asteroids {
 				asteroid.Position = asteroidStartPosition;
 				asteroidStartPosition.RotateRadians(MathF.PI * 2 / activeAsteroidCount);
 			}
-			void AsteroidDrawSetup(CommandLineGraphicsContext context) {
-				context.SetColor(ConsoleColor.Gray);
+			void AsteroidDrawSetup(CommandLineCanvas canvas) {
+				canvas.SetColor(ConsoleColor.Gray);
 			}
 			void BreakApartAsteroid(MobileCircle asteroid, MobileObject projectile, Vec2 collisionPosition) {
 				explosion.Emit((int)(asteroid.Radius * asteroid.Radius) + 1, asteroid.Position, ConsoleColor.Gray, (0, asteroid.Radius));
@@ -190,8 +205,8 @@ namespace asteroids {
 				powerup.TypeId = (int)AsteroidType.None;
 				powerup.DrawSetup = null;
 			});
-			void PowerupDrawSetup(CommandLineGraphicsContext context) {
-				context.SetColor(ConsoleColor.Cyan);
+			void PowerupDrawSetup(CommandLineCanvas canvas) {
+				canvas.SetColor(ConsoleColor.Cyan);
 			}
 			void CreatePowerup(MobileObject projectile, Vec2 position) {
 				MobileCircle powerup = powerupPool.Commission();

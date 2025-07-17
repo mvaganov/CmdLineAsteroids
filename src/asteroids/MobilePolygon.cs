@@ -20,23 +20,23 @@ namespace asteroids {
 			BoundingCircle = Welzl.GetMinimumCircle(playerPoly);
 		}
 
-		public override void Draw(CommandLineGraphicsContext graphicsContext) {
+		public override void Draw(CommandLineCanvas canvas) {
 			if (!_active) {
 				return;
 			}
 			if (!ShowCollisionCircles || _detailedCollisionCircles == null) {
-				polygon.Draw(graphicsContext);
+				polygon.Draw(canvas);
 			} else {
-				BlinkBetweenPolygonAndCollisionCircles(graphicsContext);
+				BlinkBetweenPolygonAndCollisionCircles(canvas);
 			}
 		}
 
-		private void BlinkBetweenPolygonAndCollisionCircles(CommandLineGraphicsContext graphicsContext) {
+		private void BlinkBetweenPolygonAndCollisionCircles(CommandLineCanvas canvas) {
 			if (((int)(Time.TimeSeconds*5)) % 2 == 0) {
-				polygon.Draw(graphicsContext);
+				polygon.Draw(canvas);
 			} else {
 				for (int i = 0; i < _detailedCollisionCircles.Length; i++) {
-					GetCollisionCircleInSpace(i).Draw(graphicsContext);
+					GetCollisionCircleInSpace(i).Draw(canvas);
 				}
 			}
 		}
