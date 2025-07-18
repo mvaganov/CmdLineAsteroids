@@ -5,10 +5,6 @@ using System;
 using System.Collections.Generic;
 
 namespace asteroids {
-	// TODO asteroids should move
-	// TODO objects leaving the play area should be nudged back
-	// TODO player should be able to die
-	// TODO game should be able to restart
 	internal class Program {
 		enum AsteroidType { None, Player, Asteroid, Projectile, Powerup }
 		static void Main(string[] args) {

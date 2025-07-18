@@ -80,28 +80,29 @@ namespace ConsoleMrV {
 			VisibilityEscapeCodes = sb.ToString();
 		}
 		public static void PrintWithVisibility(string msg, Code minimumVisibility, bool endline)
-			=> PrintWithVisibilityInternal(msg, minimumVisibility, endline);
-		private static void PrintWithVisibilityInternal(string msg, Code visibility, bool endline) {
+			=> PrintWithVisibilityInternal(msg, minimumVisibility, endline, IdentifySourceCode);
+		private static void PrintWithVisibilityInternal(string msg, Code visibility, bool endline, bool identifySourceCode) {
 #if KeepLogs
 			if (Log.visibility < visibility) { return; }
-			if (IdentifySourceCode) {
+			if (identifySourceCode) {
 				ShowSourceCodeMetaData(visibility);
 			}
 			ForcePrintWithVisibility(msg, visibility, endline);
 #endif
 		}
-		public static void e(string msg) => PrintWithVisibilityInternal(msg, Code.Error, true);
-		public static void w(string msg) => PrintWithVisibilityInternal(msg, Code.Warning, true);
-		public static void i(string msg) => PrintWithVisibilityInternal(msg, Code.Info, true);
-		public static void d(string msg) => PrintWithVisibilityInternal(msg, Code.Debug, true);
-		public static void v(string msg) => PrintWithVisibilityInternal(msg, Code.Verbose, true);
+		public static void e(string msg) => PrintWithVisibilityInternal(msg, Code.Error, true, IdentifySourceCode);
+		public static void w(string msg) => PrintWithVisibilityInternal(msg, Code.Warning, true, IdentifySourceCode);
+		public static void i(string msg) => PrintWithVisibilityInternal(msg, Code.Info, true, IdentifySourceCode);
+		public static void d(string msg) => PrintWithVisibilityInternal(msg, Code.Debug, true, IdentifySourceCode);
+		public static void v(string msg) => PrintWithVisibilityInternal(msg, Code.Verbose, true, IdentifySourceCode);
 		public static void Assert(bool condition, string message) {
 			if (condition) {
-				PrintWithVisibilityInternal(message, Code.SuccessfulAsserts, true);
+				PrintWithVisibilityInternal(message, Code.SuccessfulAsserts, true, IdentifySourceCode);
 			} else {
-				PrintWithVisibilityInternal(message, Code.Critical, true);
-				// TODO print additional stack info
+				PrintWithVisibilityInternal(message, Code.Critical, true, IdentifySourceCode);
 				if (AssertThrowsException) {
+					StackTrace t = new StackTrace();
+					PrintWithVisibilityInternal(t.ToString(), Code.Critical, true, false);
 					throw new Exception(message);
 				}
 			}
