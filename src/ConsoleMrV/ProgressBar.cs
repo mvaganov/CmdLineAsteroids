@@ -37,7 +37,7 @@ namespace ConsoleMrV {
 					glyph.Letter = '|';
 					++specialIndex;
 				}
-				canvas.SetCharacter(cursor, glyph);
+				canvas.WriteAt(glyph, (int)cursor.x, (int)cursor.y);
 				cursor += increment;
 			}
 		}

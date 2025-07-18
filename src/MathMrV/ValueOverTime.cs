@@ -15,7 +15,7 @@ namespace MathMrV {
 			if (Wrap) {
 				value = WrapValue(value, curve[curve.Count - 1].x - curve[0].x);
 			}
-			int index = Algorithms.binary_search_with_insertion_point(curve, value, vec2 => vec2.x);
+			int index = Algorithms.BinarySearchWithInsertionPoint(curve, value, vec2 => vec2.x);
 			if (index >= 0) {
 				return curve[index].y;
 			}

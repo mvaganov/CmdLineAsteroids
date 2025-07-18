@@ -58,7 +58,7 @@ namespace ConsoleMrV {
 		}
 		static Log() {
 			GenerateVisiblities();
-			File.WriteAllText(LogFile, "");
+			File.WriteAllText(LogFile, DateTime.Now.ToString() + "\n");
 		}
 		public static char UnhighlightChar => Visibilities[0].escapeCode;
 		public static string Unhighlight => Visibilities[0].escapeCode.ToString();

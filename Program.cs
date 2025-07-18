@@ -60,18 +60,31 @@ namespace asteroids {
 			float playerMinThrustDuration = 1f / 2;
 			objects.Add(player);
 			collideList.Add(player);
+			Action playerTriggerAfterDeath = null;
 			postUpdate.Add(PlayerDeathWatch);
 			void PlayerDeathWatch() {
 				if (playerHp <= 0 && player.IsActive) {
 					playerHp = 0;
 					player.IsActive = false;
 					explosion.Emit(100, player.Position, ConsoleColor.Blue, (1, 4), (1, 2));
-					ActionQueue.Instance.EnqueueDelayed(1, () => quit(null));
+					ActionQueue.Instance.EnqueueDelayed(1, () => playerTriggerAfterDeath?.Invoke());
 				}
+			}
+			void RestartPlayer() {
+				playerScore = 0;
+				playerAmmo = 10;
+				playerMaxHp = 10;
+				playerHp = playerMaxHp;
+				playerShootCooldownMs = 50;
+				player.Position = Vec2.Zero;
+				player.Velocity = Vec2.Zero;
+				player.RotationRadians = 0;
+				player.IsActive = true;
 			}
 
 			// camera
 			bool cameraLookAhead = false;
+			float targetScaleY = 1;
 			preDraw.Add(() => {
 				Vec2 halfScreen = graphics.Size / 2;
 				Vec2 screenAnchor = player.Position - halfScreen.Scaled(graphics.Scale);
@@ -87,6 +100,14 @@ namespace asteroids {
 					}
 				} else {
 					graphics.Offset = screenAnchor;
+				}
+				//graphics.PivotAsPercentage = graphics.GetConsolePosition(player.Position).Scaled((1/graphics.Width, 1/graphics.Height));
+				Vec2 scaleChangePerFrame = graphics.Scale * 0.1f;
+				if (graphics.Scale.y + scaleChangePerFrame.y < targetScaleY) {
+					graphics.Scale += scaleChangePerFrame;
+				}
+				if (graphics.Scale.y - scaleChangePerFrame.y > targetScaleY) {
+					graphics.Scale -= scaleChangePerFrame;
 				}
 			});
 
@@ -119,11 +140,12 @@ namespace asteroids {
 				projectile.TypeId = (int)AsteroidType.None;
 			});
 			void DrawSetupProjectile(CommandLineCanvas canvas) => canvas.SetColor(ConsoleColor.Red);
-			postUpdate.Add(() => {
+			postUpdate.Add(AlwaysRotateAllProjectiles);
+			void AlwaysRotateAllProjectiles() {
 				for (int i = 0; i < projectilePool.Count; i++) {
 					projectilePool[i].RotationRadians += Time.DeltaTimeSeconds * projectileRotation;
 				}
-			});
+			}
 
 			// initialize asteroids
 			float asteroidStartRadius = 10;
@@ -143,14 +165,18 @@ namespace asteroids {
 				asteroid.DrawSetup = null;
 				asteroid.TypeId = (int)AsteroidType.None;
 			});
-			int activeAsteroidCount = 10;
+
 			float asteroidMinimumRadiusThatDivides = 3;
 			int asteroidBreakupCount = 3;
-			Vec2 asteroidStartPosition = new Vec2(40, 0);
-			for(int i = 0; i < activeAsteroidCount; i++) {
-				MobileCircle asteroid = asteroidPool.Commission();
-				asteroid.Position = asteroidStartPosition;
-				asteroidStartPosition.RotateRadians(MathF.PI * 2 / activeAsteroidCount);
+			void StartAsteroids() {
+				int activeAsteroidCount = 10;
+				Vec2 asteroidStartPosition = new Vec2(40, 0);
+				for (int i = 0; i < activeAsteroidCount; i++) {
+					MobileCircle asteroid = asteroidPool.Commission();
+					asteroid.Position = asteroidStartPosition;
+					asteroidStartPosition.RotateRadians(MathF.PI * 2 / activeAsteroidCount);
+					asteroid.Velocity = Vec2.RandomDirection;
+				}
 			}
 			void AsteroidDrawSetup(CommandLineCanvas canvas) {
 				canvas.SetColor(ConsoleColor.Gray);
@@ -217,7 +243,7 @@ namespace asteroids {
 			}
 
 			// add acceleration force to bring objects back to center if they stray too far
-			float WorldExtentSize = 50;
+			float WorldExtentSize = 100;
 			Vec2 WorldMin = new Vec2(-WorldExtentSize, -WorldExtentSize);
 			Vec2 WorldMax = new Vec2(WorldExtentSize, WorldExtentSize);
 			postUpdate.Add(BringBackStrayObjects);
@@ -236,10 +262,13 @@ namespace asteroids {
 			void NudgeObjectBackToWorld(MobileObject obj) {
 				Vec2 p = obj.Position;
 				Vec2 v = obj.Velocity;
-				if (p.x < WorldMin.x && v.x < 1) { v.x += Time.DeltaTimeSeconds; }
-				if (p.x > WorldMax.x && v.x > -1) { v.x -= Time.DeltaTimeSeconds; }
-				if (p.y < WorldMin.y && v.y < 1) { v.y += Time.DeltaTimeSeconds; }
-				if (p.y > WorldMin.y && v.y > -1) { v.y -= Time.DeltaTimeSeconds; }
+				const float NudgeStrength = 1;
+				const float MaxNudgeSpeed = 10;
+				if (p.x < WorldMin.x && v.x < MaxNudgeSpeed) { v.x += Time.DeltaTimeSeconds * NudgeStrength; }
+				if (p.x > WorldMax.x && v.x > -MaxNudgeSpeed) { v.x -= Time.DeltaTimeSeconds * NudgeStrength; }
+				if (p.y < WorldMin.y && v.y < MaxNudgeSpeed) { v.y += Time.DeltaTimeSeconds * NudgeStrength; }
+				if (p.y > WorldMax.y && v.y > -MaxNudgeSpeed) { v.y -= Time.DeltaTimeSeconds * NudgeStrength; }
+				obj.Velocity = v;
 			}
 
 			// direction marker, underlay GUI
@@ -255,7 +284,7 @@ namespace asteroids {
 			postDraw.Add(DrawScore);
 			postDraw.Add(DebugDraw);
 			void DrawScore() {
-				graphics.WriteAt($"score: {playerScore}\nammo: {playerAmmo}\nhp: {playerHp}/{playerMaxHp}", (int)graphics.Size.y - 3, 0);
+				graphics.WriteAt($"score: {playerScore}\nammo: {playerAmmo}\nhp: {playerHp}/{playerMaxHp}", 0, (int)graphics.Size.y - 3);
 			}
 			void DebugDraw() {
 				LabelList(projectilePool, "p", ConsoleColor.Magenta);
@@ -281,12 +310,12 @@ namespace asteroids {
 			void quit(KeyInput ki) => running = false;
 			void toggleUpdating(KeyInput ki) => updating = !updating;
 			void zoomIn(KeyInput ki) {
-				if (graphics.Scale.x < 1f / 128) { return; }
-				graphics.Scale /= 1.5f;
+				if (targetScaleY < 1f/128) { return; }
+				targetScaleY /= 1.5f;
 			}
 			void zoomOut(KeyInput ki) {
-				if (graphics.Scale.x > 128) { return; }
-				graphics.Scale *= 1.5f;
+				if (targetScaleY > 128) { return; }
+				targetScaleY *= 1.5f;
 			}
 
 			// player keybinding
@@ -421,6 +450,16 @@ namespace asteroids {
 				};
 				return postCollisionReflection;
 			}
+
+			void RestartGame() {
+				asteroidPool.Clear();
+				projectilePool.Clear();
+				powerupPool.Clear();
+				RestartPlayer();
+				StartAsteroids();
+				playerTriggerAfterDeath = RestartGame;
+			}
+			RestartGame();
 
 			while (running) {
 				// input

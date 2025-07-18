@@ -26,7 +26,7 @@ namespace asteroids {
 			}
 		}
 
-		private void ShowDebugVelocity(CommandLineGraphicsContext graphicsContext) {
+		private void ShowDebugVelocity(CommandLineCanvas graphicsContext) {
 			float speed = Velocity.Magnitude;
 			if (speed == 0) {
 				return;
