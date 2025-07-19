@@ -21,7 +21,8 @@ namespace MathMrV {
 		public override bool Equals(object obj) => obj is Vec2 v && this == v;
 		public override int GetHashCode() => x.GetHashCode() ^ y.GetHashCode();
 		public override string ToString() => $"({x},{y})";
-		public float Magnitude => MathF.Sqrt(X * X + Y * Y);
+		public float MagnitudeSqr => x * x + y * y;
+		public float Magnitude => MathF.Sqrt(MagnitudeSqr);
 		public Vec2 Normal => this / Magnitude;
 		public Vec2 Scaled(Vec2 scale) => new Vec2(x * scale.x, y * scale.y);
 		public Vec2 InverseScaled(Vec2 scale) => new Vec2(x / scale.x, y / scale.y);
@@ -30,6 +31,8 @@ namespace MathMrV {
 		public void Floor() { x = MathF.Floor(x); y = MathF.Floor(y); }
 		public void Ceil() { x = MathF.Ceiling(x); y = MathF.Ceiling(y); }
 		public float Distance(Vec2 other) => (this - other).Magnitude;
+		internal static float Distance(Vec2 a, Vec2 b) => a.Distance(b);
+
 		public static float DegreesToRadians(float degrees) => degrees * MathF.PI / 180;
 		internal Vec2 ToUnitVector() {
 			if (x == 0 && y == 0) return DirectionMaxX;
@@ -57,8 +60,9 @@ namespace MathMrV {
 			return x >= minInclusive.x && y >= minInclusive.y && x < maxExclusive.x && y < maxExclusive.y;
 		}
 		public Vec2 FlippedXY() => new Vec2(y, x);
-		internal Vec2 Perpendicular() => new Vec2(-y, x);
-
+		public Vec2 Perpendicular() => new Vec2(-y, x);
+		public void ClampToInt() { x = (int)x; y = (int)y; }
+		public void RoundToInt() { x = MathF.Round(x); y = MathF.Round(y); }
 		public static float Dot(Vec2 a, Vec2 b) {
 			return a.x * b.x + a.y * b.y;
 		}
@@ -77,6 +81,7 @@ namespace MathMrV {
 		public static Vec2 DirectionMinY = (0, -1);
 		public static Vec2 DirectionMaxY = (0, 1);
 		public static Vec2 NaN = (float.NaN, float.NaN);
+		public bool IsNaN() => float.IsNaN(x) || float.IsNaN(y);
 
 		public static Vec2 RandomDirection => UnitVectorFromDegrees((float)randomGenerator.NextDouble()*360);
 		public static System.Random randomGenerator = new System.Random();

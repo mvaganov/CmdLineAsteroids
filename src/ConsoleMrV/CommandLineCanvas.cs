@@ -131,7 +131,10 @@ namespace ConsoleMrV {
 				}
 			}
 		}
-
+		public void FillRect(Vec2 aabbMin, Vec2 aabbMax) {
+			bool IsInsideRectangle(Vec2 p) => p.x >= aabbMin.x && p.y >= aabbMin.y && p.x <= aabbMax.x && p.y <= aabbMax.y;
+			DrawSupersampledShape(IsInsideRectangle, aabbMin, aabbMax);
+		}
 		public void DrawLine(Vec2 start, Vec2 end, float lineWidth = 0.5f) {
 			lineWidth *= Scale.y;
 			DrawLineUnscaled(start, end, lineWidth);

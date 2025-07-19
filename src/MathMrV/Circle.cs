@@ -2,12 +2,12 @@
 
 namespace MathMrV {
 	public struct Circle {
-		public Vec2 position;
+		public Vec2 center;
 		public float radius;
-		public Vec2 Position { get => position; set => position = value; }
+		public Vec2 Position { get => center; set => center = value; }
 		public float Radius { get => radius; set => radius = value; }
 		public Circle(Vec2 position, float radius) {
-			this.position = position;
+			this.center = position;
 			this.radius = radius;
 		}
 		public static void Draw(CommandLineCanvas canvas, Vec2 pos, float radius) {
@@ -22,23 +22,23 @@ namespace MathMrV {
 			float dy = point.y - position.y;
 			return dx * dx + dy * dy <= radius * radius;
 		}
-		public bool Contains(Vec2 point) => IsInsideCircle(position, radius, point);
+		public bool Contains(Vec2 point) => IsInsideCircle(center, radius, point);
 
-		public void Draw(CommandLineCanvas canvas) => Draw(canvas, position, radius);
-		public bool IsColliding(Circle other) => IsColliding(position, radius, other.position, other.radius);
-		public bool TryGetAABB(out Vec2 min, out Vec2 max) => TryGetAABB(position, radius, out min, out max);
+		public void Draw(CommandLineCanvas canvas) => Draw(canvas, center, radius);
+		public bool IsColliding(Circle other) => IsColliding(center, radius, other.center, other.radius);
+		public bool TryGetAABB(out Vec2 min, out Vec2 max) => TryGetAABB(center, radius, out min, out max);
 		public static bool TryGetCircleCollisionPoints(Circle a, Circle b, out Vec2 pointA, out Vec2 pointB) {
-			Vec2 delta = b.position - a.position;
+			Vec2 delta = b.center - a.center;
 			float dist = delta.Magnitude;
 			float totalRad = a.radius + b.radius;
 			if (dist > totalRad) {
-				pointA = a.position;
-				pointB = b.position;
+				pointA = a.center;
+				pointB = b.center;
 				return false;
 			}
 			Vec2 dir = delta / dist;
-			pointA = a.position + dir * a.radius;
-			pointB = b.position - dir * b.radius;
+			pointA = a.center + dir * a.radius;
+			pointB = b.center - dir * b.radius;
 			return true;
 		}
 		public static bool IsColliding(Vec2 centerA, float radiusA, Vec2 centerB, float radiusB) {

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 
 namespace asteroids {
+	// TODO cellspace partition for collision detection
 	internal class Program {
 		enum AsteroidType { None, Player, Asteroid, Projectile, Powerup }
 		static void Main(string[] args) {
@@ -167,11 +168,18 @@ namespace asteroids {
 			void StartAsteroids() {
 				int activeAsteroidCount = 10;
 				Vec2 asteroidStartPosition = new Vec2(40, 0);
-				for (int i = 0; i < activeAsteroidCount; i++) {
-					MobileCircle asteroid = asteroidPool.Commission();
-					asteroid.Position = asteroidStartPosition;
-					asteroidStartPosition.RotateRadians(MathF.PI * 2 / activeAsteroidCount);
-					asteroid.Velocity = Vec2.RandomDirection;
+				void MakeAsteroidRing() {
+					for (int i = 0; i < activeAsteroidCount; i++) {
+						MobileCircle asteroid = asteroidPool.Commission();
+						asteroid.Position = asteroidStartPosition;
+						asteroidStartPosition.RotateRadians(MathF.PI * 2 / activeAsteroidCount);
+						asteroid.Velocity = Vec2.RandomDirection;
+					}
+				}
+				for (int layers = 0; layers < 1; ++layers) {
+					MakeAsteroidRing();
+					asteroidStartPosition *= 2;
+					activeAsteroidCount *= 2;
 				}
 			}
 			void AsteroidDrawSetup(CommandLineCanvas canvas) {
@@ -280,7 +288,8 @@ namespace asteroids {
 			postDraw.Add(DrawScore);
 			postDraw.Add(DebugDraw);
 			void DrawScore() {
-				graphics.WriteAt($"score: {playerScore}\nammo: {playerAmmo}\nhp: {playerHp}/{playerMaxHp}", 0, (int)graphics.Size.y - 3);
+				graphics.WriteAt($"score: {playerScore}    DT:{Time.DeltaTimeMs}\n" +
+					$"ammo: {playerAmmo}\nhp: {playerHp}/{playerMaxHp}", 0, (int)graphics.Size.y - 3);
 			}
 			void DebugDraw() {
 				LabelList(projectilePool, "p", ConsoleColor.Magenta);

@@ -43,12 +43,12 @@ namespace asteroids {
 
 		public Circle GetCollisionCircleInSpace(int index) {
 			Circle circle = _detailedCollisionCircles[index];
-			circle.Position = Position + circle.position.RotatedRadians(RotationRadians);
+			circle.Position = Position + circle.center.RotatedRadians(RotationRadians);
 			return circle;
 		}
 		public Circle GetBoundingCircleInSpace() {
 			Circle circle = BoundingCircle;
-			circle.Position = Position + circle.position.RotatedRadians(RotationRadians);
+			circle.Position = Position + circle.center.RotatedRadians(RotationRadians);
 			return circle;
 		}
 

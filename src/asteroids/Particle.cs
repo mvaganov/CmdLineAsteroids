@@ -13,7 +13,7 @@ namespace asteroids {
 		public float Lifetime;
 		public float StartSize;
 		public ParticleSystem _particleSystem;
-		public Vec2 Position { get => circle.position; set => circle.position = value; }
+		public Vec2 Position { get => circle.center; set => circle.center = value; }
 		public float Radius { get => circle.Radius; set => circle.Radius = value; }
 		public Vec2 Velocity { get => _velocity; set => _velocity = value; }
 		public bool IsActive { get => !Disabled; set => Disabled = !value; }
