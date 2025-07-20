@@ -12,7 +12,9 @@ namespace asteroids {
 		protected int depth;
 		protected SpacePartition<T> parent;
 		protected List<SpacePartition<T>> subpartition;
-		SpacePartition(Vec2 min, Vec2 max, float minArea, Vec2 columnsRows, SpacePartition<T> parent = null) {
+		public AABB AABB => aabb;
+		public Vec2 Position => aabb.getCenter();
+		public SpacePartition(Vec2 min, Vec2 max, float minArea, Vec2 columnsRows, SpacePartition<T> parent = null) {
 			aabb = new AABB(min, max);
 			this.columnsRows = columnsRows;
 			depth = 0;
@@ -50,14 +52,25 @@ namespace asteroids {
 			}
 		}
 
+		private static ConsoleColor[] collisionSpaceColors = new ConsoleColor[] { ConsoleColor.DarkBlue, ConsoleColor.DarkCyan, ConsoleColor.DarkGreen, ConsoleColor.DarkYellow, ConsoleColor.DarkRed, ConsoleColor.DarkMagenta };
+		private static int consoleCollisionSpaceColorIndex = -1;
+		void NextConsoleCollisionColor(CommandLineCanvas ctx) {
+			if (++consoleCollisionSpaceColorIndex >= collisionSpaceColors.Length) {
+				consoleCollisionSpaceColorIndex = 0;
+			}
+			ctx.SetColor(collisionSpaceColors[consoleCollisionSpaceColorIndex]);
+		}
 		public void draw(CommandLineCanvas ctx, DrawFunction drawElementFunction) {
-			aabb.draw(ctx);
+			if (parent == null) { consoleCollisionSpaceColorIndex = -1; } NextConsoleCollisionColor(ctx);
+			if (drawElementFunction == null) {
+				aabb.draw(ctx);
+			}
 			if (subpartition != null) {
 				for (int i = 0; i < subpartition.Count; i++) {
 					subpartition[i].draw(ctx, drawElementFunction);
 				}
 			}
-			Vec2 center = aabb.getCenter();
+			//Vec2 center = aabb.getCenter();
 			//ctx.fillText(""+this.list.length, center.x, center.y);
 			if (drawElementFunction != null) {
 				for (int i = 0; i < list.Count; ++i) {
@@ -87,6 +100,7 @@ namespace asteroids {
 					}
 				}
 			}
+			// this should not be required... it should bloat the data output.
 			//if (totalFoundPartitions == null) {
 			//	totalFoundPartitions = new List<SpacePartition<T>>() { this };
 			//}

@@ -6,6 +6,8 @@ namespace MathMrV {
 		public float radius;
 		public Vec2 Position { get => center; set => center = value; }
 		public float Radius { get => radius; set => radius = value; }
+		public static Circle NaN = new Circle(Vec2.NaN, float.NaN);
+
 		public Circle(Vec2 position, float radius) {
 			this.center = position;
 			this.radius = radius;

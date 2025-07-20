@@ -434,7 +434,7 @@ namespace asteroids {
 			Action MoveMobilePolygoneOutOf(MobilePolygon poly, CollisionData collision) {
 				int index = collision.self == poly ? collision.colliderIndexSelf :
 				            collision.other == poly ? collision.colliderIndexOther : -1;
-				Circle collidingSubCircle = poly.GetCollisionCircleInSpace(index);
+				Circle collidingSubCircle = poly.GetCollisionCircle(index);
 				return MoveObjectOutOf(poly, collidingSubCircle, collision.point);
 			}
 			Action MoveAsteroidOutOf(MobileCircle asteroid, Vec2 point) {
@@ -466,6 +466,21 @@ namespace asteroids {
 			}
 			RestartGame();
 
+			SpacePartition<ICollidable> collideTree = new SpacePartition<ICollidable>(WorldMin, WorldMax, 256, (9,9));
+			Circle GetCircle(ICollidable collidable) {
+				switch (collidable) {
+					case MobileCircle mc: return mc.Circle;
+					case MobilePolygon mp: return mp.GetBoundingCircle();
+					case IGameObject go: return new Circle(go.Position, 0);
+				}
+				Log.Assert(1 == 0, $"ICollidable type {collidable.GetType().Name}");
+				return Circle.NaN;
+			}
+			void DrawFunctionCollidable(CommandLineCanvas canvas, SpacePartition<ICollidable> spacePartition, ICollidable obj) {
+				Circle c = GetCircle(obj);
+				canvas.DrawLine(spacePartition.Position, c.Position);
+			}
+
 			while (running) {
 				// input
 				keyInput.UpdateKeyInput();
@@ -474,6 +489,7 @@ namespace asteroids {
 				Time.Update();
 				keyInput.TriggerKeyBinding();
 				if (updating) {
+					collideTree.populate(collideList, GetCircle);
 					CollisionLogic.DoCollisionLogic(collideList, collisionRules);
 					objects.ForEach(o => o.Update());
 					postUpdate.ForEach(a => a.Invoke());
@@ -482,11 +498,13 @@ namespace asteroids {
 				}
 
 				// draw
+				collideTree.draw(graphics, null);
 				preDraw.ForEach(a => a.Invoke());
 				objects.ForEach(o => {
 					o.DrawSetup?.Invoke(graphics);
 					o.Draw(graphics);
 				});
+				collideTree.draw(graphics, DrawFunctionCollidable);
 				postDraw.ForEach(a => a.Invoke());
 				graphics.PrintModifiedCharactersOnly();
 				graphics.FinishedRender();
