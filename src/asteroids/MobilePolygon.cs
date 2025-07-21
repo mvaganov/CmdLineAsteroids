@@ -19,7 +19,6 @@ namespace asteroids {
 			polygon = new Polygon(playerPoly);
 			BoundingCircleInLocalSpace = Welzl.GetMinimumCircle(playerPoly);
 		}
-
 		public override void Draw(CommandLineCanvas canvas) {
 			if (!_active) {
 				return;
@@ -46,7 +45,7 @@ namespace asteroids {
 			circle.Position = Position + circle.center.RotatedRadians(RotationRadians);
 			return circle;
 		}
-		public Circle GetBoundingCircle() {
+		public Circle GetCollisionBoundingCircle() {
 			Circle circle = BoundingCircleInLocalSpace;
 			circle.Position = Position + circle.center.RotatedRadians(RotationRadians);
 			return circle;
@@ -62,11 +61,11 @@ namespace asteroids {
 		}
 
 		public CollisionData GetCollision(Circle circle) {
-			if (!GetBoundingCircle().IsColliding(circle)) {
+			if (!GetCollisionBoundingCircle().IsColliding(circle)) {
 				return null;
 			}
 			if (_detailedCollisionCirclesInLocalSpace == null) {
-				return CollisionData.ForCircles(GetBoundingCircle(), circle);
+				return CollisionData.ForCircles(GetCollisionBoundingCircle(), circle);
 			}
 			return GetCollisionInternal(circle);
 		}
@@ -83,17 +82,17 @@ namespace asteroids {
 			return null;
 		}
 		public CollisionData IsColliding(MobilePolygon other) {
-			if (!GetBoundingCircle().IsColliding(other.GetBoundingCircle())) {
+			if (!GetCollisionBoundingCircle().IsColliding(other.GetCollisionBoundingCircle())) {
 				return null;
 			}
 			if (_detailedCollisionCirclesInLocalSpace == null && other._detailedCollisionCirclesInLocalSpace == null) {
-				return MyCollisionWith(other, GetBoundingCircle(), other.GetBoundingCircle());
+				return MyCollisionWith(other, GetCollisionBoundingCircle(), other.GetCollisionBoundingCircle());
 			}
 			if (_detailedCollisionCirclesInLocalSpace == null && other._detailedCollisionCirclesInLocalSpace != null) {
-				return MyCollisionWith(other, other.GetCollisionInternal(GetBoundingCircle()));
+				return MyCollisionWith(other, other.GetCollisionInternal(GetCollisionBoundingCircle()));
 			}
 			if (_detailedCollisionCirclesInLocalSpace != null && other._detailedCollisionCirclesInLocalSpace == null) {
-				return MyCollisionWith(other, GetCollisionInternal(other.GetBoundingCircle()));
+				return MyCollisionWith(other, GetCollisionInternal(other.GetCollisionBoundingCircle()));
 			}
 			for (int c = 0; c < other._detailedCollisionCirclesInLocalSpace.Length; ++c) {
 				for (int i = 0; i < _detailedCollisionCirclesInLocalSpace.Length; ++i) {

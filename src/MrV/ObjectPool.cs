@@ -22,7 +22,7 @@ using System.Collections.Generic;
 /// </summary>
 public class ObjectPool<T> : IList<T> {
 	private List<T> allObjects = new List<T>();
-	private List<int> delayedDecommission = new List<int>();
+	private HashSet<int> delayedDecommission = new HashSet<int>();
 	private int freeObjectCount = 0;
 	/// <summary>
 	/// Used to memory-allocate/marshall a new object
@@ -165,11 +165,15 @@ public class ObjectPool<T> : IList<T> {
 
 	public virtual void Update() {
 		if (delayedDecommission.Count == 0) { return; }
-		delayedDecommission.Sort();
-		for(int i = delayedDecommission.Count - 1; i >= 0; --i) {
-			Decommission(delayedDecommission[i]);
-		}
+		List<int> sortedList = new List<int>(delayedDecommission);
 		delayedDecommission.Clear();
+		sortedList.Sort();
+		for(int i = sortedList.Count - 1; i >= 0; --i) {
+			if (i > 0 && sortedList[i -1] == sortedList[i]) {
+				continue;
+			}
+			Decommission(sortedList[i]);
+		}
 	}
 
 	/// <summary>performs the given delegate on each object in the memory pool</summary>

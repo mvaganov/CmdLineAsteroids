@@ -11,6 +11,8 @@ namespace asteroids {
 		public Vec2 pointOther;
 		public int colliderIndexSelf = -1;
 		public int colliderIndexOther = -1;
+		public List<CollisionLogic.Function> collisionFunctions;
+		public string Name => (self is IGameObject a ? a.Name : "?") + "." + (other is IGameObject b ? b.Name : "?");
 		public void Get<TypeA, TypeB>(out TypeA self, out TypeB other) {
 			self = (TypeA)this.self;
 			other = (TypeB)this.other;
@@ -29,6 +31,14 @@ namespace asteroids {
 			}
 			return null;
 		}
+		public override int GetHashCode() {
+			int hash = 0;
+			if (self != null) { hash ^= self.GetHashCode(); }
+			if (other != null) { hash ^= other.GetHashCode(); }
+			return hash;
+		}
+		public override bool Equals(object obj) => obj is CollisionData cd && Equals(cd);
+		public bool Equals(CollisionData other) => this.self == other.self && this.other == other.other;
 	}
 	public struct CollisionPair {
 		public Type a, b;
@@ -51,9 +61,22 @@ namespace asteroids {
 	public static class CollisionLogic {
 		/// <returns>collision resolution function, null if no collision happened or collision was trivial</returns>
 		public delegate Action Function(CollisionData collision);
-		public static void DoCollisionLogic<T>(IList<T> collidables,
+		public struct ToResolve {
+			public CollisionData collision;
+			public Action resolution;
+			public ToResolve(CollisionData collision, Action resolution) {
+				this.collision = collision;
+				this.resolution = resolution;
+			}
+			public static implicit operator ToResolve((CollisionData collision, Action resolution) tuple) =>
+				new ToResolve(tuple.collision, tuple.resolution);
+			public override int GetHashCode() => collision.GetHashCode();
+			public override bool Equals(object obj) => obj is ToResolve other && Equals(other);
+			public bool Equals(ToResolve other) => collision.Equals(other.collision);
+		}
+		public static List<ToResolve> DoCollisionLogic<T>(IList<T> collidables,
 			Dictionary<CollisionPair, List<Function>> rules) where T : ICollidable {
-			List<Action> collisionResolutions = new List<Action>();
+			List<ToResolve> collisionResolutions = new List<ToResolve>();
 			for (int i = 0; i < collidables.Count; i++) {
 				ICollidable ci = collidables[i];
 				for (int j = i + 1; j < collidables.Count; j++) {
@@ -62,25 +85,33 @@ namespace asteroids {
 					DoCollisionLogicOnPair(cj, ci, rules, collisionResolutions);
 				}
 			}
-			collisionResolutions.ForEach(r => r.Invoke());
+			return collisionResolutions;
 		}
-		private static void DoCollisionLogicOnPair(ICollidable a, ICollidable b,
-			Dictionary<CollisionPair, List<Function>> rules, List<Action> collisionResolutions) {
+		private static CollisionData DoCollisionLogicOnPair(ICollidable a, ICollidable b,
+			Dictionary<CollisionPair, List<Function>> rules, List<ToResolve> collisionResolutions) {
 			if (!rules.TryGetValue(new CollisionPair(a, b), out List<Function> collisionFunctions)) {
-				return;
+				return null;
 			}
 			CollisionData collision = a.IsColliding(b);
 			if (collision == null) {
-				return;
+				return null;
 			}
 			collision.SetParticipants(a, b);
+			collision.collisionFunctions = collisionFunctions;
+			// TODO coordinate CollisionData to avoid duplicates, and execute collisionFunctions after dups are culled.
 			for (int i = 0; i < collisionFunctions.Count; i++) {
 				Function f = collisionFunctions[i];
 				Action collisionResult = f.Invoke(collision);
 				if (collisionResult != null) {
-					collisionResolutions.Add(collisionResult);
+					collisionResolutions.Add((collision, collisionResult));
 				}
 			}
+			return collision;
+		}
+		public static void DoCollisionLogicAndResolve<T>(IList<T> collidables,
+			Dictionary<CollisionPair, List<Function>> rules) where T : ICollidable {
+			List<ToResolve> collisionResolutions = DoCollisionLogic<T>(collidables, rules);
+			collisionResolutions.ForEach(r => r.resolution.Invoke());
 		}
 	}
 }

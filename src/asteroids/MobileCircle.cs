@@ -17,7 +17,7 @@ namespace asteroids {
 			base.Copy(other);
 			circle = other.circle;
 		}
-
+		public Circle GetCollisionBoundingCircle() => circle;
 		public override void Draw(CommandLineCanvas canvas) {
 			if (!_active) return;
 			circle.Draw(canvas);

@@ -78,12 +78,12 @@ namespace MathMrV {
 			min += ins;
 			max -= ins;
 		}
-		public float getWidth() { return max.x - min.x; }
-		public float getHeight() { return max.y - min.y; }
+		public float GetWidth() { return max.x - min.x; }
+		public float GetHeight() { return max.y - min.y; }
 		/** width/height vector */
-		public Vec2 getSize() { return new Vec2(getWidth(), getHeight()); }
+		public Vec2 GetSize() { return new Vec2(GetWidth(), GetHeight()); }
 		public float getArea() {
-			Vec2 size = getSize();
+			Vec2 size = GetSize();
 			return size.x * size.y;
 		}
 		// TODO draw with canvas
@@ -116,7 +116,7 @@ namespace MathMrV {
 			max = r.max;
 		}
 		public override string ToString() {
-			return "[min(" + min.x + "," + min.y + "), max(" + max.x + "," + max.y + "), w/h(" + (int)getWidth() + "," + (int)getHeight() + ")]";
+			return "[min(" + min.x + "," + min.y + "), max(" + max.x + "," + max.y + "), w/h(" + (int)GetWidth() + "," + (int)GetHeight() + ")]";
 		}
 		public Vec2 getCenter() => (min + max) / 2;
 		public bool contains(AABB r) {
@@ -124,7 +124,7 @@ namespace MathMrV {
 				&& min.y <= r.min.y && max.y >= r.max.y;
 		}
 		public AABB GetRectangle() => this;
-		public bool isValid() => getWidth() > 0 && getHeight() > 0;
+		public bool isValid() => GetWidth() > 0 && GetHeight() > 0;
 		/**
 		 * @param r
 		 * @return where this and r overlap
@@ -177,7 +177,7 @@ namespace MathMrV {
 		}
 		/** move this rectangle assuming, this rectangle is the unit grid size */
 		public void gridTranslate(int colTranslate, int rowTranslate) {
-			Vec2 delta = new Vec2(getWidth() * colTranslate, getHeight() * rowTranslate);
+			Vec2 delta = new Vec2(GetWidth() * colTranslate, GetHeight() * rowTranslate);
 			translate(delta);
 		}
 		/** a new rectangle that would be translated, assuming this rectangle is the unit grid size */

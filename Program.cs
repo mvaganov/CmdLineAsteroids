@@ -82,7 +82,8 @@ namespace asteroids {
 			// camera
 			bool cameraLookAhead = false;
 			float targetScaleY = 1;
-			preDraw.Add(() => {
+			preDraw.Add(CameraFollowsPlayer);
+			void CameraFollowsPlayer() {
 				Vec2 halfScreen = graphics.Size / 2;
 				Vec2 screenAnchor = player.Position - halfScreen.Scaled(graphics.Scale);
 				if (cameraLookAhead) {
@@ -106,7 +107,7 @@ namespace asteroids {
 				if (graphics.Scale.y - scaleChangePerFrame.y > targetScaleY) {
 					graphics.Scale -= scaleChangePerFrame;
 				}
-			});
+			}
 
 			// initialize projectiles
 			float projectileScale = 3;
@@ -128,14 +129,22 @@ namespace asteroids {
 				projectile.IsActive = true;
 				objects.Add(projectile);
 				collideList.Add(projectile);
+				NameObjectsByIndex(projectilePool, "");
 			}, projectile => {
 				projectile.IsActive = false;
 				objects.Remove(projectile);
 				collideList.Remove(projectile);
+				NameObjectsByIndex(projectilePool, "");
 			}, projectile => {
 				projectile.DrawSetup = null;
 				projectile.TypeId = (int)AsteroidType.None;
 			});
+			void NameObjectsByIndex<T>(IList<T> objects, string prefix) where T : IGameObject {
+				for(int i = 0; i < objects.Count; ++i) {
+					T obj = objects[i];
+					obj.Name = prefix + i;
+				}
+			}
 			void DrawSetupProjectile(CommandLineCanvas canvas) => canvas.SetColor(ConsoleColor.Red);
 			postUpdate.Add(AlwaysRotateAllProjectiles);
 			void AlwaysRotateAllProjectiles() {
@@ -154,10 +163,12 @@ namespace asteroids {
 				asteroid.IsActive = true;
 				objects.Add(asteroid);
 				collideList.Add(asteroid);
+				NameObjectsByIndex(asteroidPool, "a");
 			}, asteroid => {
 				asteroid.IsActive = false;
 				objects.Remove(asteroid);
 				collideList.Remove(asteroid);
+				NameObjectsByIndex(asteroidPool, "a");
 			}, asteroid => {
 				asteroid.DrawSetup = null;
 				asteroid.TypeId = (int)AsteroidType.None;
@@ -176,7 +187,7 @@ namespace asteroids {
 						asteroid.Velocity = Vec2.RandomDirection;
 					}
 				}
-				for (int layers = 0; layers < 1; ++layers) {
+				for (int layers = 0; layers < 7; ++layers) {
 					MakeAsteroidRing();
 					asteroidStartPosition *= 2;
 					activeAsteroidCount *= 2;
@@ -188,7 +199,7 @@ namespace asteroids {
 			void BreakApartAsteroid(MobileCircle asteroid, MobileObject projectile, Vec2 collisionPosition) {
 				explosion.Emit((int)(asteroid.Radius * asteroid.Radius) + 1, asteroid.Position, ConsoleColor.Gray, (0, asteroid.Radius));
 				if (asteroid.Radius <= asteroidMinimumRadiusThatDivides) {
-					asteroidPool.Decommission(asteroid);
+					asteroidPool.DecommissionDelayed(asteroid);
 					CreatePowerup(projectile, collisionPosition);
 					explosion.Emit(10, collisionPosition, ConsoleColor.Cyan, 0);
 				} else {
@@ -208,10 +219,10 @@ namespace asteroids {
 						newAsteroid.Position = asteroid.Position + points[i];
 						newAsteroid.Velocity = asteroid.Velocity + points[i];
 					}
-					asteroidPool.Decommission(asteroid);
+					asteroidPool.DecommissionDelayed(asteroid);
 				}
 				if (projectile != null && projectile.IsActive) {
-					projectilePool.Decommission(projectile as MobilePolygon);
+					projectilePool.DecommissionDelayed(projectile as MobilePolygon);
 				}
 			}
 
@@ -227,10 +238,12 @@ namespace asteroids {
 				powerup.IsActive = true;
 				objects.Add(powerup);
 				collideList.Add(powerup);
+				NameObjectsByIndex(powerupPool, ".");
 			}, powerup => {
 				powerup.IsActive = false;
 				objects.Remove(powerup);
 				collideList.Remove(powerup);
+				NameObjectsByIndex(powerupPool, ".");
 			}, powerup => {
 				powerup.TypeId = (int)AsteroidType.None;
 				powerup.DrawSetup = null;
@@ -292,17 +305,17 @@ namespace asteroids {
 					$"ammo: {playerAmmo}\nhp: {playerHp}/{playerMaxHp}", 0, (int)graphics.Size.y - 3);
 			}
 			void DebugDraw() {
-				LabelList(projectilePool, "p", ConsoleColor.Magenta);
+				LabelList(projectilePool, ConsoleColor.Magenta);
 				graphics.WriteAt(ConsoleGlyph.Convert("player", ConsoleColor.Green), player.Position);
-				LabelList(asteroidPool, "a", ConsoleColor.DarkYellow);
-				LabelList(powerupPool, "*", ConsoleColor.Green);
+				LabelList(asteroidPool, ConsoleColor.DarkYellow);
+				LabelList(powerupPool, ConsoleColor.Green);
 			}
-			void LabelList<T>(IList<T> objects, string prefix, ConsoleColor textColor) where T : IGameObject {
+			void LabelList<T>(IList<T> objects, ConsoleColor textColor) where T : IGameObject {
 				for (int i = 0; i < objects.Count; i++) {
 					if (!objects[i].IsActive) {
 						continue;
 					}
-					graphics.WriteAt(ConsoleGlyph.Convert(prefix + i, textColor), objects[i].Position);
+					graphics.WriteAt(ConsoleGlyph.Convert(objects[i].Name, textColor), objects[i].Position);
 				}
 			}
 
@@ -344,6 +357,7 @@ namespace asteroids {
 			keyInput.BindKey('j', k => player.Position += Vec2.DirectionMinX);
 			keyInput.BindKey('k', k => player.Position += Vec2.DirectionMaxY);
 			keyInput.BindKey('l', k => player.Position += Vec2.DirectionMaxX);
+			keyInput.BindKey('I', k => playerHp = playerMaxHp = 100000);
 			void playerMove(float normalizedRadian) {
 				player.SmoothRotateTarget(MathF.PI * normalizedRadian, playerAutoRotationSpeedRadianPerSecond);
 				Thrust();
@@ -397,8 +411,11 @@ namespace asteroids {
 					(CollisionData collision) => {
 						collision.Get(out MobilePolygon projectile, out MobileCircle asteroid);
 						if (projectile.TypeId == (byte)AsteroidType.Projectile && asteroid.TypeId == (byte)AsteroidType.Asteroid) {
-							BreakApartAsteroid(asteroid, projectile, projectile.Position);
-							++playerScore;
+							return () => {
+								BreakApartAsteroid(asteroid, projectile, projectile.Position);
+								asteroid.Name = "decomissioned by "+projectile.Name;
+								++playerScore;
+							};
 						}
 						return null;
 					}
@@ -409,22 +426,25 @@ namespace asteroids {
 						if (player.TypeId == (byte)AsteroidType.Player) {
 							switch(circle.TypeId) {
 								case (byte)AsteroidType.Asteroid:
-									float hpLost = circle.Radius;
-									explosion.Emit((int)hpLost*2+1, collision.point, ConsoleColor.Magenta, 2, 1);
-									player.ClearRotation();
-									BreakApartAsteroid(circle, null, collision.point);
-									Action moveAsteroid = MoveAsteroidOutOf(circle, collision.point);
-									Action movePlayer = MoveMobilePolygoneOutOf(player, collision);
 									return () => {
+										float hpLost = circle.Radius;
+										explosion.Emit((int)hpLost*2+1, collision.point, ConsoleColor.Magenta, 2, 1);
+										player.ClearRotation();
+										BreakApartAsteroid(circle, null, collision.point);
+										circle.Name = "decomissioned by Player";
+										Action moveAsteroid = MoveAsteroidOutOf(circle, collision.point);
+										Action movePlayer = MoveMobilePolygoneOutOf(player, collision);
 										moveAsteroid?.Invoke();
 										movePlayer?.Invoke();
 										playerHp -= hpLost;
 									};
 								case (byte)AsteroidType.Powerup:
-									powerupPool.Decommission(circle);
-									playerAmmo += 5;
-									if (++playerHp > playerMaxHp) { playerHp = playerMaxHp; }
-									return null;
+									return () => {
+										powerupPool.DecommissionDelayed(circle);
+										circle.Name = "Absorbed by Player";
+										playerAmmo += 5;
+										if (++playerHp > playerMaxHp) { playerHp = playerMaxHp; }
+									};
 							}
 						}
 						return null;
@@ -466,18 +486,10 @@ namespace asteroids {
 			}
 			RestartGame();
 
-			SpacePartition<ICollidable> collideTree = new SpacePartition<ICollidable>(WorldMin, WorldMax, 256, (9,9));
-			Circle GetCircle(ICollidable collidable) {
-				switch (collidable) {
-					case MobileCircle mc: return mc.Circle;
-					case MobilePolygon mp: return mp.GetBoundingCircle();
-					case IGameObject go: return new Circle(go.Position, 0);
-				}
-				Log.Assert(1 == 0, $"ICollidable type {collidable.GetType().Name}");
-				return Circle.NaN;
-			}
+			SpacePartition<ICollidable> collideTree = new SpacePartition<ICollidable>(WorldMin * 2, WorldMax * 2, 0, (5,5));
+			Circle GetCircle(ICollidable collidable) => collidable.GetCollisionBoundingCircle();
 			void DrawFunctionCollidable(CommandLineCanvas canvas, SpacePartition<ICollidable> spacePartition, ICollidable obj) {
-				Circle c = GetCircle(obj);
+				Circle c = obj.GetCollisionBoundingCircle();//GetCircle(obj);
 				canvas.DrawLine(spacePartition.Position, c.Position);
 			}
 
@@ -489,22 +501,26 @@ namespace asteroids {
 				Time.Update();
 				keyInput.TriggerKeyBinding();
 				if (updating) {
-					collideTree.populate(collideList, GetCircle);
-					CollisionLogic.DoCollisionLogic(collideList, collisionRules);
+					collideTree.Populate(collideList, GetCircle);
+					collideTree.DoCollisionLogicAndResolve(collisionRules);
+					//CollisionLogic.DoCollisionLogicAndResolve(collideList, collisionRules);
 					objects.ForEach(o => o.Update());
 					postUpdate.ForEach(a => a.Invoke());
 					particleSystems.ForEach(ps => ps.Update());
 					ActionQueue.Update();
+					asteroidPool.Update();
+					projectilePool.Update();
+					powerupPool.Update();
 				}
 
 				// draw
-				collideTree.draw(graphics, null);
+				//collideTree.draw(graphics, null);
 				preDraw.ForEach(a => a.Invoke());
 				objects.ForEach(o => {
 					o.DrawSetup?.Invoke(graphics);
 					o.Draw(graphics);
 				});
-				collideTree.draw(graphics, DrawFunctionCollidable);
+				//collideTree.draw(graphics, DrawFunctionCollidable);
 				postDraw.ForEach(a => a.Invoke());
 				graphics.PrintModifiedCharactersOnly();
 				graphics.FinishedRender();

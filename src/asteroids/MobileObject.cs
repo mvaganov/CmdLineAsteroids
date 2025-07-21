@@ -5,9 +5,11 @@ using System;
 
 namespace asteroids {
 	public abstract class MobileObject : IGameObject {
+		protected string _name;
 		protected bool _active = true;
 		protected Vec2 _velocity;
 		protected Action<CommandLineCanvas> _preDraw;
+		public virtual string Name { get => _name; set => _name = value; }
 		public virtual Vec2 Velocity { get => _velocity; set => _velocity = value; }
 		public virtual bool IsActive { get => _active; set => _active = value; }
 		public virtual bool IsVisible { get => IsActive; set => IsActive = value; }
