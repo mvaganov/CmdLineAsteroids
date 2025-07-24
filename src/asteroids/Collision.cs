@@ -1,6 +1,7 @@
 ﻿using MathMrV;
 using System;
 using System.Collections.Generic;
+using static asteroids.CollisionLogic;
 
 namespace asteroids {
 	public class CollisionData {
@@ -38,7 +39,17 @@ namespace asteroids {
 			return hash;
 		}
 		public override bool Equals(object obj) => obj is CollisionData cd && Equals(cd);
-		public bool Equals(CollisionData other) => this.self == other.self && this.other == other.other;
+		public bool Equals(CollisionData other) => this.self == other.self && this.other == other.other && this.point == other.point;
+		public void CalculateCollisionResults(List<ToResolve> out_collisionResolutions) {
+			// TODO organize CollisionData to avoid duplicates, and execute collisionFunctions after dups are culled.
+			for (int i = 0; i < collisionFunctions.Count; i++) {
+				Function f = collisionFunctions[i];
+				Action collisionResult = f.Invoke(this);
+				if (collisionResult != null) {
+					out_collisionResolutions.Add((this, collisionResult));
+				}
+			}
+		}
 	}
 	public struct CollisionPair {
 		public Type a, b;
@@ -74,21 +85,29 @@ namespace asteroids {
 			public override bool Equals(object obj) => obj is ToResolve other && Equals(other);
 			public bool Equals(ToResolve other) => collision.Equals(other.collision);
 		}
-		public static List<ToResolve> DoCollisionLogic<T>(IList<T> collidables,
-			Dictionary<CollisionPair, List<Function>> rules) where T : ICollidable {
-			List<ToResolve> collisionResolutions = new List<ToResolve>();
+		//public static List<ToResolve> DoCollisionLogic<T>(IList<T> collidables,
+		//	Dictionary<CollisionPair, List<Function>> rules) where T : ICollidable {
+		//	List<CollisionData> collisionData = new List<CollisionData>();
+		//	FindCollisions(collidables, rules, collisionData);
+		//	List<ToResolve> collisionResolutions = new List<ToResolve>();
+		//	CalculateCollisionResolution(collisionData, collisionResolutions);
+		//	return collisionResolutions;
+		//}
+		public static void CalculateCollisions<T>(IList<T> collidables,
+			Dictionary<CollisionPair, List<Function>> rules, IList<CollisionData> out_collisionData) where T : ICollidable {
 			for (int i = 0; i < collidables.Count; i++) {
 				ICollidable ci = collidables[i];
 				for (int j = i + 1; j < collidables.Count; j++) {
 					ICollidable cj = collidables[j];
-					DoCollisionLogicOnPair(ci, cj, rules, collisionResolutions);
-					DoCollisionLogicOnPair(cj, ci, rules, collisionResolutions);
+					CollisionData a = DoCollisionLogicOnPair(ci, cj, rules);
+					if (a != null) { out_collisionData.Add(a); }
+					CollisionData b = DoCollisionLogicOnPair(cj, ci, rules);
+					if (b != null) { out_collisionData.Add(b); }
 				}
 			}
-			return collisionResolutions;
 		}
-		private static CollisionData DoCollisionLogicOnPair(ICollidable a, ICollidable b,
-			Dictionary<CollisionPair, List<Function>> rules, List<ToResolve> collisionResolutions) {
+		public static CollisionData DoCollisionLogicOnPair(ICollidable a, ICollidable b,
+			Dictionary<CollisionPair, List<Function>> rules) {
 			if (!rules.TryGetValue(new CollisionPair(a, b), out List<Function> collisionFunctions)) {
 				return null;
 			}
@@ -98,20 +117,23 @@ namespace asteroids {
 			}
 			collision.SetParticipants(a, b);
 			collision.collisionFunctions = collisionFunctions;
-			// TODO coordinate CollisionData to avoid duplicates, and execute collisionFunctions after dups are culled.
-			for (int i = 0; i < collisionFunctions.Count; i++) {
-				Function f = collisionFunctions[i];
-				Action collisionResult = f.Invoke(collision);
-				if (collisionResult != null) {
-					collisionResolutions.Add((collision, collisionResult));
-				}
-			}
 			return collision;
 		}
+		public static void CalculateCollisionResolution(IList<CollisionData> collisionData, List<ToResolve> out_collisionResolutions) {
+			//for(int i = 0; i < collisionData.Count; ++i) {
+			foreach(CollisionData collision in collisionData) {
+				collision.CalculateCollisionResults(out_collisionResolutions);
+			}
+		}
+
 		public static void DoCollisionLogicAndResolve<T>(IList<T> collidables,
 			Dictionary<CollisionPair, List<Function>> rules) where T : ICollidable {
-			List<ToResolve> collisionResolutions = DoCollisionLogic<T>(collidables, rules);
-			collisionResolutions.ForEach(r => r.resolution.Invoke());
+			//List<ToResolve> collisionResolutions = DoCollisionLogic<T>(collidables, rules);
+			List<CollisionData> collisionData = new List<CollisionData>();
+			CalculateCollisions(collidables, rules, collisionData);
+			List<ToResolve> collisionResolutions = new List<ToResolve>();
+			CalculateCollisionResolution(collisionData, collisionResolutions);
+			collisionResolutions.ForEach(cr => cr.resolution.Invoke());
 		}
 	}
 }

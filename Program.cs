@@ -22,7 +22,9 @@ namespace asteroids {
 			List<Action> postUpdate = new List<Action>();
 			bool running = true;
 			bool updating = true;
-			float targetFps = 30;
+			bool visible = true;
+			bool throttle = true;
+			float targetFps = 60;
 			int targetMsDelay = (int)(1000 / targetFps);
 
 			// particle systems
@@ -291,17 +293,19 @@ namespace asteroids {
 			// direction marker, underlay GUI
 			float lineWidth = 1f/2;
 			float lineLength = 20;
-			preDraw.Add(() => {
+			preDraw.Add(ShowPlayerDirection);
+			void ShowPlayerDirection() {
+				if (!visible) { return; }
 				graphics.SetColor(ConsoleColor.DarkGray);
 				Vec2 lineEnd = player.Position + player.Direction * (lineLength * graphics.Scale.y);
 				graphics.DrawLine(player.Position, lineEnd, lineWidth);
-			});
+			}
 
 			// additional labels, overlay GUI
 			postDraw.Add(DrawScore);
 			postDraw.Add(DebugDraw);
 			void DrawScore() {
-				graphics.WriteAt($"score: {playerScore}    DT:{Time.DeltaTimeMs}\n" +
+				graphics.WriteAt($"score: {playerScore}    DT:{Time.DeltaTimeMsAverage}   \n" +
 					$"ammo: {playerAmmo}\nhp: {playerHp}/{playerMaxHp}", 0, (int)graphics.Size.y - 3);
 			}
 			void DebugDraw() {
@@ -322,11 +326,15 @@ namespace asteroids {
 			// initialize key binding
 			keyInput.BindKey((char)27, quit);
 			keyInput.BindKey('p', toggleUpdating);
+			keyInput.BindKey('v', toggleVisible);
+			keyInput.BindKey('t', toggleThrottle);
 			keyInput.BindKey('.', ki => cameraLookAhead = !cameraLookAhead);
 			keyInput.BindKey('-', zoomOut);
 			keyInput.BindKey('=', zoomIn);
 			void quit(KeyInput ki) => running = false;
 			void toggleUpdating(KeyInput ki) => updating = !updating;
+			void toggleVisible(KeyInput ki) => visible = !visible;
+			void toggleThrottle(KeyInput ki) => throttle = !throttle;
 			void zoomIn(KeyInput ki) {
 				if (targetScaleY < 1f/128) { return; }
 				targetScaleY /= 1.5f;
@@ -494,15 +502,19 @@ namespace asteroids {
 			}
 
 			while (running) {
-				// input
 				keyInput.UpdateKeyInput();
+				Update();
+				Draw();
+				if (throttle) {
+					Time.SleepWithoutConsoleKeyPress(targetMsDelay);
+				}
+			}
 
-				// update
+			void Update() {
 				Time.Update();
 				keyInput.TriggerKeyBinding();
 				if (updating) {
-					collideTree.Populate(collideList, GetCircle);
-					collideTree.DoCollisionLogicAndResolve(collisionRules);
+					collideTree.Populate(collideList, GetCircle); collideTree.DoCollisionLogicAndResolve(collisionRules);
 					//CollisionLogic.DoCollisionLogicAndResolve(collideList, collisionRules);
 					objects.ForEach(o => o.Update());
 					postUpdate.ForEach(a => a.Invoke());
@@ -512,20 +524,22 @@ namespace asteroids {
 					projectilePool.Update();
 					powerupPool.Update();
 				}
+			}
 
-				// draw
+			void Draw() {
 				//collideTree.draw(graphics, null);
 				preDraw.ForEach(a => a.Invoke());
-				objects.ForEach(o => {
-					o.DrawSetup?.Invoke(graphics);
-					o.Draw(graphics);
-				});
+				if (visible) {
+					objects.ForEach(o => {
+						o.DrawSetup?.Invoke(graphics);
+						o.Draw(graphics);
+					});
+				}
 				//collideTree.draw(graphics, DrawFunctionCollidable);
 				postDraw.ForEach(a => a.Invoke());
 				graphics.PrintModifiedCharactersOnly();
 				graphics.FinishedRender();
 				Console.SetCursorPosition(0, (int)graphics.Size.y);
-				Time.SleepWithoutConsoleKeyPress(targetMsDelay);
 			}
 		}
 	}
