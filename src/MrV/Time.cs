@@ -18,13 +18,26 @@ namespace MrV {
 		public static long TimeMs => (long)Instance._timer.Elapsed.TotalMilliseconds;
 		public static void Update() => Instance.UpdateSelf();
 		public static void SleepWithoutConsoleKeyPress(int ms) => Instance.ThrottleWithoutConsoleKeyPress(ms);
-		public static long DeltaTimeMsAverage => Instance.CalculateDeltaTimeMsAverage();
-		public long CalculateDeltaTimeMsAverage() {
+		public static float DeltaTimeMsAverage => Instance.CalculateDeltaTimeMsAverage();
+		public static int DeltaTimeSampleCount {
+			get => Instance._deltaTimeMsSamples.Length;
+			set => Instance.SetDeltaTimeSampleSize(value);
+		}
+		public float CalculateDeltaTimeMsAverage() {
 			long sum = 0;
 			for (int i = 0; i < _deltaTimeMsSamples.Length; ++i) {
 				sum += _deltaTimeMsSamples[i];
 			}
-			return sum / _deltaTimeMsSamples.Length;
+			return sum / (float)_deltaTimeMsSamples.Length;
+		}
+		public void SetDeltaTimeSampleSize(int sampleSize) {
+			long avg = (long)CalculateDeltaTimeMsAverage();
+			int oldLen = _deltaTimeMsSamples.Length;
+			Array.Resize(ref _deltaTimeMsSamples, sampleSize);
+			_deltaTimeMsSamplesIndex = oldLen - 1;
+			for(int i = oldLen; i < _deltaTimeMsSamples.Length; ++i) {
+				_deltaTimeMsSamples[i] = avg;
+			}
 		}
 		public Time() {
 			_timer = new Stopwatch();
@@ -40,8 +53,8 @@ namespace MrV {
 			_deltaTimeSeconds = UpdateDeltaSeconds;
 			_lastUpdateTimeSeconds = _timer.Elapsed.TotalSeconds;
 			_lastUpdateTimeMs = _timer.ElapsedMilliseconds;
-			_deltaTimeMsSamples[_deltaTimeMsSamplesIndex++] = _deltaTimeMs;
-			if (_deltaTimeMsSamplesIndex >= _deltaTimeMsSamples.Length) { _deltaTimeMsSamplesIndex = 0; }
+			if (++_deltaTimeMsSamplesIndex >= _deltaTimeMsSamples.Length) { _deltaTimeMsSamplesIndex = 0; }
+			_deltaTimeMsSamples[_deltaTimeMsSamplesIndex] = _deltaTimeMs;
 		}
 		public void ThrottleWithoutConsoleKeyPress(int ms) {
 			long soon = _lastUpdateTimeMs + ms;

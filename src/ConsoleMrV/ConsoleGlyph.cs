@@ -8,7 +8,7 @@ namespace ConsoleMrV {
 			get { return letter; }
 			set {
 				letter = value;
-				if (letter != '\n' && (letter < 32 || letter > 127)) {
+				if (letter != '\n' && (letter < 32 || letter > 126)) {
 					throw new Exception("out of ascii range");
 				}
 			}

@@ -1,9 +1,9 @@
-﻿using MathMrV;
+﻿using asteroids;
+using MathMrV;
 using System;
 using System.Collections.Generic;
-using static asteroids.CollisionLogic;
 
-namespace asteroids {
+namespace collision {
 	public class CollisionData {
 		public ICollidable self;
 		public ICollidable other;
@@ -40,10 +40,10 @@ namespace asteroids {
 		}
 		public override bool Equals(object obj) => obj is CollisionData cd && Equals(cd);
 		public bool Equals(CollisionData other) => this.self == other.self && this.other == other.other && this.point == other.point;
-		public void CalculateCollisionResults(List<ToResolve> out_collisionResolutions) {
+		public void CalculateCollisionResults(List<CollisionLogic.ToResolve> out_collisionResolutions) {
 			// TODO organize CollisionData to avoid duplicates, and execute collisionFunctions after dups are culled.
 			for (int i = 0; i < collisionFunctions.Count; i++) {
-				Function f = collisionFunctions[i];
+				CollisionLogic.Function f = collisionFunctions[i];
 				Action collisionResult = f.Invoke(this);
 				if (collisionResult != null) {
 					out_collisionResolutions.Add((this, collisionResult));

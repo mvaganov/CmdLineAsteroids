@@ -1,12 +1,12 @@
-﻿using ConsoleMrV;
+﻿using collision;
+using ConsoleMrV;
 using MathMrV;
 using MrV;
 using System;
 using System.Collections.Generic;
 
 namespace asteroids {
-	// TODO cellspace partition for collision detection
-	internal class Program {
+	public class Program {
 		enum AsteroidType { None, Player, Asteroid, Projectile, Powerup }
 		static void Main(string[] args) {
 			// initialize system
@@ -24,7 +24,9 @@ namespace asteroids {
 			bool updating = true;
 			bool visible = true;
 			bool throttle = true;
-			float targetFps = 60;
+			bool showSpacePartition = false;
+			bool recycleCollisionDatabse = true;
+			float targetFps = 20;
 			int targetMsDelay = (int)(1000 / targetFps);
 
 			// particle systems
@@ -44,6 +46,7 @@ namespace asteroids {
 			float playerMaxHp = 10;
 			float playerHp = playerMaxHp;
 			ControlledPolygon player = new ControlledPolygon(playerPoly);
+			player.Name = "player";
 			player.TypeId = (int)AsteroidType.Player;
 			player.DrawSetup = g => g.SetColor(ConsoleColor.Blue);
 			player.DirectionMatchesVelocity = true;
@@ -57,8 +60,9 @@ namespace asteroids {
 			float playerAutoRotationSpeedRadianPerSecond = MathF.PI * 4;
 			float playerFreeRotationSpeedRadianPerSecond = MathF.PI * 2;
 			float playerMinThrustDuration = 1f / 2;
-			objects.Add(player);
-			collideList.Add(player);
+			List<MobileObject> playerObjects = new List<MobileObject>() { player };
+			objects.AddRange(playerObjects);
+			collideList.AddRange(playerObjects.ConvertAll(p => (ICollidable)p));
 			Action playerTriggerAfterDeath = null;
 			postUpdate.Add(PlayerDeathWatch);
 			void PlayerDeathWatch() {
@@ -293,8 +297,8 @@ namespace asteroids {
 			// direction marker, underlay GUI
 			float lineWidth = 1f/2;
 			float lineLength = 20;
-			preDraw.Add(ShowPlayerDirection);
-			void ShowPlayerDirection() {
+			preDraw.Add(ShowPlayerDirectionUnderlay);
+			void ShowPlayerDirectionUnderlay() {
 				if (!visible) { return; }
 				graphics.SetColor(ConsoleColor.DarkGray);
 				Vec2 lineEnd = player.Position + player.Direction * (lineLength * graphics.Scale.y);
@@ -302,15 +306,16 @@ namespace asteroids {
 			}
 
 			// additional labels, overlay GUI
-			postDraw.Add(DrawScore);
 			postDraw.Add(DebugDraw);
+			postDraw.Add(DrawScore);
 			void DrawScore() {
 				graphics.WriteAt($"score: {playerScore}    DT:{Time.DeltaTimeMsAverage}   \n" +
 					$"ammo: {playerAmmo}\nhp: {playerHp}/{playerMaxHp}", 0, (int)graphics.Size.y - 3);
 			}
 			void DebugDraw() {
 				LabelList(projectilePool, ConsoleColor.Magenta);
-				graphics.WriteAt(ConsoleGlyph.Convert("player", ConsoleColor.Green), player.Position);
+				LabelList(playerObjects, ConsoleColor.Green);
+				//graphics.WriteAt(ConsoleGlyph.Convert("player", ConsoleColor.Green), player.Position);
 				LabelList(asteroidPool, ConsoleColor.DarkYellow);
 				LabelList(powerupPool, ConsoleColor.Green);
 			}
@@ -328,6 +333,9 @@ namespace asteroids {
 			keyInput.BindKey('p', toggleUpdating);
 			keyInput.BindKey('v', toggleVisible);
 			keyInput.BindKey('t', toggleThrottle);
+			keyInput.BindKey('r', toggleRecycleCollisionDatabase);
+			keyInput.BindKey('u', toggleShowSpacePartition);
+			keyInput.BindKey('y', toggleBigDeltatTimeSampleSize);
 			keyInput.BindKey('.', ki => cameraLookAhead = !cameraLookAhead);
 			keyInput.BindKey('-', zoomOut);
 			keyInput.BindKey('=', zoomIn);
@@ -335,6 +343,15 @@ namespace asteroids {
 			void toggleUpdating(KeyInput ki) => updating = !updating;
 			void toggleVisible(KeyInput ki) => visible = !visible;
 			void toggleThrottle(KeyInput ki) => throttle = !throttle;
+			void toggleShowSpacePartition(KeyInput ki) => showSpacePartition = !showSpacePartition;
+			void toggleRecycleCollisionDatabase(KeyInput ki) => recycleCollisionDatabse = !recycleCollisionDatabse;
+			void toggleBigDeltatTimeSampleSize(KeyInput ki) {
+				if (Time.DeltaTimeSampleCount < 100) {
+					Time.DeltaTimeSampleCount = 200;
+				} else {
+					Time.DeltaTimeSampleCount = 20;
+				}
+			}
 			void zoomIn(KeyInput ki) {
 				if (targetScaleY < 1f/128) { return; }
 				targetScaleY /= 1.5f;
@@ -494,12 +511,13 @@ namespace asteroids {
 			}
 			RestartGame();
 
-			SpacePartition<ICollidable> collideTree = new SpacePartition<ICollidable>(WorldMin * 2, WorldMax * 2, 0, (5,5));
+			SpacePartition<ICollidable> spacePartition = new SpacePartition<ICollidable>(WorldMin * 30, WorldMax * 30, 2, (5,5));
 			Circle GetCircle(ICollidable collidable) => collidable.GetCollisionBoundingCircle();
 			void DrawFunctionCollidable(CommandLineCanvas canvas, SpacePartition<ICollidable> spacePartition, ICollidable obj) {
-				Circle c = obj.GetCollisionBoundingCircle();//GetCircle(obj);
+				Circle c = obj.GetCollisionBoundingCircle();
 				canvas.DrawLine(spacePartition.Position, c.Position);
 			}
+			CollisionDatabase collisionDatabase = new CollisionDatabase();
 
 			while (running) {
 				keyInput.UpdateKeyInput();
@@ -514,7 +532,8 @@ namespace asteroids {
 				Time.Update();
 				keyInput.TriggerKeyBinding();
 				if (updating) {
-					collideTree.Populate(collideList, GetCircle); collideTree.DoCollisionLogicAndResolve(collisionRules);
+					spacePartition.Populate(collideList, GetCircle);
+					spacePartition.DoCollisionLogicAndResolve(collisionRules, recycleCollisionDatabse?collisionDatabase:null);
 					//CollisionLogic.DoCollisionLogicAndResolve(collideList, collisionRules);
 					objects.ForEach(o => o.Update());
 					postUpdate.ForEach(a => a.Invoke());
@@ -527,7 +546,9 @@ namespace asteroids {
 			}
 
 			void Draw() {
-				//collideTree.draw(graphics, null);
+				if (showSpacePartition) {
+					spacePartition.draw(graphics, null);
+				}
 				preDraw.ForEach(a => a.Invoke());
 				if (visible) {
 					objects.ForEach(o => {
@@ -535,7 +556,7 @@ namespace asteroids {
 						o.Draw(graphics);
 					});
 				}
-				//collideTree.draw(graphics, DrawFunctionCollidable);
+				//spacePartition.draw(graphics, DrawFunctionCollidable);
 				postDraw.ForEach(a => a.Invoke());
 				graphics.PrintModifiedCharactersOnly();
 				graphics.FinishedRender();

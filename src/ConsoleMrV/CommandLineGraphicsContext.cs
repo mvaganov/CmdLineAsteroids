@@ -1,6 +1,5 @@
 ﻿using MathMrV;
 using System;
-using System.Drawing;
 
 namespace ConsoleMrV {
 	/// <summary>
@@ -18,7 +17,7 @@ namespace ConsoleMrV {
 			get => (_printOffsetCol, _printOffsetRow);
 			set { _printOffsetRow = (int)value.y; _printOffsetCol = (int)value.x; }
 		}
-		public Vec2 Size => new Point(Width, Height);
+		public Vec2 Size => new Vec2(Width, Height);
 
 		public ConsoleGlyph this[int x, int y] {
 			get => _currentBuffer[x, y];
@@ -53,9 +52,9 @@ namespace ConsoleMrV {
 			}
 		}
 
-		public Point WriteAt(string text, int col, int row) => WriteAt(ConsoleGlyph.Convert(text), col, row);
-		public Point WriteAt(ConsoleGlyph[] text, int col, int row) => WriteAt(text, col, row, false);
-		public Point WriteAt(ConsoleGlyph[] text, int col, int row, bool alsoUseBackground) {
+		public Vec2 WriteAt(string text, int col, int row) => WriteAt(ConsoleGlyph.Convert(text), col, row);
+		public Vec2 WriteAt(ConsoleGlyph[] text, int col, int row) => WriteAt(text, col, row, false);
+		public Vec2 WriteAt(ConsoleGlyph[] text, int col, int row, bool alsoUseBackground) {
 			for (int i = 0; i < text.Length; i++) {
 				ConsoleGlyph g = text[i];
 				switch (g.Letter) {
@@ -63,7 +62,7 @@ namespace ConsoleMrV {
 					default: WriteAt(g, col, row, alsoUseBackground); ++col; break;
 				}
 			}
-			return new Point(col, row);
+			return new Vec2(col, row);
 		}
 		public void WriteAt(ConsoleGlyph glyph, int col, int row) => WriteAt(glyph, col, row, true);
 		public void WriteAt(ConsoleGlyph glyph, int col, int row, bool alsoUseGlyphBackground) {

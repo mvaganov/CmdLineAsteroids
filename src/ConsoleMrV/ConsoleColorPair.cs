@@ -5,7 +5,7 @@ using System;
 namespace ConsoleMrV {
 #if ConsoleColorPair_nybbles
 	/// <summary>
-	/// use 8 bits for entire structure.
+	/// use 8 bits for entire structure. probably slow, because of extra bitwise operations.
 	/// </summary>
 	public struct ConsoleColorPair {
 		private byte data;
@@ -22,7 +22,7 @@ namespace ConsoleMrV {
 	/// <summary>
 	/// use 16 bits for entire structure.
 	/// potentially useful if TTY console supports 256 colors.
-	/// faster than using bitwise operations
+	/// faster than using bitwise operations.
 	/// </summary>
 	public struct ConsoleColorPair {
 		private byte _fore, _back;
@@ -34,7 +34,7 @@ namespace ConsoleMrV {
 		}
 #else
 	/// <summary>
-	/// use default enum size for each color component, likely 64 bits total
+	/// use default enum size for each color component, likely 64 bits total.
 	/// </summary>
 	public struct ConsoleColorPair {
 		ConsoleColor fore, back;

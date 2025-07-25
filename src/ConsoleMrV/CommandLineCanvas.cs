@@ -1,20 +1,19 @@
 ﻿using MathMrV;
 using System;
-using System.Drawing;
 
 namespace ConsoleMrV {
 	/// <summary>
 	/// double-buffered 2D canvas of console glyphs, can scroll, zoom, and draw primitives
 	/// </summary>
 	public class CommandLineCanvas : CommandLineGraphicsContext {
-		private Vec2 _scale;
-		private Vec2 _originOffsetULCorner;
-		private Vec2 _pivotAsPercentage; // percentage, for zoom around a target
-		public ConsoleGlyph[] AntiAliasedGradient;
 		/// <summary>
 		/// map of color gradients per console color, for antialiased drawing
 		/// </summary>
 		public static ConsoleGlyph[][] AntiAliasedGradientPerColor;
+		public ConsoleGlyph[] AntiAliasedGradient;
+		private Vec2 _scale;
+		private Vec2 _originOffsetULCorner;
+		private Vec2 _pivotAsPercentage; // percentage, for zoom around a target
 
 		public Vec2 Scale {
 			get => _scale;
