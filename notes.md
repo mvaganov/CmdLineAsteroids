@@ -6,6 +6,8 @@
 
 `voice`
 This is a tutorial teaching how to build a real-time simulation in C#, which can simulate basic physics and object interactions.
+As a computer science teacher and professional developer, I'll also offer advice as best practices.
+Game Development a difficult kind of programming, so this exercice will be an excellent example to discuss engineering best practices.
 
 `scene`
 demo reel of the asteroids game
@@ -71,7 +73,7 @@ Lets begin. Please pause the tutorial to attempt these same steps yourself. I re
 it will help you learn this content.
 
 `scene`
-     practice is the price for understanding.
+	 practice is the price for understanding.
 understanding is the price for power in the computer.
 
 `voice`
@@ -163,7 +165,24 @@ I apologize for speeding it up. Please pause and rewind the video yourself as ne
 ```
 
 `voice`
-a 2 dimensional vector is a physics and math concept, with plenty of tutorials on the internet. One is linked in the description
+a 2 dimensional vector is a physics and math concept. The basic premise is:
+
+`scene`
+TODO diagram for each line
+
+locations in space can be fully described by position along each dimension.
+Point A can be at a known location.
+Point B can be at another location.
+The difference between A and B can also be described as a Vector, by subtracting the components of Point A from point B. This is typically called the Delta.
+The distance between A and B can be calculated by doing the pythagorean theorum on the delta. This is typically called the Magnitude.
+The direction that point B is from point A can be calculated by dividing the Delta's components by the Magnitude. This converts Delta to a point on a Unit Circle. This value is also called a Normal.
+The Normal's X and Y components correspond to the Cosine and Sine of the angle between the line AB and another line going positive along the X axis.
+This Normal version of an angle can also be used for rotation calculations.
+The perpendicular angle can be determined by swapping the X and negative Y components into another vector.
+The alignment of one vector with another can be calculated by a math operation called a Dot Product.
+These mathematical relationships help us determine collision of objects, and resolve a variety of physics interactions.
+
+There are plenty of tutorials on the internet about 2D vectors. One is linked in the description
 `add to description` Two dimensional vector concept tutorial https://youtu.be/j6RI6IWd5ZU
 
 This implementation includes the addition and subtraction operators, and also implicit tuple casting.
@@ -247,17 +266,65 @@ it has a conditional in the inner loop testing against the equation of a circle.
 		}
 ```
 
+`voice`
+the circle is more interesting than the rectangle, so I'll spend a bit more time testing it.
 
-* the circle is more interesting than the rectangle, so I'll spend a bit more time testing it.
-* I want to be able to play with the position and radius. I'll add some code to read console input, and redraw the app
+`scene`
+run the app to test
+
+`voice`
+here is a basic interactive loop, where we can play with the circle values
+
+this is already turning into a game engine.
+a game engine has 4 main regions: initializationm, draw, input, and update
+
+`scene`
 ```
+		static void Main(string[] args) {
+			// initialization
+			bool running = true;
+			Vec2 position = (18,12);
+			float radius = 10;
+			float moveIncrement = 0.125f;
+			char input;
+			while (running) {
+				Draw();
+				ProcessInput();
+				Update();
+			}
+			void Draw() {
+				DrawCircle('.', position, radius);
+			}
+			void ProcessInput() {
+				input = Console.ReadKey().keyChar;
+			}
+			void Update() {
+				switch(input) {
+				case 'w': position.y -= moveIncrement; break;
+				case 'a': position.x -= moveIncrement; break;
+				case 's': position.y += moveIncrement; break;
+				case 'd': position.x += moveIncrement; break;
+				case 'e': radius += moveIncrement; break;
+				case 'r': radius -= moveIncrement; break;
+				case (char)27: running = false; break;
+				}
+			}
+		}
 ```
-* this is already turning into a game engine.
-* we have our core main loop, with draw code, input gathering code, and logic to update data too.
-  * these three sections will continue to get flushed out during this tutorial
-* draw the circle changing radius and position in real time, using user input
-* notice the flickering
-* drawing in the command line is actually really slow. lets implement a timer to see how long it takes to render things
+C# enables us to create local functions, which help us name and organize our code.
+many programmers, myself included, consider it good programming style to use small functions, with descriptive names, and only one or two levels of indentation.
+lets run this after refactoring to make sure it still works
+
+`scene`
+run again
+
+`voice`
+notice the flickering
+drawing a character in the command line is actually really slow.
+lets implement a timer to see how long it takes to render things
+and let's put the key input behind a check, so it doesn't block the game loop.
+
+`scene`
 ```
 			Stopwatch timer = new Stopwatch();
 			// ...
@@ -267,9 +334,69 @@ it has a conditional in the inner loop testing against the equation of a circle.
 				Console.WriteLine($"{timer.ElapsedMilliseconds}   ");
 				// ...
 ```
-* //create a graphics context for dirty-pixel optimization
-* notice the flickering. that flickering is also a source of performance problems.
-* we can significantly reduce the flickering by only redrawing characters that change between frames.
+
+my computer is pretty fast, but this is really slow. it looks like it's running at around 10 frames per second.
+notice the flickering. that flickering indicates a performance problem.
+
+the code that claculates timing feels pretty bad, so before we continue, I want to implement a time-keeping class
+`scene`
+Time.cs
+
+```
+namespace MrV {
+	/// <summary>
+	/// Keeps track of timing specifically for frame-based update in a game loop.
+	/// Maintains values for time as Milliseconds and Floating point.
+	/// <list type="bullet">
+	/// <item>Uses <see cref="Stopwatch"/> as cannonical timer implementation</item>
+	/// <item>Floating point values are convenient for physics calculations</item>
+	/// <item>Floading point timestamps are stored internally as doubles for better precision</item>
+	/// <item>Time is also calculated in milliseconds, since floating points become less accurate as values increase</item>
+	/// </list>
+	/// </summary>
+	public partial class Time {
+		private static Time _instance;
+		private long _deltaTimeMs;
+		private long _lastUpdateTimeMs;
+		private float _deltaTimeSeconds;
+		private double _lastUpdateTimeSeconds;
+		private Stopwatch _timer;
+		public static Time Instance => _instance != null ? _instance : _instance = new Time();
+		public static long DeltaTimeMs => Instance._deltaTimeMs;
+		public static float DeltaTimeSeconds => Instance._deltaTimeSeconds;
+		public static double TimeSeconds => Instance._timer.Elapsed.TotalSeconds;
+		public static long TimeMs => (long)Instance._timer.Elapsed.TotalMilliseconds;
+		public static void Update() => Instance.UpdateSelf();
+		public static void SleepWithoutConsoleKeyPress(int ms) => Instance.ThrottleUpdate(ms, ()=>Console.KeyAvailable);
+		public Time() {
+			_timer = new Stopwatch();
+			_timer.Start();
+			_lastUpdateTimeSeconds = _timer.Elapsed.TotalSeconds;
+			_lastUpdateTimeMs = _timer.ElapsedMilliseconds;
+			UpdateSelf();
+		}
+		private long UpdateDeltaMs => _timer.ElapsedMilliseconds - _lastUpdateTimeMs;
+		private float UpdateDeltaSeconds => (float)(_timer.Elapsed.TotalSeconds - _lastUpdateTimeSeconds);
+		public void UpdateSelf() {
+			_deltaTimeMs = UpdateDeltaMs;
+			_deltaTimeSeconds = UpdateDeltaSeconds;
+			_lastUpdateTimeSeconds = _timer.Elapsed.TotalSeconds;
+			_lastUpdateTimeMs = _timer.ElapsedMilliseconds;
+		}
+		public void ThrottleUpdate(int ms, Func<bool> interruptSleep = null) {
+			long soon = _lastUpdateTimeMs + ms;
+			while((interruptSleep == null || !interruptSleep.Invoke()) && _timer.ElapsedMilliseconds < soon) {
+				System.Threading.Thread.Sleep(1);
+			}
+		}
+	}
+}
+```
+
+`voice`
+// TODO explain Time.cs
+
+we can significantly reduce the flickering by only redrawing characters that change between frames.
 * to do that, we need to be able to querey what the current frame looks like, and what the previous frame looked like
 ```
 ```

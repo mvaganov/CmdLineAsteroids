@@ -24,7 +24,7 @@ namespace ConsoleMrV {
 		}
 		public Vec2 PivotAsPercentage { get => _pivotAsPercentage; set { _pivotAsPercentage = value; } }
 		public Vec2 Offset { get => _originOffsetULCorner; set => _originOffsetULCorner = value; }
-		private static Vec2 GetNextOriginOffsetAfterScale(Point size, Vec2 ulCornerOrigin, Vec2 currentScale,
+		private static Vec2 GetNextOriginOffsetAfterScale(Vec2 size, Vec2 ulCornerOrigin, Vec2 currentScale,
 		Vec2 nextScale, Vec2 pivotAsPercentage) {
 			Vec2 currentPivotOffset = new Vec2(pivotAsPercentage.X * size.X * currentScale.X, 
 			                                   pivotAsPercentage.Y * size.Y * currentScale.Y);
