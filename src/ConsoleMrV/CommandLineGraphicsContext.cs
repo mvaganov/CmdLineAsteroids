@@ -1,39 +1,25 @@
-﻿using MathMrV;
+﻿#define IN_COLOR
+using MathMrV;
 using System;
 
 namespace ConsoleMrV {
-	/// <summary>
-	/// double-buffered 2D array for drawing to the command line
-	/// </summary>
+#if IN_COLOR
 	public class CommandLineGraphicsContext {
 		protected ConsoleGlyph[,] _currentBuffer;
 		protected ConsoleGlyph[,] _previousBuffer;
-		protected int _printOffsetRow;
-		protected int _printOffsetCol;
-		public int Width;
-		public int Height;
-
-		public Vec2 PrintOffset {
-			get => (_printOffsetCol, _printOffsetRow);
-			set { _printOffsetRow = (int)value.y; _printOffsetCol = (int)value.x; }
-		}
+		public int Width => _currentBuffer.GetLength(0);
+		public int Height => _currentBuffer.GetLength(1);
 		public Vec2 Size => new Vec2(Width, Height);
-
 		public ConsoleGlyph this[int x, int y] {
 			get => _currentBuffer[x, y];
 			set => _currentBuffer[x, y] = value;
 		}
-
-		public CommandLineGraphicsContext(int width, int height, int offsetCol, int offsetRow) {
+		public CommandLineGraphicsContext(int width, int height) {
 			SetSize(width, height);
-			_printOffsetRow = offsetRow;
-			_printOffsetCol = offsetCol;
 		}
 		public void SetSize(int width, int height) {
 			ResizeBuffer(ref _previousBuffer, width, height);
 			ResizeBuffer(ref _currentBuffer, width, height);
-			Width = width;
-			Height = height;
 		}
 		private static void ResizeBuffer(ref ConsoleGlyph[,] buffer, int width, int height) {
 			ConsoleGlyph[,] oldBuffer = buffer;
@@ -75,10 +61,10 @@ namespace ConsoleMrV {
 			_currentBuffer[col, row] = glyph;
 		}
 		bool IsValidCoordinate(int x, int y) => x >= 0 && x < Width && y >= 0 && y < Height;
-		public static void PrintBuffer(ConsoleGlyph[,] buffer, int minX, int minY) {
+		public static void PrintBuffer(ConsoleGlyph[,] buffer) {
 			int height = buffer.GetLength(0), width = buffer.GetLength(1);
 			for (int row = 0; row < height; ++row) {
-				Console.SetCursorPosition(minX, minY + row);
+				Console.SetCursorPosition(0, row);
 				for (int col = 0; col < width; ++col) {
 					ConsoleGlyph g = buffer[row, col];
 					g.ApplyColor();
@@ -87,22 +73,19 @@ namespace ConsoleMrV {
 			}
 			ConsoleGlyph.Default.ApplyColor();
 		}
-		public virtual void PrintUnoptimized() => PrintBuffer(_currentBuffer, _printOffsetCol, _printOffsetRow);
+		public virtual void PrintUnoptimized() => PrintBuffer(_currentBuffer);
 		public virtual void PrintModifiedCharactersOnly() {
 			bool cursorInCorrectPlace;
-			int x, y;
 			ConsoleColorPair oldColors = ConsoleColorPair.Current;
 			for (int row = 0; row < Height; ++row) {
 				cursorInCorrectPlace = false;
 				for (int col = 0; col < Width; ++col) {
 					if (_currentBuffer[col, row] != _previousBuffer[col, row]) {
-						x = col + _printOffsetCol;
-						y = row + _printOffsetRow;
-						if (x < 0 || y < 0 || x >= Console.BufferWidth || y >= Console.BufferHeight) {
+						if (col < 0 || row < 0 || col >= Console.BufferWidth || row >= Console.BufferHeight) {
 							cursorInCorrectPlace = false;
 						} else {
 							if (!cursorInCorrectPlace) {
-								Console.SetCursorPosition(x, y);
+								Console.SetCursorPosition(col, row);
 							}
 							ConsoleGlyph g = _currentBuffer[col, row];
 							g.ApplyColor();
@@ -141,4 +124,89 @@ namespace ConsoleMrV {
 		/// </summary>
 		public void SetDirty() => Clear(_previousBuffer, ConsoleGlyph.Empty);
 	}
+#else
+	public class CommandLineGraphicsContext {
+		protected char[,] _currentBuffer;
+		protected char[,] _previousBuffer;
+		public int Width => _currentBuffer.GetLength(0);
+		public int Height => _currentBuffer.GetLength(1);
+		public Vec2 Size => new Vec2(Width, Height);
+		public char this[int x, int y] {
+			get => _currentBuffer[x, y];
+			set => _currentBuffer[x, y] = value;
+		}
+		public CommandLineGraphicsContext(int width, int height) {
+			SetSize(width, height);
+		}
+		public void SetSize(int width, int height) {
+			_previousBuffer = new char[width, height];
+			_currentBuffer = new char[width, height];
+		}
+		public Vec2 WriteAt(string text, int col, int row) {
+			for (int i = 0; i < text.Length; i++) {
+				char letter = text[i];
+				switch (letter) {
+					case '\n': col = 0; ++row; break;
+					default: WriteAt(letter, col, row); ++col; break;
+				}
+			}
+			return new Vec2(col, row);
+		}
+		public void WriteAt(char glyph, int col, int row) {
+			if (!IsValidCoordinate(col, row)) {
+				return;
+			}
+			_currentBuffer[col, row] = glyph;
+		}
+		bool IsValidCoordinate(int x, int y) => x >= 0 && x < Width && y >= 0 && y < Height;
+		public static void PrintBuffer(char[,] buffer) {
+			int height = buffer.GetLength(0), width = buffer.GetLength(1);
+			for (int row = 0; row < height; ++row) {
+				Console.SetCursorPosition(0, row);
+				for (int col = 0; col < width; ++col) {
+					Console.Write(buffer[row, col]);
+				}
+			}
+		}
+		public virtual void PrintUnoptimized() => PrintBuffer(_currentBuffer);
+		public virtual void PrintModifiedCharactersOnly() {
+			bool cursorInCorrectPlace;
+			for (int row = 0; row < Height; ++row) {
+				cursorInCorrectPlace = false;
+				for (int col = 0; col < Width; ++col) {
+					if (_currentBuffer[col, row] != _previousBuffer[col, row]) {
+						if (col < 0 || row < 0 || col >= Console.BufferWidth || row >= Console.BufferHeight) {
+							cursorInCorrectPlace = false;
+						} else {
+							if (!cursorInCorrectPlace) {
+								Console.SetCursorPosition(col, row);
+							}
+							Console.Write(_currentBuffer[col, row]);
+							cursorInCorrectPlace = true;
+						}
+					} else {
+						cursorInCorrectPlace = false;
+					}
+				}
+			}
+		}
+		public void FinishedRender() {
+			SwapBuffers();
+			Clear();
+		}
+		public void SwapBuffers() {
+			char[,] swap = _currentBuffer;
+			_currentBuffer = _previousBuffer;
+			_previousBuffer = swap;
+		}
+		public void Clear() => Clear(_currentBuffer, ' ');
+		public void Clear(char[,] buffer, char background) {
+			for (int row = 0; row < Height; ++row) {
+				for (int col = 0; col < Width; ++col) {
+					buffer[col, row] = background;
+				}
+			}
+		}
+	}
+#endif
 }

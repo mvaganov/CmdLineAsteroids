@@ -4,58 +4,200 @@ using System;
 using System.Collections.Generic;
 
 namespace collision {
+	/// <summary>
+	/// Breaks up the world into chunks, like a quad tree or octree.
+	/// Can break up space into column*row branches, creating a more shallow tree for less recursion costs.
+	/// </summary>
+	/// <typeparam name="T"></typeparam>
 	public class SpacePartition<T> {
-		public delegate void DrawFunction(CommandLineCanvas canvas, SpacePartition<T> spacePartition, T obj);
-		protected AABB aabb;
-		protected Vec2 columnsRows;
-		protected int depth;
-		/// <summary>
-		/// null for root
-		/// </summary>
-		protected SpacePartition<T> parent;
-		/// <summary>
-		/// null for branche nodes
-		/// </summary>
-		protected List<T> list;
-		/// <summary>
-		/// null for leaf nodes
-		/// </summary>
-		protected SpacePartition<T>[,] subpartition;
-		public AABB AABB => aabb;
-		public Vec2 Position => aabb.getCenter();
-		public SpacePartition(Vec2 min, Vec2 max, int treeDepth, Vec2 columnsRows, SpacePartition<T> parent = null) {
-			aabb = new AABB(min, max);
-			this.columnsRows = columnsRows;
-			depth = 0;
-			this.parent = parent;
-			while (parent != null) {
-				++depth;
-				parent = parent.parent;
-			}
-			//if (depth > 3) {
-			//	return;
-			//}
-			if (treeDepth >= 0) {
-				createSubPartition(treeDepth);
+		protected SpacePartitionCell<T> root;
+		protected Mem mem = new Mem();
+		public class Mem {
+			public ObjectPool<SpacePartitionCell<T>> cellPool = new ObjectPool<SpacePartitionCell<T>>();
+			public ObjectPool<List<T>> elementListPool = new ObjectPool<List<T>>();
+			public ObjectPool<SpacePartitionCell<T>[,]> branchPool = new ObjectPool<SpacePartitionCell<T>[,]>();
+		}
+		public SpacePartition(Vec2 min, Vec2 max, byte treeDepth, byte columns, byte rows, SpacePartitionCell<T>.ConvertElementToCircleDelegate convertElementToCircle) {
+			mem.cellPool.Setup(CreateCell, CommissionCell, DecommissionCell, DestroyCell);
+			mem.elementListPool.Setup(() => new List<T>(), l => l.Clear());
+			mem.branchPool.Setup(() => new SpacePartitionCell<T>[rows, columns]);
+			root = mem.cellPool.Commission();
+			root.Set(min, max, treeDepth, columns, rows, convertElementToCircle);
+		}
+		private SpacePartitionCell<T> CreateCell() => new SpacePartitionCell<T>(Vec2.Zero, Vec2.Zero, 0, 0, 0, null, null);
+		private void CommissionCell(SpacePartitionCell<T> cell) { }
+		private void DecommissionCell(SpacePartitionCell<T> cell) { }
+		private void DestroyCell(SpacePartitionCell<T> cell) { }
+		public Vec2 Position => root.Position;
+		public void Populate(IEnumerable<T> collideList) {
+			root.Populate(collideList, mem);
+			EnsureTrueParent();
+		}
+		public void DoCollisionLogicAndResolve(Dictionary<CollisionPair, List<CollisionLogic.Function>> collisionRules, CollisionDatabase collisionDatabase) {
+			root.DoCollisionLogicAndResolve(collisionRules, collisionDatabase);
+		}
+		private void EnsureTrueParent() {
+			while(root.Parent != null) {
+				root = root.Parent;
 			}
 		}
 
-		private void createSubPartition(int treeDepth) {
-			int columns = (int)columnsRows.x;
-			int rows = (int)columnsRows.y;
+		internal void Draw(CommandLineCanvas graphics, SpacePartitionCell<T>.DrawCellObjectsOnCanvasDelegate drawFunction) {
+			root.Draw(graphics, drawFunction);
+			graphics.WriteAt($"cells: {mem.cellPool.Count}", 0, 0);
+		}
+	}
+	public class SpacePartitionCell<T> {
+		public delegate Circle ConvertElementToCircleDelegate(T obj);
+		public delegate void DrawCellObjectsOnCanvasDelegate(CommandLineCanvas canvas, SpacePartitionCell<T> spacePartition, T obj);
+		/// <summary>
+		/// Area of this <see cref="SpacePartitionCell{T}"/>
+		/// </summary>
+		protected AABB aabb;
+		/// <summary>
+		/// How to split this <see cref="SpacePartitionCell{T}"/>
+		/// </summary>
+		protected byte rows, columns;
+		/// <summary>
+		/// How many times this <see cref="SpacePartitionCell{T}"/> can split
+		/// </summary>
+		protected byte availableDepth;
+		/// <summary>
+		/// How many elements are required to trigger a split
+		/// </summary>
+		protected byte maxElementsPerCell = 8;
+		/// <summary>
+		/// Function used to convert an element to a circle
+		/// </summary>
+		protected ConvertElementToCircleDelegate convertElementToCircle;
+		/// <summary>
+		/// null for root
+		/// </summary>
+		protected SpacePartitionCell<T> parent;
+		/// <summary>
+		/// null for branch nodes
+		/// </summary>
+		protected List<T> elements;
+		/// <summary>
+		/// null for leaf nodes. [row,column]
+		/// </summary>
+		protected SpacePartitionCell<T>[,] subPartition;
+		public AABB AABB => aabb;
+		public Vec2 Position => aabb.GetCenter();
+		public SpacePartitionCell<T> Parent => parent;
+		public SpacePartitionCell(Vec2 min, Vec2 max, byte treeDepth, byte columns, byte rows,
+		ConvertElementToCircleDelegate convertElementToCircle, SpacePartitionCell<T> parent = null) {
+			Set(min, max, treeDepth, columns, rows, convertElementToCircle);
+		}
+		public void Set(Vec2 min, Vec2 max, byte treeDepth, byte columns, byte rows,
+		ConvertElementToCircleDelegate convertElementToCircle, SpacePartitionCell<T> parent = null) {
+			aabb = new AABB(min, max);
+			this.availableDepth = treeDepth;
+			this.columns = columns;
+			this.rows = rows;
+			this.convertElementToCircle = convertElementToCircle;
+			this.parent = parent;
+		}
+
+		private void Split(SpacePartition<T>.Mem mem, Func<int,int,SpacePartitionCell<T>> getExistingCellAtColumnRow = null) {
+			if (availableDepth == 0) {
+				throw new Exception("cannot split, already at zero available depth");
+			}
 			Vec2 size = aabb.GetSize();
 			Vec2 cellSize = new Vec2(size.x / columns, size.y / rows);
-			subpartition = new SpacePartition<T>[rows,columns];
-			Vec2 cursor = aabb.min;
+			subPartition = mem.branchPool.Commission();
+			Vec2 cursor = aabb.Min;
 			for (int r = 0; r < rows; ++r) {
-				cursor.x = aabb.min.x;
+				cursor.x = aabb.Min.x;
 				for (int c = 0; c < columns; ++c) {
-					SpacePartition<T> nextCell = new SpacePartition<T>(cursor, cursor+cellSize, treeDepth-1, columnsRows, this);
-					subpartition[r,c] = nextCell;
+					SpacePartitionCell<T> nextCell = null;
+					if (getExistingCellAtColumnRow != null) {
+						nextCell = getExistingCellAtColumnRow(c, r);
+					}
+					if (nextCell == null) {
+						nextCell = mem.cellPool.Commission(); nextCell.Set(
+							cursor, cursor + cellSize,
+							(byte)(availableDepth - 1), columns, rows, convertElementToCircle, this);
+					}
+					subPartition[r,c] = nextCell;
 					cursor.x += cellSize.x;
 				}
 				cursor.y += cellSize.y;
 			}
+			if (elements != null) {
+				for (int i = 0; i < elements.Count; ++i) {
+					T element = elements[i];
+					Circle circle = convertElementToCircle(element);
+					InsertIntoSubPartitions(circle, element, mem);
+				}
+				elements.Clear();
+				mem.elementListPool.Decommission(elements);
+				elements = null;
+			}
+		}
+
+		public bool Insert(IEnumerable<T> elements, SpacePartition<T>.Mem mem) {
+			bool inserted = false;
+			foreach (T element in elements) {
+				inserted |= Insert(element, mem);
+			}
+			return inserted;
+		}
+		public bool Insert(T element, SpacePartition<T>.Mem mem) {
+			Circle circle = convertElementToCircle(element);
+			return Insert(circle, element, mem);
+		}
+
+		private bool Insert(Circle circle, T element, SpacePartition<T>.Mem mem) {
+			if (!CircleGoesHere(circle)) {
+				if (parent == null) {
+					InsertIntoNewParent(circle, element, mem);
+					return true;
+				}
+				return false;
+			}
+			if (subPartition != null) {
+				return InsertIntoSubPartitions(circle, element, mem);
+			}
+			if (elements == null) {
+				elements = mem.elementListPool.Commission();
+			}
+			elements.Add(element);
+			if (availableDepth > 0 && elements.Count > maxElementsPerCell) {
+				Split(mem);
+			}
+			return true;
+		}
+		private void InsertIntoNewParent(Circle circle, T element, SpacePartition<T>.Mem mem) {
+			Vec2 parentCellSize = aabb.GetSize();
+			Vec2 parentFullSize = parentCellSize.Scaled(new Vec2(columns, rows));
+			Vec2 center = (circle.center + Position) / 2;
+			AABB parentEstimate = AABB.CreateAt(center, parentFullSize);
+			Vec2 positionInParent = Position - parentEstimate.Min;
+			int col = (int)(positionInParent.x / parentCellSize.x);
+			int row = (int)(positionInParent.y / parentCellSize.y);
+			if (col < 0) { col = 0; }
+			if (col >= columns) { col = columns-1; }
+			if (row < 0) { row = 0; }
+			if (row >= rows) { row = rows - 1; }
+			Vec2 parentMin = aabb.Min;
+			parentMin.x -= parentCellSize.x * col;
+			parentMin.y -= parentCellSize.y * row;
+			Vec2 parentMax = parentMin + parentFullSize;
+			SpacePartitionCell<T> newParent = mem.cellPool.Commission();
+			newParent.Set(parentMin, parentMax, (byte)(availableDepth+1), columns, rows, convertElementToCircle);
+			parent = newParent;
+			parent.Split(mem, (c, r) => (c == col && r == row) ? this : null);
+			parent.Insert(circle, element, mem);
+		}
+		private bool InsertIntoSubPartitions(Circle circle, T element, SpacePartition<T>.Mem mem) {
+			bool inserted = false;
+			for (int r = 0; r < rows; ++r) {
+				for (int c = 0; c < columns; ++c) {
+					inserted |= subPartition[r, c].Insert(circle, element, mem);
+				}
+			}
+			return inserted;
 		}
 
 		private static ConsoleColor[] collisionSpaceColors = new ConsoleColor[] {
@@ -63,35 +205,30 @@ namespace collision {
 			ConsoleColor.DarkBlue,
 			ConsoleColor.DarkCyan,
 			ConsoleColor.DarkGreen,
-			//ConsoleColor.DarkYellow,
-			//ConsoleColor.DarkRed,
-			//ConsoleColor.DarkMagenta
 		};
 		private static int consoleCollisionSpaceColorIndex = -1;
-		void NextConsoleCollisionColor(CommandLineCanvas ctx) {
+		private void NextConsoleCollisionColor(CommandLineCanvas ctx) {
 			if (++consoleCollisionSpaceColorIndex >= collisionSpaceColors.Length) {
 				consoleCollisionSpaceColorIndex = 0;
 			}
 			ctx.SetColor(collisionSpaceColors[consoleCollisionSpaceColorIndex]);
 		}
-		public void draw(CommandLineCanvas ctx, DrawFunction drawElementFunction) {
+		public void Draw(CommandLineCanvas ctx, DrawCellObjectsOnCanvasDelegate drawElementFunction) {
 			if (parent == null) { consoleCollisionSpaceColorIndex = -1; }
-			if (subpartition == null) { NextConsoleCollisionColor(ctx); }
+			if (subPartition == null) { NextConsoleCollisionColor(ctx); }
 			if (drawElementFunction == null) {
 				aabb.draw(ctx);
 			}
-			if (subpartition != null) {
-				for (int r = 0; r < subpartition.GetLength(0); ++r) {
-					for (int c = 0; c < subpartition.GetLength(1); ++c) {
-						subpartition[r,c].draw(ctx, drawElementFunction);
+			if (subPartition != null) {
+				for (int r = 0; r < subPartition.GetLength(0); ++r) {
+					for (int c = 0; c < subPartition.GetLength(1); ++c) {
+						subPartition[r,c].Draw(ctx, drawElementFunction);
 					}
 				}
 			}
-			//Vec2 center = aabb.getCenter();
-			//ctx.fillText(""+this.list.length, center.x, center.y);
-			if (drawElementFunction != null && list != null) {
-				for (int i = 0; i < list.Count; ++i) {
-					T element = list[i];
+			if (drawElementFunction != null && elements != null) {
+				for (int i = 0; i < elements.Count; ++i) {
+					T element = elements[i];
 					drawElementFunction.Invoke(ctx, this, element);
 				}
 			}
@@ -100,20 +237,24 @@ namespace collision {
 		public bool CircleGoesHere(Circle circle) {
 			return circle.radius > 0
 			? aabb.IntersectsCircle(circle.center, circle.radius)
-			: aabb.contains(circle.center);
+			: aabb.Contains(circle.center);
+		}
+		public List<SpacePartitionCell<T>> GetLeafPartitions(Circle circle) {
+			circle.TryGetAABB(out Vec2 min, out Vec2 max);
+			return GetLeafCells(min, max, space => space.CircleGoesHere(circle));
 		}
 
-		public List<SpacePartition<T>> GetPartitions(Circle circle) {
-			if (subpartition == null) {
-				return new List<SpacePartition<T>>() { this };
+		public List<SpacePartitionCell<T>> GetLeafCells(Vec2 min, Vec2 max, Func<SpacePartitionCell<T>,bool> isValidCell) {
+			if (subPartition == null) {
+				List<SpacePartitionCell<T>> list = new List<SpacePartitionCell<T>>() { this };
+				return list;
 			}
-			// calculate range of sub partitions, quit early if out of bounds
-			int lastRow = subpartition.GetLength(0) - 1;
-			int lastCol = subpartition.GetLength(1) - 1;
-			circle.TryGetAABB(out Vec2 min, out Vec2 max);
-			min -= aabb.min;
-			max -= aabb.min;
-			Vec2 cellSize = subpartition[0, 0].AABB.GetSize();
+			// calculate range of sub partitions, quit early if clearly out of bounds
+			int lastRow = subPartition.GetLength(0) - 1;
+			int lastCol = subPartition.GetLength(1) - 1;
+			min -= aabb.Min;
+			max -= aabb.Min;
+			Vec2 cellSize = subPartition[0, 0].AABB.GetSize();
 			int startRow = (int)(min.y / cellSize.y);
 			if (startRow > lastRow) { return null; }
 			int startCol = (int)(min.x / cellSize.x);
@@ -127,14 +268,14 @@ namespace collision {
 			startCol = Math.Max(0, startCol);
 			endRow = Math.Min(lastRow, endRow);
 			endCol = Math.Min(lastCol, endCol);
-			List<SpacePartition<T>> totalFoundPartitions = null;
+			List<SpacePartitionCell<T>> totalFoundPartitions = null;
 			for (int r = startRow; r <= endRow; ++r) {
 				for (int c = startCol; c <= endCol; ++c) {
-					SpacePartition<T> subPartition = subpartition[r,c];
-					if (!subPartition.CircleGoesHere(circle)) {
+					SpacePartitionCell<T> subPartition = this.subPartition[r,c];
+					if (isValidCell != null && !isValidCell(subPartition)) {
 						continue;
 					}
-					List<SpacePartition<T>> foundPartitions = subPartition.GetPartitions(circle);
+					List<SpacePartitionCell<T>> foundPartitions = subPartition.GetLeafCells(min, max, isValidCell);
 					if (foundPartitions != null) {
 						if (totalFoundPartitions == null) {
 							totalFoundPartitions = foundPartitions;
@@ -147,51 +288,40 @@ namespace collision {
 			return totalFoundPartitions;
 		}
 
-		public void Clear() {
-			if (list != null) {
-				list.Clear();
+		public void Clear(SpacePartition<T>.Mem mem) {
+			if (elements != null) {
+				elements.Clear();
+				mem.elementListPool.Decommission(elements);
+				elements = null;
 			}
-			if (subpartition != null) {
-				for (int r = 0; r < subpartition.GetLength(0); ++r) {
-					for (int c = 0; c < subpartition.GetLength(1); ++c) {
-						subpartition[r,c].Clear();
+			if (subPartition != null) {
+				for (int r = 0; r < subPartition.GetLength(0); ++r) {
+					for (int c = 0; c < subPartition.GetLength(1); ++c) {
+						subPartition[r,c].Clear(mem);
+						mem.cellPool.Decommission(subPartition[r, c]);
 					}
 				}
+				mem.branchPool.Decommission(subPartition);
+				subPartition = null;
 			}
 		}
 
-		public void Populate(IList<T> elementList, Func<T, Circle> convertElementToCircleMethod) {
-			Clear();
-			for (int i = 0; i < elementList.Count; ++i) {
-				T element = elementList[i];
-				Circle circle = convertElementToCircleMethod(element);
-				List<SpacePartition<T>> partitions = GetPartitions(circle);
-				//console.log(element.name+" in "+partitions.length+" partitions: "+partitions[0].aabb);
-				if (partitions == null) {
-					continue;
-				}
-				for (int p = 0; p < partitions.Count; ++p) {
-					SpacePartition<T> partition = partitions[p];
-					if (partition.list == null) {
-						partition.list = new List<T>();
-					}
-					partition.list.Add(element);
-				}
-			}
+		public void Populate(IEnumerable<T> elementList, SpacePartition<T>.Mem mem) {
+			Clear(mem);
+			Insert(elementList, mem);
 		}
-
 
 		public void FindCollisions(Dictionary<CollisionPair, List<CollisionLogic.Function>> rules, 
 			IList<CollisionData> collisionData) {
-			if (list != null) {
-				CollisionLogic.CalculateCollisions(list as IList<ICollidable>, rules, collisionData);
+			if (elements != null) {
+				CollisionLogic.CalculateCollisions(elements as IList<ICollidable>, rules, collisionData);
 			}
-			if (subpartition != null) {
-				int rows = subpartition.GetLength(0);
-				int cols = subpartition.GetLength(1);
+			if (subPartition != null) {
+				int rows = subPartition.GetLength(0);
+				int cols = subPartition.GetLength(1);
 				for (int r = 0; r < rows; ++r) {
 					for (int c = 0; c < cols; ++c) {
-						subpartition[r, c].FindCollisions(rules, collisionData);
+						subPartition[r, c].FindCollisions(rules, collisionData);
 					}
 				}
 			}
@@ -199,15 +329,15 @@ namespace collision {
 
 		public void FindCollisions(Dictionary<CollisionPair, List<CollisionLogic.Function>> rules,
 	CollisionDatabase collisionDatabase) {
-			if (list != null) {
-				CollisionLogic.CalculateCollisions(list as IList<ICollidable>, rules, collisionDatabase);
+			if (elements != null) {
+				CollisionLogic.CalculateCollisions(elements as IList<ICollidable>, rules, collisionDatabase);
 			}
-			if (subpartition != null) {
-				int rows = subpartition.GetLength(0);
-				int cols = subpartition.GetLength(1);
+			if (subPartition != null) {
+				int rows = subPartition.GetLength(0);
+				int cols = subPartition.GetLength(1);
 				for (int r = 0; r < rows; ++r) {
 					for (int c = 0; c < cols; ++c) {
-						subpartition[r, c].FindCollisions(rules, collisionDatabase);
+						subPartition[r, c].FindCollisions(rules, collisionDatabase);
 					}
 				}
 			}
@@ -234,19 +364,6 @@ namespace collision {
 			CollisionLogic.CalculateCollisionResolution(collisionData, collisionResolutions);
 			return collisionResolutions;
 		}
-		bool FindDuplicateIndex(List<CollisionLogic.ToResolve> collisionsToResolve, out int a, out int b) {
-			for (a = 0; a < collisionsToResolve.Count; ++a) {
-				CollisionLogic.ToResolve resolveA = collisionsToResolve[a];
-				for (b = a+1; b < collisionsToResolve.Count; ++b) {
-					CollisionLogic.ToResolve resolveB = collisionsToResolve[b];
-					if (resolveA.Equals(resolveB)) {
-						return true;
-					}
-				}
-			}
-			a = b = -1;
-			return false;
-		}
 		public void DoCollisionLogicAndResolve(Dictionary<CollisionPair, List<CollisionLogic.Function>> rules, CollisionDatabase collisionDatabase) {
 			List<CollisionLogic.ToResolve> collisionsToResolve = DoCollisionLogic(rules, collisionDatabase);
 			if (collisionsToResolve == null) {
@@ -258,17 +375,16 @@ namespace collision {
 		public List<CollisionData> GetCollisions(T collidable, Func<T,Circle> convertElementToCircleMethod,
 		Func<T, T, bool> verifyCollisionMoreThanCircleOverlap) {
 			Circle circle = convertElementToCircleMethod(collidable);
-			List<SpacePartition<T>> partitions = GetPartitions(circle);
+			List<SpacePartitionCell<T>> partitions = GetLeafPartitions(circle);
 			List<CollisionData> collisions = null;
 			for (int i = 0; i < partitions.Count; ++i) {
-				SpacePartition<T> subPart = partitions[i];
-				if (subPart.list == null) {
+				SpacePartitionCell<T> subPart = partitions[i];
+				if (subPart.elements == null) {
 					continue;
 				}
 
-				for (int e = 0; e < subPart.list.Count; ++e) {
-					T element = subPart.list[e];
-					//if (e == null) { continue; }
+				for (int e = 0; e < subPart.elements.Count; ++e) {
+					T element = subPart.elements[e];
 					Circle otherCircle = convertElementToCircleMethod(element);
 					float targetDistance = otherCircle.radius;
 					if (circle.radius != 0) {

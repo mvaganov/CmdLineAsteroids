@@ -38,6 +38,7 @@ namespace ConsoleMrV {
 					++specialIndex;
 				}
 				canvas.WriteAt(glyph, (int)cursor.x, (int)cursor.y);
+				//canvas.WriteAt(glyph.Letter, (int)cursor.x, (int)cursor.y);
 				cursor += increment;
 			}
 		}

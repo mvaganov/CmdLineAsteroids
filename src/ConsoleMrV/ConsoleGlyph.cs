@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 
 namespace ConsoleMrV {
 	public struct ConsoleGlyph {
@@ -46,6 +47,13 @@ namespace ConsoleMrV {
 				result[i] = g;
 			}
 			return result;
+		}
+		public static string Convert(ConsoleGlyph[] text) {
+			StringBuilder sb = new StringBuilder();
+			for (int i = 0; i < text.Length; ++i) {
+				sb.Append(text[i].letter);
+			}
+			return sb.ToString();
 		}
 	}
 }

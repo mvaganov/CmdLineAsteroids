@@ -6,8 +6,7 @@
 
 `voice`
 This is a tutorial teaching how to build a real-time simulation in C#, which can simulate basic physics and object interactions.
-As a computer science teacher and professional developer, I'll also offer advice as best practices.
-Game Development a difficult kind of programming, so this exercice will be an excellent example to discuss engineering best practices.
+I'll also offer in context advice and best practices from my experience as a professional developer and computer science teacher.
 
 `scene`
 demo reel of the asteroids game
@@ -19,12 +18,11 @@ I've summoned that ancient motivation to capture your attention while I teach yo
 Check the description for the Github project if you want this code. Continue watching if you want to understand this code.
 
 I spent a few weeks creating this game and writing this script before creating the tutorial series.
-please do not misunderstand that this program just fell out of my head in one moment.
-programming does not work that way. sometimes we wish it did, but it doesn't. your projects will take a long time to finish too.
-be patient with yourself.
-my guidance will follow roughly the same path I went through, but it the tutorial will be many times faster.
-Now I have the extreme benefit of having made lots of implementation mistakes recently.
-There is a lot of code to explain, so I will be very brief about most of the code.
+Please do not misunderstand that this program just fell out of my head in one moment. Programming does not work that way.
+We wish it did, but it doesn't. Your projects will take a long time to finish too, even if they use a tutorial like this as a starting point.
+Be patient with yourself.
+My guidance will follow roughly the same path I went through while making this game a few weeks ago, but it will be many times faster.
+Because I wrote this application once already, I have the extreme benefit of having made lots of mistakes recently.
 
 `scene`
 montage of code
@@ -32,14 +30,14 @@ montage of code
 `voice`
 I'll be using C# as the programming language.
 I assume you already have a C# runtime, compiler, and IDE installed.
-I assume you know the basics of how to program command line applications in C#.
+I also assume you know the basics of how to program command line applications in C#.
 
 `scene`
 montage of Unity
 
 `voice`
-The biggest reason for this language choice is the integration it has with the popular Unity game engine.
-This tutorial should give you some insight into how a game engine like Unity is created.
+C# is notable because of the popular Unity game engine.
+This tutorial should give you some insight into how a game engine like Unity works.
 
 //I also assume you are using LLMs to help you write code. Importantly:
 //  I assume you're aware of the intellectual hazard of relying on AI while programming. AI helps you **do**, not **learn**.
@@ -276,7 +274,8 @@ run the app to test
 here is a basic interactive loop, where we can play with the circle values
 
 this is already turning into a game engine.
-a game engine has 4 main regions: initializationm, draw, input, and update
+a game engine has 4 main regions: initializationm, draw, input, and update.
+each single iteration through the loop is a gameloop frame.
 
 `scene`
 ```
@@ -326,19 +325,37 @@ and let's put the key input behind a check, so it doesn't block the game loop.
 
 `scene`
 ```
+		static void Main(string[] args) {
+			// initialization
+			//...
+			char input;
 			Stopwatch timer = new Stopwatch();
-			// ...
 			while (running) {
-				timer.Restart();
-				// ...
+				Draw();
 				Console.WriteLine($"{timer.ElapsedMilliseconds}   ");
-				// ...
+				ProcessInput();
+				Update();
+				timer.Restart();
+			}
+			//...
+			void ProcessInput() {
+				if (Console.KeyAvailable) {
+					input = Console.ReadKey().keyChar;
+				} else {
+					input = (char)0;
+				}
+			}
+			//...
+		}
 ```
+compile and test. also, comment out Draw and test again.
 
-my computer is pretty fast, but this is really slow. it looks like it's running at around 10 frames per second.
-notice the flickering. that flickering indicates a performance problem.
+I've changed ProcessInput so that it doesn't wait for a user key press. this is also called Non-Blocking input.
+Notice the flickering. that flickering indicates a performance problem.
+My computer is pretty fast, but this game engine is really slow. it looks like it's running at around 10 frames per second.
+As with most game engines, the biggest reason for this performance is probably because of Draw.
 
-the code that claculates timing feels pretty bad, so before we continue, I want to implement a time-keeping class
+The code that claculates timing feels pretty bad, so before we continue, I want to implement a time-keeping class
 `scene`
 Time.cs
 
@@ -355,12 +372,12 @@ namespace MrV {
 	/// </list>
 	/// </summary>
 	public partial class Time {
-		private static Time _instance;
+		private Stopwatch _timer;
 		private long _deltaTimeMs;
 		private long _lastUpdateTimeMs;
 		private float _deltaTimeSeconds;
 		private double _lastUpdateTimeSeconds;
-		private Stopwatch _timer;
+		private static Time _instance;
 		public static Time Instance => _instance != null ? _instance : _instance = new Time();
 		public static long DeltaTimeMs => Instance._deltaTimeMs;
 		public static float DeltaTimeSeconds => Instance._deltaTimeSeconds;
@@ -394,12 +411,57 @@ namespace MrV {
 ```
 
 `voice`
-// TODO explain Time.cs
+Timing is a really important part of a real-time game engine.
+It is required for physics simulation, a key measurement of performance, and a tool to intentionally reduce CPU usage.
+Making a separate time-keeping system like this leaves design space for time-related features in the future, like pausing our simulation, or slowing down time.
 
-we can significantly reduce the flickering by only redrawing characters that change between frames.
-* to do that, we need to be able to querey what the current frame looks like, and what the previous frame looked like
+This implementation is a wrapper around the C# Stopwatch object, which is a high-resolution timer standard to the C# API.
+It is keeping track of the passage of time as seconds and milliseconds separately.
+Floating point values for time are most convenient for physics calculations.
+Millisecond values are most convenient for system-level calculations.
+Also, as floating point values increase, they reduce in precision.
+Specifically, a game that has running for more than 4.5 hours will be more accurate if it uses integer-based millisecond calculations instead of floating points.
+This class is a singleton, which allows details about the passage of time to be accessed anywhere in the program. This is very important for physics calculations.
+I'm not making the entire class static because pure static classes create design hazards similar to global variables.
+  These would be most apparent if we were designing a game with variable passage of time, like time dialation in different regions of space.
+
+`scene`
 ```
+			//...
+			char input;
+			float targetFps = 20;
+			while (running) {
+				Draw();
+				Console.WriteLine($"{Time.DeltaTimeMs}   ");
+				ProcessInput();
+				Time.Update();
+				Update();
+				int targetMsDelay = (int)(1000 / targetFps);
+				Time.SleepWithoutConsoleKeyPress(targetMsDelay);
+			}
+			//...
 ```
+
+`voice`
+It's possible to design the Time class without a necessary Update method, but doing so would result in different values for delta time within the same gameloop frame.
+This implementation tries to artificially set the gameloop speed to 20 frames per second.
+Doing so reduces the burden that this program puts on the CPU. A lower CPU burden improves performance of the rest of your computer while this game is running.
+
+Performance is incredibly important to a realtime simulation, and a game especially.
+So, let's improve the performance a bit more before moving on.
+This tutorial will not be an exaustive exploration about solving performance problems.
+However, a two specific classes of solutions will have major impacts on performance, so we'll focus on them: Drawing and Collision detection.
+
+First, drawing. We can significantly reduce the cost of drawing and the appearance of flickering by only redrawing characters that change between frames.
+To do that, we need to be able to keep track of what was drawn last frame so it can be compared to the new frame.
+
+`scene`
+```
+
+```
+
+Many APIs have the concept of a Graphics Context.
+
 * let's test this out
 ```
 ```

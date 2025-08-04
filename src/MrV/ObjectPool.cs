@@ -91,16 +91,16 @@ public class ObjectPool<T> : IList<T> {
 	/// <param name="commission">(optional) callback function or delegate used to activate an object of type T</param>
 	/// <param name="decommission">(optional) callback function or delegate used to de-activate an object of type T</param>
 	/// <param name="destroy">(optional) callback function or delegate used to destroy an object of type T</param>
-	public void Setup(DelegateCreate create, DelegateCommission commission, DelegateDecommission decommission, DelegateDestroy destroy) {
+	public void Setup(DelegateCreate create, DelegateCommission commission = null, DelegateDecommission decommission = null, DelegateDestroy destroy = null) {
 		CreateDelegate = create; CommissionDelegate = commission; DecommissionDelegate = decommission; DestroyDelegate = destroy;
 	}
 
 	/// <summary>Constructs and calls <see cref="Setup"/></summary>
 	public ObjectPool(
 		DelegateCreate create,
-		DelegateCommission commission,
-		DelegateDecommission decommission,
-		DelegateDestroy destroy) {
+		DelegateCommission commission = null,
+		DelegateDecommission decommission = null,
+		DelegateDestroy destroy = null) {
 		Setup(create, commission, decommission, destroy);
 	}
 

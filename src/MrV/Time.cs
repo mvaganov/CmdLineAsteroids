@@ -13,12 +13,12 @@ namespace MrV {
 	/// </list>
 	/// </summary>
 	public partial class Time {
-		private static Time _instance;
+		private Stopwatch _timer;
 		private long _deltaTimeMs;
 		private long _lastUpdateTimeMs;
 		private float _deltaTimeSeconds;
 		private double _lastUpdateTimeSeconds;
-		private Stopwatch _timer;
+		private static Time _instance;
 		public static Time Instance => _instance != null ? _instance : _instance = new Time();
 		public static long DeltaTimeMs => Instance._deltaTimeMs;
 		public static float DeltaTimeSeconds => Instance._deltaTimeSeconds;

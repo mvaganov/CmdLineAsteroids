@@ -11,7 +11,7 @@ namespace asteroids {
 		static void Main(string[] args) {
 			// initialize system
 			Random random = new Random();
-			CommandLineCanvas graphics = new CommandLineCanvas(80, 25, (0.5f, 1), (0, 0));
+			CommandLineCanvas graphics = new CommandLineCanvas(80, 25, (0.5f, 1));
 			KeyInput keyInput = new KeyInput();
 			List<IGameObject> objects = new List<IGameObject>();
 			ParticleSystem.OnParticleCommission = particle => objects.Add(particle);
@@ -511,9 +511,9 @@ namespace asteroids {
 			}
 			RestartGame();
 
-			SpacePartition<ICollidable> spacePartition = new SpacePartition<ICollidable>(WorldMin * 30, WorldMax * 30, 2, (5,5));
+			SpacePartition<ICollidable> spacePartition = new SpacePartition<ICollidable>(WorldMin, WorldMax, 3, 3, 3, GetCircle);
 			Circle GetCircle(ICollidable collidable) => collidable.GetCollisionBoundingCircle();
-			void DrawFunctionCollidable(CommandLineCanvas canvas, SpacePartition<ICollidable> spacePartition, ICollidable obj) {
+			void DrawFunctionCollidable(CommandLineCanvas canvas, SpacePartitionCell<ICollidable> spacePartition, ICollidable obj) {
 				Circle c = obj.GetCollisionBoundingCircle();
 				canvas.DrawLine(spacePartition.Position, c.Position);
 			}
@@ -530,9 +530,11 @@ namespace asteroids {
 
 			void Update() {
 				Time.Update();
+				Time.UpdateAverageDeltaTime();
 				keyInput.TriggerKeyBinding();
 				if (updating) {
-					spacePartition.Populate(collideList, GetCircle);
+					//spacePartition.DoCollisionLogicAndResolve(collideList, collisionRules);
+					spacePartition.Populate(collideList);
 					spacePartition.DoCollisionLogicAndResolve(collisionRules, recycleCollisionDatabse?collisionDatabase:null);
 					//CollisionLogic.DoCollisionLogicAndResolve(collideList, collisionRules);
 					objects.ForEach(o => o.Update());
@@ -547,7 +549,7 @@ namespace asteroids {
 
 			void Draw() {
 				if (showSpacePartition) {
-					spacePartition.draw(graphics, null);
+					spacePartition.Draw(graphics, null);
 				}
 				preDraw.ForEach(a => a.Invoke());
 				if (visible) {
