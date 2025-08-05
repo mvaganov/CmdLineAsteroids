@@ -86,13 +86,13 @@ Start your C# IDE. I'm using Visual Studio Community 2022.
 As of 2025, Rider is not free for commercial content, but free for personal use.
 I should not use it for a tutorial video, but I recommend that as a student.
 
-I'm going to call my project "SpaceShooterGame"
+I'm going to call my project "LowFiCollider"
 
 `scene`
 program.cs
 ```
 using System;
-namespace SpaceShooterGame {
+namespace LowFiCollider {
 	public class Program {
 		public static void Main(string[] args) {
 			Console.WriteLine("Hello World!");
@@ -113,6 +113,8 @@ Visual Studio Installer -> Modify -> .NET desktop development
 
 `voice`
 For example, be sure you have the .NET desktop development workload installed by the Visual Studio Installer.
+
+---
 
 `scene`
 back to program.cs
@@ -204,6 +206,8 @@ writing and compiling program.cs
 `voice`
 notice I'm using tuple notation for the first vector describing position, and an explicit constructor for the size.
 the form is mostly stylistic. however, in an inner-loop, using the constructor is preferred because it is slightly faster to execute.
+
+---
 
 `scene`
 ```
@@ -362,47 +366,46 @@ Time.cs
 ```
 namespace MrV {
 	/// <summary>
-	/// Keeps track of timing specifically for frame-based update in a game loop.
-	/// Maintains values for time as Milliseconds and Floating point.
+	/// Keeps track of timing, specifically for frame-based update in a game loop.
 	/// <list type="bullet">
-	/// <item>Uses <see cref="Stopwatch"/> as cannonical timer implementation</item>
+	/// <item>Uses C# <see cref="Stopwatch"/> as cannonical timer implementation</item>
 	/// <item>Floating point values are convenient for physics calculations</item>
-	/// <item>Floading point timestamps are stored internally as doubles for better precision</item>
-	/// <item>Time is also calculated in milliseconds, since floating points become less accurate as values increase</item>
+	/// <item>Floating point timestamps are stored as 'double' for precision, since 'float' becomes less accurate than 1ms after 4.5 hours</item>
+	/// <item>Time is also calculated in milliseconds, since all floating points (even doubles) become less accurate as values increase</item>
 	/// </list>
 	/// </summary>
 	public partial class Time {
-		private Stopwatch _timer;
-		private long _deltaTimeMs;
-		private long _lastUpdateTimeMs;
-		private float _deltaTimeSeconds;
-		private double _lastUpdateTimeSeconds;
-		private static Time _instance;
+		protected Stopwatch timer;
+		public long deltaTimeMs;
+		public float deltaTimeSeconds;
+		protected long lastUpdateTimeMs;
+		protected double lastUpdateTimeSeconds;
+		protected static Time _instance;
 		public static Time Instance => _instance != null ? _instance : _instance = new Time();
-		public static long DeltaTimeMs => Instance._deltaTimeMs;
-		public static float DeltaTimeSeconds => Instance._deltaTimeSeconds;
-		public static double TimeSeconds => Instance._timer.Elapsed.TotalSeconds;
-		public static long TimeMs => (long)Instance._timer.Elapsed.TotalMilliseconds;
-		public static void Update() => Instance.UpdateSelf();
+		public static long DeltaTimeMs => Instance.deltaTimeMs;
+		public static float DeltaTimeSeconds => Instance.deltaTimeSeconds;
+		public static double TimeSeconds => Instance.timer.Elapsed.TotalSeconds;
+		public static long TimeMs => (long)Instance.timer.Elapsed.TotalMilliseconds;
+		public static void Update() => Instance.UpdateTiming();
 		public static void SleepWithoutConsoleKeyPress(int ms) => Instance.ThrottleUpdate(ms, ()=>Console.KeyAvailable);
 		public Time() {
-			_timer = new Stopwatch();
-			_timer.Start();
-			_lastUpdateTimeSeconds = _timer.Elapsed.TotalSeconds;
-			_lastUpdateTimeMs = _timer.ElapsedMilliseconds;
-			UpdateSelf();
+			timer = new Stopwatch();
+			timer.Start();
+			lastUpdateTimeSeconds = timer.Elapsed.TotalSeconds;
+			lastUpdateTimeMs = timer.ElapsedMilliseconds;
+			UpdateTiming();
 		}
-		private long UpdateDeltaMs => _timer.ElapsedMilliseconds - _lastUpdateTimeMs;
-		private float UpdateDeltaSeconds => (float)(_timer.Elapsed.TotalSeconds - _lastUpdateTimeSeconds);
-		public void UpdateSelf() {
-			_deltaTimeMs = UpdateDeltaMs;
-			_deltaTimeSeconds = UpdateDeltaSeconds;
-			_lastUpdateTimeSeconds = _timer.Elapsed.TotalSeconds;
-			_lastUpdateTimeMs = _timer.ElapsedMilliseconds;
+		public long DeltaTimeUpdatedMs => timer.ElapsedMilliseconds - lastUpdateTimeMs;
+		public float DeltaTimeUpdatedSeconds => (float)(timer.Elapsed.TotalSeconds - lastUpdateTimeSeconds);
+		public void UpdateTiming() {
+			deltaTimeMs = DeltaTimeUpdatedMs;
+			deltaTimeSeconds = DeltaTimeUpdatedSeconds;
+			lastUpdateTimeSeconds = timer.Elapsed.TotalSeconds;
+			lastUpdateTimeMs = timer.ElapsedMilliseconds;
 		}
 		public void ThrottleUpdate(int ms, Func<bool> interruptSleep = null) {
-			long soon = _lastUpdateTimeMs + ms;
-			while((interruptSleep == null || !interruptSleep.Invoke()) && _timer.ElapsedMilliseconds < soon) {
+			long soon = lastUpdateTimeMs + ms;
+			while((interruptSleep == null || !interruptSleep.Invoke()) && timer.ElapsedMilliseconds < soon) {
 				System.Threading.Thread.Sleep(1);
 			}
 		}
@@ -412,31 +415,48 @@ namespace MrV {
 
 `voice`
 Timing is a really important part of a real-time game engine.
-It is required for physics simulation, a key measurement of performance, and a tool to intentionally reduce CPU usage.
+It is required for physics simulation, tracking performance, and with throttling, a tool to intentionally reduce CPU usage.
 Making a separate time-keeping system like this leaves design space for time-related features in the future, like pausing our simulation, or slowing down time.
 
 This implementation is a wrapper around the C# Stopwatch object, which is a high-resolution timer standard to the C# API.
 It is keeping track of the passage of time as seconds and milliseconds separately.
 Floating point values for time are most convenient for physics calculations.
-Millisecond values are most convenient for system-level calculations.
-Also, as floating point values increase, they reduce in precision.
-Specifically, a game that has running for more than 4.5 hours will be more accurate if it uses integer-based millisecond calculations instead of floating points.
-This class is a singleton, which allows details about the passage of time to be accessed anywhere in the program. This is very important for physics calculations.
+Millisecond values are more accurate over long durations, and most convenient for system-level calculations.
+  As floating point values increase, they reduce in precision.
+
+`scene`
+show floating point number's exponent change as it increases in value
+
+`voice`
+  Specifically, a game that has running for more than 4.5 hours will be more accurate if it uses integer-based millisecond calculations instead of floating points.
+
+`scene`
+back to code
+
+`voice`
+This class is a singleton, which allows details about the passage of time to be accessed anywhere in the program, very important for physics math.
 I'm not making the entire class static because pure static classes create design hazards similar to global variables.
   These would be most apparent if we were designing a game with variable passage of time, like time dialation in different regions of space.
+You might also notice that DeltaTime gives the same value until UpdateSelf is called. This will keep timing math consistent when DeltaTime is checked at multiple different times of the same update frame.
+You may also realize that this code is actually giving a measurement of how long the last frame took. This works in practice because frames tend to require similar amounts of compute. In the worst case
+  a one frame lag-spike will cause a very laggy frame to use the faster timing value of the previous frame
+  the next fast frame will use the long frame time of the previous laggy frame, but do so very quickly
+  to a keen-eyed observer, this will look like a strange stutter, where the game slows down a lot, and then speeds up a lot, over the course of a few milliseconds.
+The ThrottleUpdate function is used to smooth out frames, and reduce CPU burden. The ThrottleWithoutConsoleKeyPress interrrupts the throttling when a keypress is detected, so that the game always updates quickly to user input.
+lets test this out.
 
 `scene`
 ```
 			//...
 			char input;
 			float targetFps = 20;
+			int targetMsDelay = (int)(1000 / targetFps);
 			while (running) {
 				Draw();
 				Console.WriteLine($"{Time.DeltaTimeMs}   ");
 				ProcessInput();
 				Time.Update();
 				Update();
-				int targetMsDelay = (int)(1000 / targetFps);
 				Time.SleepWithoutConsoleKeyPress(targetMsDelay);
 			}
 			//...
@@ -444,28 +464,48 @@ I'm not making the entire class static because pure static classes create design
 
 `voice`
 It's possible to design the Time class without a necessary Update method, but doing so would result in different values for delta time within the same gameloop frame.
-This implementation tries to artificially set the gameloop speed to 20 frames per second.
-Doing so reduces the burden that this program puts on the CPU. A lower CPU burden improves performance of the rest of your computer while this game is running.
+This implementation tries to artificially set the gameloop speed to 20 frames per second. Feel free to experiment with this value.
+A lower framerate reduces the burden that this program puts on the CPU. A lower CPU burden improves performance of the rest of your computer while this game is running.
 
-Performance is incredibly important to a realtime simulation, and a game especially.
+---
+
+`scene`
+the game is running, with the DeltaTimeMs value fluctuating
+
+`voice`
+Performance is incredibly important to a realtime simulation, and a game especially. User experience is tightly bound to game loop performance.
 So, let's improve the performance a bit more before moving on.
 This tutorial will not be an exaustive exploration about solving performance problems.
-However, a two specific classes of solutions will have major impacts on performance, so we'll focus on them: Drawing and Collision detection.
+However, a three specific classes of problems have major impacts on simulation performance: Drawing, Memory Allocation, and Collision detection.
 
-First, drawing. We can significantly reduce the cost of drawing and the appearance of flickering by only redrawing characters that change between frames.
-To do that, we need to be able to keep track of what was drawn last frame so it can be compared to the new frame.
+For now, let's improve drawing. We can significantly reduce the cost of drawing and the appearance of flickering by only redrawing what has change between frames.
+In a traditional graphics setting, this technique is called 'Dirty Rectangle' or 'Dirty Pixel'.
+To do this optimization, we need to keep track of what was drawn last frame so it can be compared to the new frame. We'll do that by writing both into separate buffers. We'll call this the Front Buffer and Back Buffer.
+
+`scene`
+artist painting a picture, then painting a different picture behind it, and swapping between them
+
+`voice`
+This technique dramatically reduces flickering by replacing the entire image at once instead of redrawing all different parts one at a time.
+It requires a Front Buffer, and a Back Buffer.
+  The Front Buffer is displayed to the user. In our program, it is already there, in the command line console.
+  The Back Buffer is where the graphics are rendered in sequence before overwriting the Front Buffer all at once
 
 `scene`
 ```
 
 ```
 
-Many APIs have the concept of a Graphics Context.
+Many APIs have the concept of a Graphics Context, to handle this kind of graphics logic.
 
-* let's test this out
+let's test this out
+
 ```
 ```
-* the circle is drawing more quickly now. but the sape is still not correct,
+the circle is drawing without flickering. But it is still slow.
+
+
+the circle more quickly now. but the sape is still not correct,
 	* because the command line console's characters are not perfect squares
 * lets implement a function that will draw the circle with the scale of the command line taken into account
 ```

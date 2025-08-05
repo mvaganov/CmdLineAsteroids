@@ -3,47 +3,46 @@ using System.Diagnostics;
 
 namespace MrV {
 	/// <summary>
-	/// Keeps track of timing specifically for frame-based update in a game loop.
-	/// Maintains values for time as Milliseconds and Floating point.
+	/// Keeps track of timing, specifically for frame-based update in a game loop.
 	/// <list type="bullet">
-	/// <item>Uses <see cref="Stopwatch"/> as cannonical timer implementation</item>
+	/// <item>Uses C# <see cref="Stopwatch"/> as cannonical timer implementation</item>
 	/// <item>Floating point values are convenient for physics calculations</item>
-	/// <item>Floading point timestamps are stored internally as doubles for better precision</item>
-	/// <item>Time is also calculated in milliseconds, since floating points become less accurate as values increase</item>
+	/// <item>Floating point timestamps are stored as 'double' for precision, since 'float' becomes less accurate than 1ms after 4.5 hours</item>
+	/// <item>Time is also calculated in milliseconds, since all floating points (even doubles) become less accurate as values increase</item>
 	/// </list>
 	/// </summary>
 	public partial class Time {
-		private Stopwatch _timer;
-		private long _deltaTimeMs;
-		private long _lastUpdateTimeMs;
-		private float _deltaTimeSeconds;
-		private double _lastUpdateTimeSeconds;
-		private static Time _instance;
+		protected Stopwatch timer;
+		public long deltaTimeMs;
+		public float deltaTimeSeconds;
+		protected long lastUpdateTimeMs;
+		protected double lastUpdateTimeSeconds;
+		protected static Time _instance;
 		public static Time Instance => _instance != null ? _instance : _instance = new Time();
-		public static long DeltaTimeMs => Instance._deltaTimeMs;
-		public static float DeltaTimeSeconds => Instance._deltaTimeSeconds;
-		public static double TimeSeconds => Instance._timer.Elapsed.TotalSeconds;
-		public static long TimeMs => (long)Instance._timer.Elapsed.TotalMilliseconds;
-		public static void Update() => Instance.UpdateSelf();
-		public static void SleepWithoutConsoleKeyPress(int ms) => Instance.ThrottleUpdate(ms, ()=>Console.KeyAvailable);
+		public static long DeltaTimeMs => Instance.deltaTimeMs;
+		public static float DeltaTimeSeconds => Instance.deltaTimeSeconds;
+		public static double TimeSeconds => Instance.timer.Elapsed.TotalSeconds;
+		public static long TimeMs => (long)Instance.timer.Elapsed.TotalMilliseconds;
+		public static void Update() => Instance.UpdateTiming();
+		public static void ThrottleWithoutConsoleKeyPress(int ms) => Instance.ThrottleUpdate(ms, ()=>Console.KeyAvailable);
 		public Time() {
-			_timer = new Stopwatch();
-			_timer.Start();
-			_lastUpdateTimeSeconds = _timer.Elapsed.TotalSeconds;
-			_lastUpdateTimeMs = _timer.ElapsedMilliseconds;
-			UpdateSelf();
+			timer = new Stopwatch();
+			timer.Start();
+			lastUpdateTimeSeconds = timer.Elapsed.TotalSeconds;
+			lastUpdateTimeMs = timer.ElapsedMilliseconds;
+			UpdateTiming();
 		}
-		private long UpdateDeltaMs => _timer.ElapsedMilliseconds - _lastUpdateTimeMs;
-		private float UpdateDeltaSeconds => (float)(_timer.Elapsed.TotalSeconds - _lastUpdateTimeSeconds);
-		public void UpdateSelf() {
-			_deltaTimeMs = UpdateDeltaMs;
-			_deltaTimeSeconds = UpdateDeltaSeconds;
-			_lastUpdateTimeSeconds = _timer.Elapsed.TotalSeconds;
-			_lastUpdateTimeMs = _timer.ElapsedMilliseconds;
+		public long DeltaTimeUpdatedMs => timer.ElapsedMilliseconds - lastUpdateTimeMs;
+		public float DeltaTimeUpdatedSeconds => (float)(timer.Elapsed.TotalSeconds - lastUpdateTimeSeconds);
+		public void UpdateTiming() {
+			deltaTimeMs = DeltaTimeUpdatedMs;
+			deltaTimeSeconds = DeltaTimeUpdatedSeconds;
+			lastUpdateTimeSeconds = timer.Elapsed.TotalSeconds;
+			lastUpdateTimeMs = timer.ElapsedMilliseconds;
 		}
 		public void ThrottleUpdate(int ms, Func<bool> interruptSleep = null) {
-			long soon = _lastUpdateTimeMs + ms;
-			while((interruptSleep == null || !interruptSleep.Invoke()) && _timer.ElapsedMilliseconds < soon) {
+			long soon = lastUpdateTimeMs + ms;
+			while((interruptSleep == null || !interruptSleep.Invoke()) && timer.ElapsedMilliseconds < soon) {
 				System.Threading.Thread.Sleep(1);
 			}
 		}

@@ -28,7 +28,7 @@ namespace MrV {
 		public static void UpdateAverageDeltaTime() => Instance.UpdateAverageDeltaTimeMs();
 		public void UpdateAverageDeltaTimeMs() {
 			if (++_deltaTimeMsSamplesIndex >= _deltaTimeMsSamples.Length) { _deltaTimeMsSamplesIndex = 0; }
-			_deltaTimeMsSamples[_deltaTimeMsSamplesIndex] = _deltaTimeMs;
+			_deltaTimeMsSamples[_deltaTimeMsSamplesIndex] = deltaTimeMs;
 		}
 	}
 }

@@ -193,7 +193,7 @@ namespace asteroids {
 						asteroid.Velocity = Vec2.RandomDirection;
 					}
 				}
-				for (int layers = 0; layers < 7; ++layers) {
+				for (int layers = 0; layers < 3; ++layers) {
 					MakeAsteroidRing();
 					asteroidStartPosition *= 2;
 					activeAsteroidCount *= 2;
@@ -524,7 +524,7 @@ namespace asteroids {
 				Update();
 				Draw();
 				if (throttle) {
-					Time.SleepWithoutConsoleKeyPress(targetMsDelay);
+					Time.ThrottleWithoutConsoleKeyPress(targetMsDelay);
 				}
 			}
 
