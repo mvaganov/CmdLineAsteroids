@@ -26,13 +26,13 @@ namespace asteroids {
 			set {
 				base.Velocity = value;
 				if (DirectionMatchesVelocity && value != Vec2.Zero) {
-					polygon.Direction = base.Velocity.ToUnitVector();
+					polygon.Direction = base.Velocity.Normal;
 				}
 			}
 		}
 		public override void Update() {
 			if (_rotationRadiansPerSecond != 0) {
-				float currentRadians = Direction.UnitVectorToRadians();
+				float currentRadians = Direction.NormalToRadians();
 				float rotationThisMoment = _rotationRadiansPerSecond * Time.DeltaTimeSeconds;
 				if (!float.IsNaN(_targetDirection)) {
 					UpdateTargetRotationLogic(currentRadians, rotationThisMoment);
@@ -91,7 +91,7 @@ namespace asteroids {
 		}
 		public void SmoothRotateTarget(float targetRadians, float speed) {
 			_targetDirection = targetRadians;
-			float currentAngle = Direction.UnitVectorToRadians();
+			float currentAngle = Direction.NormalToRadians();
 			float deltaToTarget = GetRealDeltaRotationAccountingForWrap(_targetDirection, currentAngle);
 			_rotationRadiansPerSecond = (deltaToTarget < 0) ? -speed : speed;
 		}

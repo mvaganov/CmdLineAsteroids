@@ -4,40 +4,46 @@
 "If I can't create it, I don't understand it."
 -Richard Feynman
 
-`voice`
-This is a tutorial teaching how to build a real-time simulation in C#, which can simulate basic physics and object interactions.
-I'll also offer in context advice and best practices from my experience as a professional developer and computer science teacher.
+pause for 5 seconds
 
 `scene`
-demo reel of the asteroids game
+demo reel of the LowFiRockBlaster game
 
 `voice`
-The simulation is a space-shooter game, written for the command line console.
+This is a tutorial series teaching how to build a real-time simulation in C#. It simulates basic physics and collision detection.
+I'll show how to do everything from an empty project, in the TTY Command Line Console. Including the graphics, math, and collision detection.
+I'll also offer in-context advice and best practices from my decades of experience as a professional game developer and computer science instructor.
+
+`voice`
+The simulation is a space-shooter game inspired by Spacewar! from 1962, written for the command line console.
 The idea is as old as videogames. It was the reason why the C programming language and Unix operating system were invented.
-I've summoned that ancient motivation to capture your attention while I teach you foundational concepts for writing game engines.
-Check the description for the Github project if you want this code. Continue watching if you want to understand this code.
+I've summoned that ancient primordial motivation to capture your attention now, while I teach you foundational concepts for writing a game engine.
+Check the description for the Github project link if you want the code. Continue watching if you want a thorough lesson to understand the code.
 
-I spent a few weeks creating this game and writing this script before creating the tutorial series.
+I spent a few weeks creating this game, and a few months writing this script.
 Please do not misunderstand that this program just fell out of my head in one moment. Programming does not work that way.
-We wish it did, but it doesn't. Your projects will take a long time to finish too, even if they use a tutorial like this as a starting point.
-Be patient with yourself.
-My guidance will follow roughly the same path I went through while making this game a few weeks ago, but it will be many times faster.
+Your projects will take a long time to finish too, even if they use a tutorial like this as a starting point.
+Be patient with yourself. Be disciplined with your self. I believe anyone who sits with these ideas can learn them well, even if you don't consider yourself skilled with math.
+I was terrible at math in High School, and learned what I know because of practice doing projects like this.
+My guidance will follow roughly the same path I went through while making this game a few weeks ago, but it will be much faster, even with a few detours to experiment with some math.
 Because I wrote this application once already, I have the extreme benefit of having made lots of mistakes recently.
+Please be patient with your own mistakes, and the frustration that follows. Frustration is the sweat of learning. It is a sign that your mind is growing. Take a break if you need it.
 
 `scene`
-montage of code
+montage of code and the game
 
 `voice`
 I'll be using C# as the programming language.
 I assume you already have a C# runtime, compiler, and IDE installed.
-I also assume you know the basics of how to program command line applications in C#.
+I also assume you know the basics of how to program command line applications in C#, including object oriented programming basics.
+You can still follow along without that knowledge, but I recommend you start with that foundation.
 
 `scene`
 montage of Unity
 
 `voice`
-C# is notable because of the popular Unity game engine.
-This tutorial should give you some insight into how a game engine like Unity works.
+The Unity Game Engine is a notable reason I chose to do this in the C# language.
+This tutorial should also give new developers some insight into how a game engine like Unity works.
 
 //I also assume you are using LLMs to help you write code. Importantly:
 //  I assume you're aware of the intellectual hazard of relying on AI while programming. AI helps you **do**, not **learn**.
@@ -64,19 +70,14 @@ This tutorial should give you some insight into how a game engine like Unity wor
 //If you just want to play this game, save yourself some trouble and download the code from github.
 
 `scene`
-new project window in VS Community 2022
-
-`voice`
-Lets begin. Please pause the tutorial to attempt these same steps yourself. I recommend typing everything out yourself.
-it will help you learn this content.
-
-`scene`
 	 practice is the price for understanding.
 understanding is the price for power in the computer.
 
 `voice`
-practicing typing yourself will dramatically increase how long this tutorial takes for you to do, probably 10x longer or more.
-If you do not consider yourself a computer wizard yet, I recommend you practice now.
+If you are new to game programming, you should practice by typing all of this yourself.
+This will dramatically increase how long this tutorial takes for you to do, probably 10x longer or more.
+I believe that time will be worth the understanding you gain.
+If you do not consider yourself a computer wizard yet, I recommend you practice more.
 
 `scene`
 new project window in VS Community 2022
@@ -84,15 +85,18 @@ new project window in VS Community 2022
 `voice`
 Start your C# IDE. I'm using Visual Studio Community 2022.
 As of 2025, Rider is not free for commercial content, but free for personal use.
-I should not use it for a tutorial video, but I recommend that as a student.
+I should not use it for a tutorial video, but I recommend it for educational purposes.
+Rider is similar enough to Visual Studio that this tutorial will still work well for it.
 
-I'm going to call my project "LowFiCollider"
+I'm going to call my project "LowFiRockBlaster".
+And I'll be using .NET Core 5.0, because Unity doesn't support the latest C# features, and I want this tutorial to prepare you for Unity Game Development.
 
 `scene`
 program.cs
 ```
 using System;
-namespace LowFiCollider {
+
+namespace MrV.LowFiRockBlaster {
 	public class Program {
 		public static void Main(string[] args) {
 			Console.WriteLine("Hello World!");
@@ -103,7 +107,8 @@ namespace LowFiCollider {
 
 `voice`
 The default Program.cs will be our entry point. This is a basic "Hello World" program.
-If you are unfamiliar with Hello World in C#, please pause, and find a C# Hello World tutorial to practice before continuing.
+I'll be writing everything in my own MrV namespace, I recommend you name your own namespace yourself.
+I'll also be using a compact whitespace style, so I can fit as much code on the screen as possible.
 
 Let's run this code to make sure everything works. If your program does not compile and run, stop the video and get it working.
 Unfortuantely, most programming environments require some configuration, even with an automatic installer.
@@ -121,43 +126,112 @@ back to program.cs
 
 `voice`
 Lets start our game by drawing the screen where the game will be displayed.
+I'll make a new function called DrawRectangle, and call it in my Main function. You'll notice that it's public static
+we want it to be public staic for three reasons:
+	- it doesn't have any dependencies on the Program class, so we should be able to run it from anywhere
+	- Main is in a public static context, and needs it to be public static also
+	- public static function calls are technically faster than non-public static calls. 
+		- the speed gain is so extremely small that it hardly bears mentioning.
+		- But this is game programming, and performance is important to think about.
+		- I will not be taking extreme step to optimize this game while I write it, for the sake of clarity,
+			but I will intentionally choose a more performant style, out of habit.
+			- an example of this habit can be seen in this code, where I use the prefix increment operator.
+				it's one assembly instruction faster in old compilers.
 ```
-			int Width = 80, Height = 25, position_x = 0, position_y = 0;
-			char letterToPrint = '.';
-			for(int row = 0; row < Height; ++row) {
-				for(int col = 0; col < Width; ++col) {
-					Console.SetCursorPosition(position_x + col, position__y + row);
+		int width = 80, height = 23;
+		char letterToPrint = '#';
+		DrawRectangle(0, 0, width, height, letterToPrint);
+```
+```
+		public static void DrawRectangle(int x, int y, int width, int height, char letterToPrint) {
+			for (int row = 0; row < height; ++row) {
+				for (int col = 0; col < width; ++col) {
+					Console.SetCursorPosition(col + x, row + y);
 					Console.Write(letterToPrint);
 				}
 			}
+		}
 ```
 this is a pretty standard nested for loop iterating over a two-dimensional space.
 the logic here places the command line cursor exactly at each position in the rectangle before printing a character.
 
-please take a moment to understand this code.
-if this code is confusing, I highly recommend practicing loops before continuing.
-the programming in this tutorial will not get simpler beyond this point.
+Before moving on, let's take a moment to understand this logic.
+It seems pretty specific to the command line console, but gaining familiarity with this logic will help with may other kinds of problem solving in the future.
 
 `scene`
-Vec2.cs
+show the code and running output
+```
+			int width = 80;
+			char letterToPrint = '#';
+			for (int col = 0; col < width; ++col) {
+				Console.Write(letterToPrint);
+			}
+```
 
 `voice`
-we'll need a two dimensional Vector structure for many reasons in this game, and we can start using it in this rectangle drawing code.
-I'll be doing this kind of code refactoring a lot during my tutorial to emphasize how important it is to do during your own programming.
-I apologize for speeding it up. Please pause and rewind the video yourself as needed.
+this code will write 80 hashtag characters in a row.
+
+`scene`
+show the code and running output
 ```
-		public struct Vec2 {
-			public float x, y;
-			public Vec2(float x, float y) { this.x = x; this.y = y; }
-			public static Vec2 operator +(Vec2 a, Vec2 b) => new Vec2(a.x + b.x, a.y + b.y);
-			public static Vec2 operator -(Vec2 a, Vec2 b) => new Vec2(a.x - b.x, a.y - b.y);
-			public static implicit operator Vec2((float x, float y) tuple) => new Vec2(tuple.x, tuple.y);
-			public override string ToString() => $"({x},{y})";
+			int width = 80, height = 23;
+			char letterToPrint = '#';
+			for(int row = 0; row < height; ++row) {
+				for(int col = 0; col < width; ++col) {
+					Console.Write(letterToPrint);
+				}
+			}
+```
+
+`voice`
+this code will write 80 times 25 hashtag characters in a row.
+
+`scene`
+show the code and running output
+```
+			int width = 80, height = 23;
+			char letterToPrint = '#';
+			for(int row = 0; row < height; ++row) {
+				for(int col = 0; col < width; ++col) {
+					Console.Write(letterToPrint);
+				}
+				Console.WriteLine();
+			}
+```
+
+`voice`
+this code will write a rectangle 80 wide and 25 tall.
+
+`scene`
+show the code and running output
+```
+		public static void DrawRectangle(int width, int height, char letterToPrint) {
+			for(int row = 0; row < height; ++row) {
+				for(int col = 0; col < width; ++col) {
+					Console.Write(letterToPrint);
+				}
+				Console.WriteLine();
+			}
 		}
-		public static void DrawRectangle(Coord position, Coord size, char letterToPrint) {
-			for(int row = 0; row < size.y; ++row) {
-				Console.SetCursorPosition(position.x, position.y + row);
-				for(int col = 0; col < size.x; ++col) {
+```
+```
+		int width = 80, height = 23;
+		char letterToPrint = '#';
+		DrawRectangle(width, height, letterToPrint);
+		DrawRectangle(width, height, letterToPrint);
+```
+
+`voice`
+If we turn this into a function, we can print a new rectangle right after this one.
+Doing this allows us to call the function at any time from any place in our program.
+
+`scene`
+show the code and running output
+```
+		public static void DrawRectangle(int width, int height, char letterToPrint) {
+			for(int row = 0; row < height; ++row) {
+				for(int col = 0; col < width; ++col) {
+					Console.SetCursorPosition(col, row);
 					Console.Write(letterToPrint);
 				}
 			}
@@ -165,41 +239,181 @@ I apologize for speeding it up. Please pause and rewind the video yourself as ne
 ```
 
 `voice`
-a 2 dimensional vector is a physics and math concept. The basic premise is:
+we can use SetCursorPosition to move the commandline cursor exactly where we want it before printing any character with Console.Write
+This functionality is not easily available in all programming language console APIs, so it's nice that C# handles it for us.
+For example, if you want to do the same thing in Python, you need to replace SetCursorPosition with printing an escape sequence.
+And that escape sequence will not work if executed in the basic Windows console.
 
 `scene`
-TODO diagram for each line
+show the code and running output
+```
+		public static void DrawRectangle(int x, int y, int width, int height, char letterToPrint) {
+			for(int row = 0; row < height; ++row) {
+				for(int col = 0; col < width; ++col) {
+					Console.SetCursorPosition(col + c, row + y);
+					Console.Write(letterToPrint);
+				}
+			}
+		}
+```
 
-locations in space can be fully described by position along each dimension.
-Point A can be at a known location.
-Point B can be at another location.
-The difference between A and B can also be described as a Vector, by subtracting the components of Point A from point B. This is typically called the Delta.
-The distance between A and B can be calculated by doing the pythagorean theorum on the delta. This is typically called the Magnitude.
-The direction that point B is from point A can be calculated by dividing the Delta's components by the Magnitude. This converts Delta to a point on a Unit Circle. This value is also called a Normal.
-The Normal's X and Y components correspond to the Cosine and Sine of the angle between the line AB and another line going positive along the X axis.
-This Normal version of an angle can also be used for rotation calculations.
-The perpendicular angle can be determined by swapping the X and negative Y components into another vector.
-The alignment of one vector with another can be calculated by a math operation called a Dot Product.
-These mathematical relationships help us determine collision of objects, and resolve a variety of physics interactions.
+`voice`
+and this code allows us to draw the rectangle anywhere in visible space.
 
-There are plenty of tutorials on the internet about 2D vectors. One is linked in the description
-`add to description` Two dimensional vector concept tutorial https://youtu.be/j6RI6IWd5ZU
+```
+		public static void DrawRectangle(int x, int y, int width, int height, char letterToPrint) {
+			for(int row = 0; row < height; ++row) {
+				for(int col = 0; col < width; ++col) {
+					if (col + x < 0 || row + y < 0) {
+						continue;
+					}
+					Console.SetCursorPosition(col + c, row + y);
+					Console.Write(letterToPrint);
+				}
+			}
+		}
+```
 
-This implementation includes the addition and subtraction operators, and also implicit tuple casting.
+`voice`
+The code will crash if x and y are negative, which can be solved with a simple if statement.
 
-The data structure is small, with each float taking up only 4 bytes for a total of 8 bytes.
-For this reason, I'm writing the vector as a struct, because doing so makes the vector a more efficient Value type.
-If you don't understand the difference between a value type and a refernce type, I recommend doing some research about it.
-This has implications in how we use the data structure, and the performance of code using it.
+if this code is confusing, I highly recommend practicing loops before continuing.
+the programming in this tutorial will get much more conceptually complex beyond this point.
 
-let's test it
+---
+
+`scene`
+Create a src folder, MrV folder, Math folder. create Vec2.cs inside of src/MrV/Math
+Vec2.cs
+```
+namespace MrV.Math {
+	public struct Vec2 {
+		public float x, y;
+		public Vec2(float x, float y) { this.x = x; this.y = y; }
+		public static Vec2 operator +(Vec2 a, Vec2 b) => new Vec2(a.x + b.x, a.y + b.y);
+		public static Vec2 operator -(Vec2 a, Vec2 b) => new Vec2(a.x - b.x, a.y - b.y);
+		public static implicit operator Vec2((float x, float y) tuple) => new Vec2(tuple.x, tuple.y);
+		public override string ToString() => $"({x},{y})";
+	}
+}
+```
+
+`scene`
+Program.cs
+put Program.cs into src. 
+```
+		public static void DrawRectangle(Vec2 position, Vec2 size, char letterToPrint) {
+			DrawRectangle((int)position.x, (int)position.y, (int)size.x, (int)size.y, letterToPrint);
+		}
+```
+
+`voice`
+We should get serious about 2 dimensional structures.
+This simulation will have many of them, and we should start using 2D concepts in this rectangle drawing code.
+Also, this program will need many source files, and I want to organize them with folders.
+
+I'll be doing this kind of code refactoring a lot during my tutorial.
+If you are new to programming, you need to know that this is how big projects are written: one step at a time, with lots of rewrites, and tests between changes.
+It will be slower for you, and that's fine.
+I apologize for speeding it up. Please pause and rewind the video for yourself as needed.
+
+Notice that I'm using the old DrawRectangle class in this new function.
+
+`voice`
+Vec2 is a 2 dimensional vector, which is a physics and math concept. The basic premise is:
+
+`scene`
+Vec2.cs, with diagram for each line when it is discussed
+
+Point A can be at a known location x/y.
+	in the command line, 0,0 is at the upper left corner, and y increases as it goes down.
+	I'll show you how to change this conceptually later.
+Point B can be at another location x/y.
+locations in space can be fully described by a vector, which is a position along each dimension.
+  distances can also be described this way.
+  directions can also be described this way.
+//The difference between A and B can also be described as a Vector, by subtracting the components of Point A from point B. This is typically called the Delta.
+//The distance between A and B can be calculated by doing the pythagorean theorum on the Delta. This is the Distance between A and B, also called the Magnitude of Delta.
+//The direction of point B from point A can be calculated by dividing the Delta's components by the Magnitude. This converts Delta to a point on a Unit Circle. This value is also called a Normal.
+//This Normal vector of an angle can be used for rotation calculations. Notably, the math for rotating vectors this way is identical to the math used to convert imaginary numbers into real numbers.
+//The Normal's X and Y components correspond to the Cosine and Sine of the angle between the line AB and another line going positive along the X axis.
+//  Luckily, we don't need to think about trig identities or the differences between radians and degrees if we keep angles as normals. But for the sake of completeness, I've included that math here.
+//A perpendicular direction can be determined by swapping the X and negative Y components into another vector.
+//The alignment of one vector with another can be calculated by a math operation called a Dot Product.
+//Alignment with a perpendicular vector is required information when calculating how one Vector will reflect on another surface normal in a physica collision.
+//The mathematical bundled up in the Vector concept helps us fully define many things in a software simulation, including the physics interactions this tutorial will show later.
+There are plenty of additional tutorials on the internet about 2D vectors, check the description for examples:
+`add to description` Two Dimensional Vector Concept:
+  3blue1brown https://youtu.be/fNk_zzaMoSs
+  HoustonMathPrep https://youtu.be/j6RI6IWd5ZU
+
+`scene`
+AABB.cs
+create in the src/MrV/Math folder
+```
+namespace MrV.Math {
+	public struct AABB {
+		public Vec2 Min, Max;
+		public float Width => (Max.x - Min.x);
+		public float Height => (Max.y - Min.y);
+		public AABB(AABB r) : this(r.Min, r.Max) { }
+		public AABB(Vec2 min, Vec2 max) { Min = min; Max = max; }
+		public AABB(float minx, float miny, float maxx, float maxy) :
+			this(new Vec2(minx, miny), new Vec2(maxx, maxy)) { }
+	}
+}
+```
+
+Diagram of AABB as it is discussed
+```
+		public static void DrawRectangle(AABB aabb, char letterToPrint) {
+			DrawRectangle((int)aabb.Min.x, (int)aabb.Min.y, (int)aabb.Width, (int)aabb.Height, letterToPrint);
+		}
+```
+
+`voice`
+A box can be described with two Vec2 structures, bounded by edges aligned on the x and y axis. We call this an Axis Aligned Bounding Box or AABB.
+This is a simple description of space in a simulation, and it is used for many kinds of clalculations. 
+notice I'm again using public static functions, and calling a common function that has the logic written once
+	computer programmers need to have a Single Point Of Truth wherever possible, even at the cost of performance.
+	Single Point Of Truth is an optimization for the Programmer, not for the computer.
+	If we can keep complicated logic in one place, then we only need to fix one place when there is a bug in it.
+	We can always inline our functions as a final optimization step.
+
+`scene`
+Circle.cs
+
+`voice`
+A circle can be described as a Vector with one additional value for radius.
+
+`scene`
+Polygon.cs
+
+`voice`
+A polygon's shape can be described as a list of 2 dimensional vectors, with the assumption that there is a line between each point in the sequence.
+//A more useful polygon would be that shape, which can be offset to a new position, and also rotated. We'll cover that math in more detail later.
+
+With the exception of the polygon, these data structures are small and simple in memory. Each float taking up only 4 bytes. The Vec2 is a total of 8 bytes. Circle is 12. AABB is 16.
+For this reason, these are written as a struct instead of a class. The struct keyword makes each structure a Value type, which has certain memory advantages.
+Specifically, a CPU is more certain about the value of a value-type, because it doesn't need to check a reference. This means less ability for a cache miss by design.
+Check the description for additional explanation about the difference between value type and refernce type:
+`add to description` Value Type vs. Reference Type:
+  CodeMonkey: https://youtu.be/KGFAnwkO0Pk
+  MarkInman: https://youtu.be/95SkyJe3Fe0
+//A big reason for using value types is that the memory is forced to be local to the calculation space, which eliminates the possibility of cache misses
+//`add to description` Cache Misses:
+//  MLGuy: https://youtu.be/RkRUuNdb7io
+//  HandsOnEngineering: https://youtu.be/31avbKDwyuA
+
+let's write and test the new DrawRectangle function before we develop these classes more.
 
 `scene`
 writing and compiling program.cs
 ```
 		public static void Main(string[] args) {
 			Console.WriteLine("Hello World!");
-			DrawRectangle('#', (2, 3), new Vec2(20, 15));
+			DrawRectangle((2, 3), new Vec2(20, 15), '#');
+			DrawRectangle(new AABB((10, 1), (15, 20)), '@');
 		}
 ```
 
@@ -211,7 +425,10 @@ the form is mostly stylistic. however, in an inner-loop, using the constructor i
 
 `scene`
 ```
-			public static void DrawCircle(char letterToPrint, Vec2 pos, float radius) {
+			public static void DrawCircle(Circle c, char letterToPrint) {
+				DrawCircle(c.center, c.radius);
+			}
+			public static void DrawCircle(Vec2 pos, float radius, char letterToPrint) {
 				Vec2 extent = (radius, radius); // Vec2 knows how to convert from a tuple of floats
 				Vec2 start = pos - extent;
 				Vec2 end = pos + extent;
@@ -233,6 +450,8 @@ the form is mostly stylistic. however, in an inner-loop, using the constructor i
 ```
 
 `voice`
+this is what a circle drawing function could look like.
+
 this game will need circles for a lot of things.
 let's prove that we can draw a circle in the command line before doing additional circle-related programming.
 this circle drawing code uses a nested for loop like the rectangle drawing code.
@@ -253,7 +472,9 @@ it has a conditional in the inner loop testing against the equation of a circle.
 			float radius = 10;
 			float moveIncrement = 0.125f;
 			while (running) {
-				DrawCircle('.', position, radius);
+				DrawRectangle((2, 3), new Vec2(20, 15), '#');
+				DrawRectangle(new AABB((10, 1), (15, 20)), '@');
+				DrawCircle(position, radius, '.');
 				char input = Console.ReadKey().keyChar;
 				switch(input) {
 				case 'w': position.y -= moveIncrement; break;
@@ -315,6 +536,52 @@ each single iteration through the loop is a gameloop frame.
 		}
 ```
 C# enables us to create local functions, which help us name and organize our code.
+Many programming languages don't support local functions, so we might want to create a Game class that has the data mambers, an Init function, Draw, ProcessInput, and Update function. Like this:
+```
+public class Game {
+	public bool running;
+	private Vec2 position;
+	private float radius;
+	private float moveIncrement;
+	private char input;
+	public void Init() {
+		running = true;
+		position = (18,12);
+		radius = 10;
+		moveIncrement = 0.125f;
+	}
+	public void Draw() {
+		DrawCircle('.', position, radius);
+	}
+	public void ProcessInput() {
+		input = Console.ReadKey().keyChar;
+	}
+	public void Update() {
+		switch(input) {
+		case 'w': position.y -= moveIncrement; break;
+		case 'a': position.x -= moveIncrement; break;
+		case 's': position.y += moveIncrement; break;
+		case 'd': position.x += moveIncrement; break;
+		case 'e': radius += moveIncrement; break;
+		case 'r': radius -= moveIncrement; break;
+		case (char)27: running = false; break;
+		}
+	}
+}
+```
+```
+public static void Main(string[] args) {
+	Game game = new Game();
+	game.Init();
+	while (game.running) {
+		game.Draw();
+		game.ProcessInput();
+		game.Update();
+	}
+}
+```
+this is a perfectly valid style in C# as well. but for the sake of fewer source files, I'll keep writing in local functions.
+
 many programmers, myself included, consider it good programming style to use small functions, with descriptive names, and only one or two levels of indentation.
 lets run this after refactoring to make sure it still works
 
@@ -325,7 +592,7 @@ run again
 notice the flickering
 drawing a character in the command line is actually really slow.
 lets implement a timer to see how long it takes to render things
-and let's put the key input behind a check, so it doesn't block the game loop.
+and let's put the key input behind a check, so the game iteractes as quickly as possible, without blocking the game loop.
 
 `scene`
 ```
@@ -532,6 +799,7 @@ the circle more quickly now. but the sape is still not correct,
 ```
 // TODO <----------------------
 * create graphics context class to handle drawing in a double buffer
+* show how changing  the scale will change how the system draws, so y can increase up if we want
 ```
 ```
 * Circle.cs

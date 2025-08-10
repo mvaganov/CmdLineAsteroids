@@ -132,6 +132,7 @@ namespace ConsoleMrV {
 				}
 			}
 		}
+		public void FillRect(AABB aabb) => FillRect(aabb.Min, aabb.Max);
 		public void FillRect(Vec2 aabbMin, Vec2 aabbMax) {
 			bool IsInsideRectangle(Vec2 p) => p.x >= aabbMin.x && p.y >= aabbMin.y && p.x <= aabbMax.x && p.y <= aabbMax.y;
 			DrawSupersampledShape(IsInsideRectangle, aabbMin, aabbMax);
@@ -146,9 +147,9 @@ namespace ConsoleMrV {
 			Vec2 direction = delta / lineLength;
 			Vec2 perp = direction.Perpendicular() * (lineWidth / 2);
 			Vec2[] line = new Vec2[4] { start + perp, start - perp, end - perp, end + perp, };
-			Polygon.TryGetAABB(line, out Vec2 min, out Vec2 max);
+			PolygonShape.TryGetAABB(line, out Vec2 min, out Vec2 max);
 			DrawSupersampledShape(IsInsideLine, min, max);
-			bool IsInsideLine(Vec2 point) => Polygon.IsInPolygon(line, point);
+			bool IsInsideLine(Vec2 point) => PolygonShape.IsInPolygon(line, point);
 		}
 	}
 #else

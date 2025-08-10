@@ -1,126 +1,43 @@
-﻿using ConsoleMrV;
-using System;
-using System.Collections.Generic;
-using static MathMrV.AABB;
+﻿using System;
 
 namespace MathMrV {
-	public interface HasRectangle {
-		public AABB GetRectangle();
-	}
-
-	public struct AABB : HasRectangle {
+	public struct AABB {
 		public static AABB zero = new AABB(0, 0, 0, 0);
 		public Vec2 Min, Max;
 		public float CenterX => (Min.x + Min.y) / 2;
 		public float CenterY => (Min.y + Min.y) / 2;
-		public void Set(float minx, float miny, float maxx, float maxy) {
-			Min.x = minx; Min.y = miny;
-			Max.x = maxx; Max.y = maxy;
-		}
-		public void Set(Vec2 min, Vec2 max) {
-			this.Min = min;
-			this.Max = max;
-		}
-		public AABB(float minx, float miny, float maxx, float maxy) {
-			Min = new Vec2(minx, miny);
-			Max = new Vec2(maxx, maxy);
-		}
-		public AABB(AABB r) {
-			Min = r.Min;
-			Max = r.Max;
-		}
-		//public AABB() { Min = Max = Vec2.Zero; }
-		public AABB(Vec2 min, Vec2 max) {
-			Min = min; Max = max;
-		}
+		public Vec2 Center => new Vec2(CenterX, CenterY);
+		public float Width => (Max.x - Min.x);
+		public float Height => (Max.y - Min.y);
+		public Vec2 Size => new Vec2(Width, Height);
+		public AABB(float minx, float miny, float maxx, float maxy) :
+			this(new Vec2(minx, miny), new Vec2(maxx, maxy)) { }
+		public AABB(AABB r) : this(r.Min, r.Max) { }
+		public AABB(Vec2 min, Vec2 max) { Min = min; Max = max; }
 		public static AABB CreateAt(Vec2 center, Vec2 size) {
 			Vec2 extents = size / 2;
 			return new AABB(center - extents, center + extents);
 		}
 		public bool Intersects(AABB r) {
-			if (!IsValid() || !r.IsValid()) return false;
-			return !(Min.x >= r.Max.x || Max.x <= r.Min.x || Min.y >= r.Max.y || Max.y <= r.Min.y);
-		}
-		public bool IntersectsCircle(Vec2 center, float radius) {
-			if (this.Contains(center)) { return true; }
-			Vec2 radSize = new Vec2(radius, radius);
-			Vec2 expandedMin = this.Min - radSize;
-			Vec2 expandedMax = this.Max + radSize;
-			if (AABB.Contains(center, expandedMin, expandedMax)) {
-				Vec2 cornerCase = Vec2.NaN;
-				if (center.x < this.Min.x) {
-					if (center.y < this.Min.y) {
-						cornerCase = this.Min;
-					} else if (center.y > this.Max.y) {
-						cornerCase = new Vec2(this.Min.x, this.Max.y);
-					}
-				} else if (center.x > this.Max.x) {
-					if (center.y < this.Min.y) {
-						cornerCase = new Vec2(this.Max.x, this.Min.y);
-					} else if (center.y > this.Max.y) {
-						cornerCase = this.Max;
-					}
-				}
-				if (!cornerCase.IsNaN()) {
-					float distanceSqr = (cornerCase-center).MagnitudeSqr;
-					return distanceSqr <= radius * radius;
-				}
-				return true;
+			if (!IsValid() || !r.IsValid()) {
+				return false;
 			}
-			return false;
+			return !(Min.x >= r.Max.x || Max.x <= r.Min.x || Min.y >= r.Max.y || Max.y <= r.Min.y);
 		}
 		public bool Contains(Vec2 p) => Contains(p, Min, Max);
 		public static bool Contains(Vec2 p, Vec2 min, Vec2 max) {
 			return p.x >= min.x && p.x < max.x && p.y >= min.y && p.y < max.y;
 		}
-		public void Inset(float inset) {
-			Inset(new Vec2(inset, inset));
-		}
-		public void Inset(Vec2 inset) {
-			Min += inset;
-			Max -= inset;
-		}
-		public float GetWidth() { return Max.x - Min.x; }
-		public float GetHeight() { return Max.y - Min.y; }
-		/** width/height vector */
-		public Vec2 GetSize() { return new Vec2(GetWidth(), GetHeight()); }
-		public float GetArea() {
-			Vec2 size = GetSize();
-			return size.x * size.y;
-		}
-		// TODO draw with canvas
-		public void draw(CommandLineCanvas g) {
-			g.FillRect(Min, Max);
-		}
-		public void Translate(Vec2 delta) {
-			Min += delta;
-			Max += delta;
-		}
 		public void Translate(float dx, float dy) {
 			Vec2 delta = new Vec2(dx, dy);
 			Translate(delta);
 		}
-		public void ClampToInt() {
-			Min.ClampToInt();
-			Max.ClampToInt();
-		}
-		public void RoundToInt() {
-			Min.RoundToInt();
-			Max.RoundToInt();
-		}
-		public void Set(AABB r) {
-			Min = r.Min;
-			Max = r.Max;
-		}
-		public override string ToString() {
-			return "[min(" + Min.x + "," + Min.y + "), max(" + Max.x + "," + Max.y + "), w/h(" + (int)GetWidth() + "," + (int)GetHeight() + ")]";
-		}
-		public Vec2 GetCenter() => (Min + Max) / 2;
+		public void Translate(Vec2 delta) { Min += delta; Max += delta; }
+		public override string ToString() => $"[min{Min}, max{Max}, w/h({Width}, {Height})]";
 		public bool Contains(AABB r) {
 			return Min.x <= r.Min.x && Max.x >= r.Max.x && Min.y <= r.Min.y && Max.y >= r.Max.y;
 		}
-		public AABB GetRectangle() => this;
-		public bool IsValid() => GetWidth() > 0 && GetHeight() > 0;
+		public bool IsValid() => Width > 0 && Height > 0;
 		public bool TryGetUnion(AABB r, out AABB union) {
 			if (!Intersects(r)) { 
 				union = new AABB(Vec2.NaN, Vec2.NaN);
@@ -144,73 +61,8 @@ namespace MathMrV {
 			if (p.y < Min.y) Min.y = p.y;
 			if (p.y > Max.y) Max.y = p.y;
 		}
-		/// <summary>
-		/// Determines if rectangles are adjacent, with identical adjacent lengths. These can be merged.
-		/// </summary>
-		/// <param name="r"></param>
-		/// <returns></returns>
-		public bool CanMerge(AABB r) {
-			return (Min.y == r.Min.y && Max.y == r.Max.y && (Min.x == r.Max.x || Max.x == r.Min.x))
-					|| (Min.x == r.Min.x && Max.x == r.Max.x && (Min.y == r.Max.y || Max.y == r.Min.y));
-		}
-
-		public static void Merge(List<AABB> list) {
-			AABB ra, rb;
-			// TODO iterate list backwards, so --a is not required
-			for (int a = 0; a < list.Count; ++a) {
-				ra = list[a];
-				if (!ra.IsValid()) {
-					list.RemoveAt(a);
-					--a;
-					continue;
-				}
-				// TODO iterate list backwards, so --a is not required
-				for (int b = a + 1; b < list.Count; ++b) {
-					rb = list[b];
-					if (ra.CanMerge(rb)) {
-						ra.Add(rb);
-						list.RemoveAt(b);
-						--b;
-					}
-				}
-			}
-		}
-		/// <summary>
-		/// move this rectangle assuming, this rectangle is the unit grid size
-		/// </summary>
-		public void GridTranslate(int colTranslate, int rowTranslate) {
-			Vec2 delta = new Vec2(GetWidth() * colTranslate, GetHeight() * rowTranslate);
-			Translate(delta);
-		}
-		/// <summary>
-		/// a new rectangle that would be translated, assuming this rectangle is the unit grid size
-		/// </summary>
-		/// <param name="colTranslate"></param>
-		/// <param name="rowTranslate"></param>
-		/// <returns></returns>
-		public AABB GetGridTranslated(int colTranslate, int rowTranslate) {
-			AABB moved = new AABB(this);
-			moved.GridTranslate(colTranslate, rowTranslate);
-			return moved;
-		}
-		// TODO use canvas
-		//public static void draw(Graphics2D g, List<AABB> list) {
-		//	if (list == null || list.size() == 0)
-		//		return;
-		//	for (int i = 0; i < list.size(); ++i) {
-		//		list.get(i).draw(g);
-		//	}
-		//}
-		//public static void fill(Graphics2D g, List<AABB> list) {
-		//	if (list == null || list.size() == 0)
-		//		return;
-		//	for (int i = 0; i < list.size(); ++i) {
-		//		list.get(i).fill(g);
-		//	}
-		//}
 		public enum SideIndex { Invalid = -1, MinY = 0, MinX = 1, MaxY = 2, MaxX = 3 }
 		public SideIndex SqueezOutOf(AABB r, out Vec2 a_out) {
-			// up, left, down, right
 			float[] squeeze = { Max.y - r.Min.y, Max.x - r.Min.x, r.Max.y - Min.y, r.Max.x - Min.x };
 			SideIndex collidingSide = SideIndex.MinY;
 			for (int i = 1; i < squeeze.Length; ++i) {
@@ -230,20 +82,9 @@ namespace MathMrV {
 			}
 			return SideIndex.Invalid;
 		}
-		public void multiply(float d) {
-			Min *= d;
-			Max *= d;
-		}
-		public void Scale(Vec2 v) {
-			Min.Scale(v);
-			Max.Scale(v);
-		}
-		private static Vec2 hflip = new Vec2(-1, 1);
-		public void HorizontalFlip() {
-			Scale(hflip);
-			CorrectNegative();
-		}
-		public void CorrectNegative() {
+		public void Scale(float d) { Min *= d; Max *= d; }
+		public void Scale(Vec2 v) { Min.Scale(v); Max.Scale(v); }
+		public void CorrectNegativeDimensions() {
 			float swap;
 			if (Min.x > Max.x) { swap = Min.x; Min.x = Max.x; Max.x = swap; }
 			if (Min.y > Max.y) { swap = Min.y; Min.y = Max.y; Max.y = swap; }

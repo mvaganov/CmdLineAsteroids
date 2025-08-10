@@ -83,7 +83,7 @@ namespace collision {
 		/// </summary>
 		protected SpacePartitionCell<T>[,] subPartition;
 		public AABB AABB => aabb;
-		public Vec2 Position => aabb.GetCenter();
+		public Vec2 Position => aabb.Center;
 		public SpacePartitionCell<T> Parent => parent;
 		public SpacePartitionCell(Vec2 min, Vec2 max, byte treeDepth, byte columns, byte rows,
 		ConvertElementToCircleDelegate convertElementToCircle, SpacePartitionCell<T> parent = null) {
@@ -103,7 +103,7 @@ namespace collision {
 			if (availableDepth == 0) {
 				throw new Exception("cannot split, already at zero available depth");
 			}
-			Vec2 size = aabb.GetSize();
+			Vec2 size = aabb.Size;
 			Vec2 cellSize = new Vec2(size.x / columns, size.y / rows);
 			subPartition = mem.branchPool.Commission();
 			Vec2 cursor = aabb.Min;
@@ -169,7 +169,7 @@ namespace collision {
 			return true;
 		}
 		private void InsertIntoNewParent(Circle circle, T element, SpacePartition<T>.Mem mem) {
-			Vec2 parentCellSize = aabb.GetSize();
+			Vec2 parentCellSize = aabb.Size;
 			Vec2 parentFullSize = parentCellSize.Scaled(new Vec2(columns, rows));
 			Vec2 center = (circle.center + Position) / 2;
 			AABB parentEstimate = AABB.CreateAt(center, parentFullSize);
@@ -217,7 +217,7 @@ namespace collision {
 			if (parent == null) { consoleCollisionSpaceColorIndex = -1; }
 			if (subPartition == null) { NextConsoleCollisionColor(ctx); }
 			if (drawElementFunction == null) {
-				aabb.draw(ctx);
+				ctx.FillRect(aabb);
 			}
 			if (subPartition != null) {
 				for (int r = 0; r < subPartition.GetLength(0); ++r) {
@@ -236,7 +236,7 @@ namespace collision {
 
 		public bool CircleGoesHere(Circle circle) {
 			return circle.radius > 0
-			? aabb.IntersectsCircle(circle.center, circle.radius)
+			? circle.IntersectsAABB(aabb)
 			: aabb.Contains(circle.center);
 		}
 		public List<SpacePartitionCell<T>> GetLeafPartitions(Circle circle) {
@@ -254,7 +254,7 @@ namespace collision {
 			int lastCol = subPartition.GetLength(1) - 1;
 			min -= aabb.Min;
 			max -= aabb.Min;
-			Vec2 cellSize = subPartition[0, 0].AABB.GetSize();
+			Vec2 cellSize = subPartition[0, 0].AABB.Size;
 			int startRow = (int)(min.y / cellSize.y);
 			if (startRow > lastRow) { return null; }
 			int startCol = (int)(min.x / cellSize.x);

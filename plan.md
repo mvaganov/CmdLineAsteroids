@@ -1,131 +1,171 @@
 # LowFiCollider
 
-## 0 - Intro and Hello World
+## Intro and Hello World
 * intro
 * preview
 * start project
+
+## initial code
 * hello world
-
-## 1 - Draw Rectangle and Vec2
 * draw rectangle
-* vec2
-* refactor draw rectangle
+* details of rectangle drawing in the command line
 
-## 2 - Basic Circle and Basic Gameloop
+## introduce Vec2 math structs
+* Vec2
+* Circle
+* AABB
+* Polygon
+
+## writing objects and Drawing with struct arguments
+* DrawRectangle -> DrawRectangle
+  - two methods for convenience
+  - code is very cheap, thinking is expensive
+  - premature optimization is the root of all evil
 * DrawCircle
+
+## Basic GameLoop
 * test circle with variable controls in a gameloop
 
-## 3 - Gameloop refactor
+## Gameloop refactor
 * refactor gameloop
 * test performance with Timer
 
-## 4 - Timing
+## Timing
 * implement Time class
 * calculate cost of calculation
 * throttle code
 
-## 5 - Double Buffering
+## Double Buffering
 * graphics context class with draw buffer
 * test double buffering
 
-## 6 - Dirty Console Glyph
+## Value Over Time To Test Circle Radius
+* ValueOverTime class
+* BinarySearchWithInsertionPoint
+* test circle
 
-## 7 - Proper Scale
+## Vec2 Lerp
+* Lerp math for 2D Vectors
 
-## 8 - Anti Aliasing With Super Sampling Using ASCII
+## DrawLine
+* determine if width or height of line is longer
+* iterate over the longer dimension, use Lerp to put down points
 
-## 9 Antialiasing With Console Color
+# abstract class and Templates
+* template ValueOverTime
+* create abstract method
+* implement two child classes
+* move circle position over time
+
+## Dirty Console Glyph
+
+## Proper Scale
+
+## Anti Aliasing With Super Sampling Using ASCII
+
+## Draw Line antialiased
+
+## Antialiasing With Console Color
 * ConsoleColorPair
 * ConsoleGlyph
 
-## 10 Color Gradient
+## Color Gradient
 
-## 11 Write Text At
+## Write Text At
 
-## 12 Polygon
+## Polygon
 * Polygon class
+* Draw polygon
+* Draw rotated polygon
 
-## 13 Draw Line
-
-## 14 Testing Proof Of Life
+## Testing
+* Proof Of Life
+* This is not Test Driven Development, this is Game Development.
 
 ---
 
-## 15 Particle Class, to show moving circle
+## Particle Class, to show moving circle
+* velocity
+* particle update
 
-## 16 Basic Particle Explosion
+## Basic Particle Explosion
+* create multiple particles
+* do it again, dynamically, in a for-loop
 
-## 17 Particle Death Over Time
+## Particle Death Over Time
+* lifetime variables
+* Update
+* disabled flag
 
-## 18 ObjectPool
+## ObjectPool
 
-## 19 Particle Change Size Over Time With Upadte
+## Particle Change Size Over Time With Upadte
+* use ValueOverTime class
 
-## 20 ValueOverTime class
+## RangeF and Rand Class For Particle Randomness
 
-## 21 RangeF and Rand Class For Particle Randomness
+## Particle System class
 
-## 22 Particle System class
+## KeyInput Class
 
-## 23 KeyInput Class
+## Use KeyInput For Different Particle Triggers
 
-## 24 KeyInput For Different Particle Triggers
-
-## 25 Game Engine Refactor
+## Game Engine Refactor
 * IDrawable list
 * IGameObject list
 * Key input triggers set during init
 
 ---
 
-## 26 Circle
+## Circle
 * Circle class
 * MobileObject class
 * Create multiple asteroids using ObjectPool
 
-## 27 Basic Mobile Polygon
+## Basic Mobile Polygon
 * MobilePolygon class
 * Welzl's Algorithm
 
-## 28 CharacterController
+## CharacterController
 * Character Controller class
 
-## 29 Shooting Projectiles
+## Shooting Projectiles
 * triangle mobile polygon
 * spin
 * create using ObjectPool
 
-## 30 Basic Collision
+## Basic Collision
 * ICollidable interface
 * projectile and mobile circle
 
-## 31 Better Collision
+## Better Collision
 * multi-stage: detect, resolve later.
 
-## 32 Limits of Naive Collision
+## Limits of Naive Collision
 * show lag From O(n^2) Collision Detection
 
-## 33 Quad Tree
+## Quad Tree
 * draw the tree
 
-## 34 Cell Space Partition
+## Cell Space Partition
 * draw the tree
 
-## 35 Circle Collision
+## Circle Collision instead of point
 * draw the membership
+* note circles that belong to multiple cells
 
-## 36 Debugging
+## Debugging
 * test collision
 * discover duplicate collisions
 
-## 37 Resolve Duplicate Collisions
+## Resolve Duplicate Collisions
 * use tests to identify and verify issue
 * break apart collision detection
 
-## 38 ObjectPool for Space Partition
+## ObjectPool for Space Partition
 * add shared memory space used by SpacePartition
 
-## 39 Next Steps
+## Next Steps
 
 ---
 

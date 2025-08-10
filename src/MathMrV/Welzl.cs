@@ -48,13 +48,13 @@ namespace MathMrV {
 			return Circumcircle(points[0], points[1], points[2]);
 		}
 
-		private static Circle MakeDiameter(Vec2 a, Vec2 b) {
+		public static Circle MakeDiameter(Vec2 a, Vec2 b) {
 			Vec2 center = new Vec2((a.x + b.x) / 2, (a.y + b.y) / 2);
 			float radius = center.Distance(a);
 			return new Circle(center, radius);
 		}
 
-		private static Circle Circumcircle(Vec2 a, Vec2 b, Vec2 c) {
+		public static Circle Circumcircle(Vec2 a, Vec2 b, Vec2 c) {
 			float determinant = 2 * (a.x * (b.y - c.y) +
 			                         b.x * (c.y - a.y) +
 			                         c.x * (a.y - b.y));

@@ -190,7 +190,7 @@ namespace asteroids {
 						MobileCircle asteroid = asteroidPool.Commission();
 						asteroid.Position = asteroidStartPosition;
 						asteroidStartPosition.RotateRadians(MathF.PI * 2 / activeAsteroidCount);
-						asteroid.Velocity = Vec2.RandomDirection;
+						asteroid.Velocity = Vec2.NormalFromDegrees(Rand.Number * 360);
 					}
 				}
 				for (int layers = 0; layers < 3; ++layers) {
@@ -217,7 +217,7 @@ namespace asteroids {
 					float degreesSeperatingFragments = 360f / asteroidBreakupCount;
 					Vec2 positionRadius = direction * (asteroid.Radius / 2);
 					positionRadius.RotateDegrees(degreesSeperatingFragments/2);
-					Vec2[] points = Polygon.CreateRegular(asteroidBreakupCount, positionRadius);
+					Vec2[] points = PolygonShape.CreateRegular(asteroidBreakupCount, positionRadius);
 					float subAsteroidRadius = points[0].Distance(points[1]) / 2;
 					for(int i = 0; i < points.Length; ++i) {
 						MobileCircle newAsteroid = asteroidPool.Commission();

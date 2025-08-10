@@ -107,7 +107,7 @@ namespace asteroids {
 			particle.Lifetime = ParticleLifetime.Value();
 			switch (kind) {
 				case Kind.Explosion:
-					Vec2 direction = Vec2.UnitVectorFromDegrees(360 * Rand.Number);
+					Vec2 direction = Vec2.NormalFromDegrees(360 * Rand.Number);
 					particle.Velocity = direction * ParticleSpeed.Value();
 					particle.Position = Position + direction * Radius.Value();
 					break;
@@ -121,7 +121,8 @@ namespace asteroids {
 		public void DestroyParticle(Particle particle) { }
 		public float GetSizeAtTime(float lifetime) {
 			if (SizeOverLifetime == null) { return 1; }
-			return SizeOverLifetime.GetValue(lifetime);
+			SizeOverLifetime.TryGetValue(lifetime, out float value);
+			return value;
 		}
 	}
 }
