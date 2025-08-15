@@ -122,6 +122,31 @@ For example, be sure you have the .NET desktop development workload installed by
 ---
 
 `scene`
+Work Breakdown Structure
+* game design document
+	* graphics
+		* draw: circles (asteroints, powerups)
+		* draw: polygons (player, projectiles)
+		* colors in the command line, with text overlay
+	* logic
+		* objects can move using simple physics
+		* objects interact when they collide
+		* player character is an object, controlled by user
+	* player choices
+		* move in cardinal directions (up/down/left/right)
+		* shoot projectile, if sufficient ammo
+		* avoid moving asteroids, or else be destroyed
+
+`voice`
+Before I start writing the game, I want to have a clear set of goals. An imagined vision of the game is a necessary starting point.
+A durable list of features and expectations is a valuable next step. This is essential for a project that will take several days.
+For game development, this is often called a Game Design Document. An effective form of a Game Design Document is a Work Breakdown Structure, like this.
+More experienced developers will need fewer details and less structure to create a product.
+Add just enough detail to your list of expectations that you feel you will remember your game vision when you read this document again. Avoid adding more detail than that.
+Spending too much time writing a design or specification is sometimes called Analysis Paralisys, and it is a real cause for projects to fail before they even start.
+Identify clear goals that you can start implementing, and give yourself the grace to updatee the document later.
+
+`scene`
 back to program.cs
 
 `voice`
@@ -306,6 +331,9 @@ put Program.cs into src.
 			DrawRectangle((int)position.x, (int)position.y, (int)size.x, (int)size.y, letterToPrint);
 		}
 ```
+```
+			DrawRectangle((2, 3), new Vec2(20, 15), '*');
+```
 
 `voice`
 We should get serious about 2 dimensional structures.
@@ -360,6 +388,7 @@ namespace MrV.Math {
 		public AABB(Vec2 min, Vec2 max) { Min = min; Max = max; }
 		public AABB(float minx, float miny, float maxx, float maxy) :
 			this(new Vec2(minx, miny), new Vec2(maxx, maxy)) { }
+		public override string ToString() => $"[min{Min}, max{Max}, w/h({Width}, {Height})]";
 	}
 }
 ```
@@ -369,6 +398,9 @@ Diagram of AABB as it is discussed
 		public static void DrawRectangle(AABB aabb, char letterToPrint) {
 			DrawRectangle((int)aabb.Min.x, (int)aabb.Min.y, (int)aabb.Width, (int)aabb.Height, letterToPrint);
 		}
+```
+```
+			DrawRectangle(new AABB((10, 1), (15, 20)), '|');
 ```
 
 `voice`
@@ -381,21 +413,59 @@ notice I'm again using public static functions, and calling a common function th
 	We can always inline our functions as a final optimization step.
 
 `scene`
+writing and compiling program.cs
+```
+		static void Main(string[] args) {
+			int width = 80, height = 24;
+			char letterToPrint = '#';
+			DrawRectangle(0, 0, width, height, letterToPrint);
+			DrawRectangle((2, 3), new Vec2(20, 15), '*');
+			DrawRectangle(new AABB((10, 1), (15, 20)), '|');
+			Console.SetCursorPosition(0, (int)height);
+		}
+```
+
+`voice`
+notice I'm using tuple notation for the first vector describing position, and an explicit constructor for the size.
+the form is mostly stylistic. however, in an inner-loop, using the constructor is preferred because it is slightly faster to execute.
+
+`scene`
 Circle.cs
+```
+namespace MrV.Math {
+	public struct Circle {
+		public Vec2 center;
+		public float radius;
+		public Circle(Vec2 position, float radius) { this.center = position; this.radius = radius; }
+		public override string ToString() => $"({center}, r:{radius})";
+	}
+}
+```
 
 `voice`
 A circle can be described as a Vector with one additional value for radius.
 
 `scene`
 Polygon.cs
+```
+namespace MrV.Math {
+	public struct PolygonShape {
+		public Vec2[] points;
+		public PolygonShape(Vec2[] points) {
+			this.points = points;
+		}
+		public override string ToString() => $"(polygon: {string.Join(", ", points)})";
+	}
+}
+```
 
 `voice`
 A polygon's shape can be described as a list of 2 dimensional vectors, with the assumption that there is a line between each point in the sequence.
 //A more useful polygon would be that shape, which can be offset to a new position, and also rotated. We'll cover that math in more detail later.
 
-With the exception of the polygon, these data structures are small and simple in memory. Each float taking up only 4 bytes. The Vec2 is a total of 8 bytes. Circle is 12. AABB is 16.
-For this reason, these are written as a struct instead of a class. The struct keyword makes each structure a Value type, which has certain memory advantages.
-Specifically, a CPU is more certain about the value of a value-type, because it doesn't need to check a reference. This means less ability for a cache miss by design.
+These data structures are small and simple in memory. Each float taking up only 4 bytes. The Vec2 is a total of 8 bytes. Circle is 12. AABB is 16. The points array of Polygon is a reference, which is also small, probably 8 bytes.
+Because they are simple in memory, these are written as struct Value types instead of class Reference types. A Value type has certain memory advantages.
+A program passes it's data by default instead of a reference to it's data. As a result, the CPU is more certain about the value of a value-type, because it doesn't need to check a reference. This design eliminates cache misses for this data.
 Check the description for additional explanation about the difference between value type and refernce type:
 `add to description` Value Type vs. Reference Type:
   CodeMonkey: https://youtu.be/KGFAnwkO0Pk
@@ -404,22 +474,8 @@ Check the description for additional explanation about the difference between va
 //`add to description` Cache Misses:
 //  MLGuy: https://youtu.be/RkRUuNdb7io
 //  HandsOnEngineering: https://youtu.be/31avbKDwyuA
-
-let's write and test the new DrawRectangle function before we develop these classes more.
-
-`scene`
-writing and compiling program.cs
-```
-		public static void Main(string[] args) {
-			Console.WriteLine("Hello World!");
-			DrawRectangle((2, 3), new Vec2(20, 15), '#');
-			DrawRectangle(new AABB((10, 1), (15, 20)), '@');
-		}
-```
-
-`voice`
-notice I'm using tuple notation for the first vector describing position, and an explicit constructor for the size.
-the form is mostly stylistic. however, in an inner-loop, using the constructor is preferred because it is slightly faster to execute.
+You should also notice that I am using public variables. Academically, it is considered best practice to use private variables wherever possible.
+However, small structures with very clear conceptual boundaries like these are often left exposed, even after rapid prototyping.
 
 ---
 
@@ -429,7 +485,7 @@ the form is mostly stylistic. however, in an inner-loop, using the constructor i
 				DrawCircle(c.center, c.radius);
 			}
 			public static void DrawCircle(Vec2 pos, float radius, char letterToPrint) {
-				Vec2 extent = (radius, radius); // Vec2 knows how to convert from a tuple of floats
+				Vec2 extent = (radius, radius);
 				Vec2 start = pos - extent;
 				Vec2 end = pos + extent;
 				Vec2 coord = start;
@@ -448,34 +504,147 @@ the form is mostly stylistic. however, in an inner-loop, using the constructor i
 				}
 			}
 ```
-
-`voice`
-this is what a circle drawing function could look like.
-
-this game will need circles for a lot of things.
-let's prove that we can draw a circle in the command line before doing additional circle-related programming.
-this circle drawing code uses a nested for loop like the rectangle drawing code.
-it has a conditional in the inner loop testing against the equation of a circle.
 ```
 		static void Main(string[] args) {
-			Console.WriteLine("Hello World!");
-			DrawRectangle('#', (2, 3), (20, 15));
-			DrawCircle('.', (18, 12), 10);
+			int width = 80, height = 24;
+			char letterToPrint = '#';
+			DrawRectangle(0, 0, width, height, letterToPrint);
+			DrawRectangle((2, 3), new Vec2(20, 15), '*');
+			DrawRectangle(new AABB((10, 1), (15, 20)), '|');
+			DrawCircle((21, 12), 10, '.');
+			Console.SetCursorPosition(0, (int)height);
 		}
 ```
+
+`voice`
+the circle drawing code is more complex than the rectangle drawing code, but based on the same principles.
+we iterate across a 2 dimensional area with a nested for-loop, just like with a rectangle.
+instead of printing the character at every location, we check to see if the character is inside of the circle, and only print if it is.
+one important additional optimization here is limiting the size of the rectangle. we calculate the start and end bounds of this region with the circle's Extent.
+
+the logic to test if a point is inside of a circle is really important to the concept of a circle, so it should probably live in the circle class
+
+`scene`
+Circle.cs
+```
+
+		public static bool IsInsideCircle(Vec2 position, float radius, Vec2 point) {
+			float dx = point.x - position.x, dy = point.y - position.y;
+			return dx * dx + dy * dy <= radius * radius;
+		}
+		public bool Contains(Vec2 point) => IsInsideCircle(center, radius, point);
+```
+Program.cs
+```
+						if (coord.x < 0 || coord.y < 0) { continue; }
+						bool pointIsInside = Circle.IsInsideCircle(pos, radius, coord);
+						if (pointIsInside) {
+							Console.SetCursorPosition((int)coord.x, (int)coord.y);
+							Console.Write(letterToPrint);
+						}
+```
+
+`voice`
+This is a method extraction refactor, and it helps create a Single Point Of Truth for our circle logic.
+
+If we implement a similar function in Polygon, we can use a similar draw function to draw the polygon
+
+```
+		public static bool IsInPolygon(IList<Vec2> poly, Vec2 pt) {
+			bool inside = false;
+			for (int index = 0, prevIndex = poly.Count - 1; index < poly.Count; prevIndex = index++) {
+				Vec2 vertex = poly[index], prevVertex = poly[prevIndex];
+				bool edgeVerticallySpansRay = (vertex.y > pt.y) != (prevVertex.y > pt.y);
+				if (!edgeVerticallySpansRay) {
+					continue;
+				}
+				float slope = (prevVertex.x - vertex.x) / (prevVertex.y - vertex.y);
+				float xIntersection = slope * (pt.y - vertex.y) + vertex.x;
+				bool intersect = pt.x < xIntersection;
+				if (intersect) {
+					inside = !inside;
+				}
+			}
+			return inside;
+		}
+		public static bool TryGetAABB(IList<Vec2> points, out Vec2 min, out Vec2 max) {
+			if (points.Count == 0) {
+				min = max = default;
+				return false;
+			}
+			min = max = points[0];
+			for (int i = 1; i < points.Count; ++i) {
+				Vec2 p = points[i];
+				if (p.x < min.x) { min.x = p.x; }
+				if (p.y < min.y) { min.y = p.y; }
+				if (p.x > max.x) { max.x = p.x; }
+				if (p.y > max.y) { max.y = p.y; }
+			}
+			return true;
+		}
+```
+
+`voice`
+The math for checking a point inside of a polygon is a bit complex. the basic idea is this:
+	imagine a ray from the given point, going to the right.
+	if that ray crosses the polygon's edges an odd number of times, then the point is inside of the polygon
+	the inner loop checks if the ray from pt crosses an edge
+		first check to see if the point is in range of the edge at all
+		then do the math to test if the ray's x intersection is on the edge
+Finding the bounding area of the polygon is also not straight forward, so we should have a function
+	it check every point, looking for the minimum and maximum values
+	the minimum and maximum values are output that as a bounding box
+This method can fail if the polygon is not correctly formed. This TryGet pattern is common in C# when failure is possible.
+
+```
+			public static void DrawPolygon(Vec2[] poly, char letterToPrint) {
+				PolygonShape.TryGetAABB(poly, out Vec2 start, out Vec2 end);
+				Vec2 coord = start;
+				for (; coord.y < end.y; coord.y += 1) {
+					coord.x = start.x;
+					for (; coord.x < end.x; coord.x += 1) {
+						if (coord.x < 0 || coord.y < 0) { continue; }
+						bool pointIsInside = PolygonShape.IsInPolygon(poly, coord);
+						if (pointIsInside) {
+							Console.SetCursorPosition((int)coord.x, (int)coord.y);
+							Console.Write(letterToPrint);
+						}
+					}
+				}
+			}
+```
+```
+		static void Main(string[] args) {
+			int width = 80, height = 24;
+			char letterToPrint = '#';
+			Vec2[] polygonShape = new Vec2[] { (25, 5), (35, 1), (50, 20) };
+		}
+```
+
+`voice`
+this code proves that I can draw important parts of my game.
+Proving graphics is critical for game development, since graphics are a huge feature, and risk.
+as a general rule of software development, you should acheive goals that address major risks first.
+I'll continue addressing graphics risks soon, after this test application becomes more of a real game.
 
 `scene`
 ```
 		static void Main(string[] args) {
+			int width = 80, height = 24;
+			char letterToPrint = '#';
+			Vec2[] polygonShape = new Vec2[] { (25, 5), (35, 1), (50, 20) };
 			bool running = true;
 			Vec2 position = (18,12);
 			float radius = 10;
 			float moveIncrement = 0.125f;
 			while (running) {
-				DrawRectangle((2, 3), new Vec2(20, 15), '#');
-				DrawRectangle(new AABB((10, 1), (15, 20)), '@');
+				DrawRectangle(0, 0, width, height, letterToPrint);
+				DrawRectangle((2, 3), new Vec2(20, 15), '*');
+				DrawRectangle(new AABB((10, 1), (15, 20)), '|');
 				DrawCircle(position, radius, '.');
-				char input = Console.ReadKey().keyChar;
+				DrawPolygon(polygonShape, '-');
+				Console.SetCursorPosition(0, (int)height);
+				char input = Console.ReadKey().KeyChar;
 				switch(input) {
 				case 'w': position.y -= moveIncrement; break;
 				case 'a': position.x -= moveIncrement; break;
@@ -490,13 +659,17 @@ it has a conditional in the inner loop testing against the equation of a circle.
 ```
 
 `voice`
-the circle is more interesting than the rectangle, so I'll spend a bit more time testing it.
+The game engine is a major risk that should be addressed as well.
+The core of a game engine is a game loop.
+We can use this interactive loop to test parts of our game as we write it.
+First, let's test circle drawing.
 
 `scene`
 run the app to test
 
 `voice`
-here is a basic interactive loop, where we can play with the circle values
+we can play with some circle values now
+with some modifications, we could use this code to test the rectangle and polygon drawing code as well. I recommend doing that as practice for novice developers.
 
 this is already turning into a game engine.
 a game engine has 4 main regions: initializationm, draw, input, and update.
@@ -506,6 +679,9 @@ each single iteration through the loop is a gameloop frame.
 ```
 		static void Main(string[] args) {
 			// initialization
+			int width = 80, height = 24;
+			char letterToPrint = '#';
+			Vec2[] polygonShape = new Vec2[] { (25, 5), (35, 1), (50, 20) };
 			bool running = true;
 			Vec2 position = (18,12);
 			float radius = 10;
@@ -517,7 +693,12 @@ each single iteration through the loop is a gameloop frame.
 				Update();
 			}
 			void Draw() {
-				DrawCircle('.', position, radius);
+				DrawRectangle(0, 0, width, height, letterToPrint);
+				DrawRectangle((2, 3), new Vec2(20, 15), '*');
+				DrawRectangle(new AABB((10, 1), (15, 20)), '|');
+				DrawCircle(position, radius, '.');
+				DrawPolygon(polygonShape, '-');
+				Console.SetCursorPosition(0, (int)height);
 			}
 			void ProcessInput() {
 				input = Console.ReadKey().keyChar;

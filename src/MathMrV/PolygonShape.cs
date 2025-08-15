@@ -4,11 +4,12 @@ using System.Collections.Generic;
 namespace MathMrV {
 	public struct PolygonShape {
 		private Vec2[] points;
-		public Vec2[] Points { get => points; set { points = value; } }
-		public int Count => points.Length;
 		public PolygonShape(Vec2[] points) {
 			this.points = points;
 		}
+		public override string ToString() => $"(polygon: {string.Join(", ", points)})";
+		public Vec2[] Points { get => points; set { points = value; } }
+		public int Count => points.Length;
 		public Vec2 GetPoint(int index) {
 			return points[index];
 		}
