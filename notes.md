@@ -129,7 +129,8 @@ Work Breakdown Structure
 		* draw: polygons (player, projectiles)
 		* colors in the command line, with text overlay
 	* logic
-		* objects can move using simple physics
+		* simulation runs in real time, even while player isn't providing input
+		* objects move using simple physics
 		* objects interact when they collide
 		* player character is an object, controlled by user
 	* player choices
@@ -481,28 +482,28 @@ However, small structures with very clear conceptual boundaries like these are o
 
 `scene`
 ```
-			public static void DrawCircle(Circle c, char letterToPrint) {
-				DrawCircle(c.center, c.radius);
-			}
-			public static void DrawCircle(Vec2 pos, float radius, char letterToPrint) {
-				Vec2 extent = (radius, radius);
-				Vec2 start = pos - extent;
-				Vec2 end = pos + extent;
-				Vec2 coord = start;
-				float r2 = radius * radius;
-				for (; coord.y < end.y; coord.y += 1) {
-					coord.x = start.x;
-					for (; coord.x < end.x; coord.x += 1) {
-						if (coord.x < 0 || coord.y < 0) { continue; }
-						Vec2 d = coord - pos;
-						bool pointIsInCircle = d.x * d.x + d.y * d.y < r2;
-						if (pointIsInCircle) {
-							Console.SetCursorPosition((int)coord.x, (int)coord.y);
-							Console.Write(letterToPrint);
-						}
+		public static void DrawCircle(Circle c, char letterToPrint) {
+			DrawCircle(c.center, c.radius);
+		}
+		public static void DrawCircle(Vec2 pos, float radius, char letterToPrint) {
+			Vec2 extent = (radius, radius); // Vec2 knows how to convert from a tuple of floats
+			Vec2 start = pos - extent;
+			Vec2 end = pos + extent;
+			float r2 = radius * radius;
+			for (int y = (int)start.y; y < end.y; ++y) {
+				for (int x = (int)start.x; x < end.x; ++x) {
+					if (x < 0 || y < 0) { continue; }
+					float dx = x - pos.x;
+					float dy = y - pos.y;
+					bool pointIsInside = dx * dx + dy * dy < r2;
+					if (pointIsInside) {
+						Console.SetCursorPosition(x, y);
+						Console.Write(letterToPrint);
 					}
 				}
 			}
+		}
+
 ```
 ```
 		static void Main(string[] args) {
@@ -517,7 +518,7 @@ However, small structures with very clear conceptual boundaries like these are o
 ```
 
 `voice`
-the circle drawing code is more complex than the rectangle drawing code, but based on the same principles.
+the circle drawing code is more complex than the rectangle drawing code, but starts with the same principles.
 we iterate across a 2 dimensional area with a nested for-loop, just like with a rectangle.
 instead of printing the character at every location, we check to see if the character is inside of the circle, and only print if it is.
 one important additional optimization here is limiting the size of the rectangle. we calculate the start and end bounds of this region with the circle's Extent.
@@ -536,12 +537,12 @@ Circle.cs
 ```
 Program.cs
 ```
-						if (coord.x < 0 || coord.y < 0) { continue; }
-						bool pointIsInside = Circle.IsInsideCircle(pos, radius, coord);
-						if (pointIsInside) {
-							Console.SetCursorPosition((int)coord.x, (int)coord.y);
-							Console.Write(letterToPrint);
-						}
+					if (x < 0 || y < 0) { continue; }
+					bool pointIsInside = Circle.IsInsideCircle(pos, radius, new Vec2(x, y));
+					if (pointIsInside) {
+						Console.SetCursorPosition(x, y);
+						Console.Write(letterToPrint);
+					}
 ```
 
 `voice`
@@ -597,35 +598,38 @@ Finding the bounding area of the polygon is also not straight forward, so we sho
 This method can fail if the polygon is not correctly formed. This TryGet pattern is common in C# when failure is possible.
 
 ```
-			public static void DrawPolygon(Vec2[] poly, char letterToPrint) {
-				PolygonShape.TryGetAABB(poly, out Vec2 start, out Vec2 end);
-				Vec2 coord = start;
-				for (; coord.y < end.y; coord.y += 1) {
-					coord.x = start.x;
-					for (; coord.x < end.x; coord.x += 1) {
-						if (coord.x < 0 || coord.y < 0) { continue; }
-						bool pointIsInside = PolygonShape.IsInPolygon(poly, coord);
-						if (pointIsInside) {
-							Console.SetCursorPosition((int)coord.x, (int)coord.y);
-							Console.Write(letterToPrint);
-						}
+		public static void DrawPolygon(Vec2[] poly, char letterToPrint) {
+			PolygonShape.TryGetAABB(poly, out Vec2 start, out Vec2 end);
+			for (int y = (int)start.y; y < end.y; ++y) {
+				for (int x = (int)start.x; x < end.x; ++x) {
+					if (x < 0 || y < 0) { continue; }
+					bool pointIsInside = PolygonShape.IsInPolygon(poly, new Vec2(x, y));
+					if (pointIsInside) {
+						Console.SetCursorPosition(x, y);
+						Console.Write(letterToPrint);
 					}
 				}
 			}
+		}
+
 ```
 ```
 		static void Main(string[] args) {
 			int width = 80, height = 24;
 			char letterToPrint = '#';
 			Vec2[] polygonShape = new Vec2[] { (25, 5), (35, 1), (50, 20) };
+			DrawRectangle(0, 0, width, height, letterToPrint);
+			DrawRectangle((2, 3), new Vec2(20, 15), '*');
+			DrawRectangle(new AABB((10, 1), (15, 20)), '|');
+			DrawCircle(position, radius, '.');
+			DrawPolygon(polygonShape, '-');
+			Console.SetCursorPosition(0, (int)height);
 		}
 ```
 
 `voice`
 this code proves that I can draw important parts of my game.
-Proving graphics is critical for game development, since graphics are a huge feature, and risk.
-as a general rule of software development, you should acheive goals that address major risks first.
-I'll continue addressing graphics risks soon, after this test application becomes more of a real game.
+Graphics are a huge feature and risk of any software. proving this kind of work can be accomplished at all is critical for development.
 
 `scene`
 ```
@@ -636,7 +640,8 @@ I'll continue addressing graphics risks soon, after this test application become
 			bool running = true;
 			Vec2 position = (18,12);
 			float radius = 10;
-			float moveIncrement = 0.125f;
+			float moveIncrement = 0.3f;
+			char input = (char)0;
 			while (running) {
 				DrawRectangle(0, 0, width, height, letterToPrint);
 				DrawRectangle((2, 3), new Vec2(20, 15), '*');
@@ -659,8 +664,8 @@ I'll continue addressing graphics risks soon, after this test application become
 ```
 
 `voice`
-The game engine is a major risk that should be addressed as well.
-The core of a game engine is a game loop.
+A real-time game engine is another major risk that should be addressed.
+The core of any simulation or game engine is a game loop.
 We can use this interactive loop to test parts of our game as we write it.
 First, let's test circle drawing.
 
@@ -671,25 +676,23 @@ run the app to test
 we can play with some circle values now
 with some modifications, we could use this code to test the rectangle and polygon drawing code as well. I recommend doing that as practice for novice developers.
 
-this is already turning into a game engine.
 a game engine has 4 main regions: initializationm, draw, input, and update.
 each single iteration through the loop is a gameloop frame.
 
 `scene`
 ```
 		static void Main(string[] args) {
-			// initialization
 			int width = 80, height = 24;
 			char letterToPrint = '#';
 			Vec2[] polygonShape = new Vec2[] { (25, 5), (35, 1), (50, 20) };
 			bool running = true;
-			Vec2 position = (18,12);
+			Vec2 position = (18, 12);
 			float radius = 10;
-			float moveIncrement = 0.125f;
-			char input;
+			float moveIncrement = 0.3f;
+			char input = (char)0;
 			while (running) {
 				Draw();
-				ProcessInput();
+				Input();
 				Update();
 			}
 			void Draw() {
@@ -700,42 +703,58 @@ each single iteration through the loop is a gameloop frame.
 				DrawPolygon(polygonShape, '-');
 				Console.SetCursorPosition(0, (int)height);
 			}
-			void ProcessInput() {
-				input = Console.ReadKey().keyChar;
+			void Input() {
+				input = Console.ReadKey().KeyChar;
 			}
 			void Update() {
-				switch(input) {
-				case 'w': position.y -= moveIncrement; break;
-				case 'a': position.x -= moveIncrement; break;
-				case 's': position.y += moveIncrement; break;
-				case 'd': position.x += moveIncrement; break;
-				case 'e': radius += moveIncrement; break;
-				case 'r': radius -= moveIncrement; break;
-				case (char)27: running = false; break;
+				switch (input) {
+					case 'w': position.y -= moveIncrement; break;
+					case 'a': position.x -= moveIncrement; break;
+					case 's': position.y += moveIncrement; break;
+					case 'd': position.x += moveIncrement; break;
+					case 'e': radius += moveIncrement; break;
+					case 'r': radius -= moveIncrement; break;
+					case (char)27: running = false; break;
 				}
 			}
 		}
 ```
 C# enables us to create local functions, which help us name and organize our code.
+
+many programmers, myself included, consider it good programming style to use small functions, with descriptive but concise names, and only one or two levels of indentation wherever possible.
+lets run this refactored code to make sure it still works how it used to.
+
 Many programming languages don't support local functions, so we might want to create a Game class that has the data mambers, an Init function, Draw, ProcessInput, and Update function. Like this:
 ```
 public class Game {
+	private int width, height;
+	private char letterToPrint;
+	private Vec2[] polygonShape;
 	public bool running;
 	private Vec2 position;
 	private float radius;
 	private float moveIncrement;
 	private char input;
 	public void Init() {
+		width = 80;
+		height = 24;
+		letterToPrint = '#';
+		polygonShape = new Vec2[] { (25, 5), (35, 1), (50, 20) };
 		running = true;
-		position = (18,12);
+		position = (18, 12);
 		radius = 10;
-		moveIncrement = 0.125f;
+		moveIncrement = 0.3f;
 	}
 	public void Draw() {
-		DrawCircle('.', position, radius);
+		DrawRectangle(0, 0, width, height, letterToPrint);
+		DrawRectangle((2, 3), new Vec2(20, 15), '*');
+		DrawRectangle(new AABB((10, 1), (15, 20)), '|');
+		DrawCircle(position, radius, '.');
+		DrawPolygon(polygonShape, '-');
+		Console.SetCursorPosition(0, (int)height);
 	}
-	public void ProcessInput() {
-		input = Console.ReadKey().keyChar;
+	public void Input() {
+		input = Console.ReadKey().KeyChar;
 	}
 	public void Update() {
 		switch(input) {
@@ -756,23 +775,20 @@ public static void Main(string[] args) {
 	game.Init();
 	while (game.running) {
 		game.Draw();
-		game.ProcessInput();
+		game.Input();
 		game.Update();
 	}
 }
 ```
-this is a perfectly valid style in C# as well. but for the sake of fewer source files, I'll keep writing in local functions.
-
-many programmers, myself included, consider it good programming style to use small functions, with descriptive names, and only one or two levels of indentation.
-lets run this after refactoring to make sure it still works
+this is a perfectly valid style in C# as well. but for the sake of fewer source files, I'll keep writing in local functions in static main.
 
 `scene`
 run again
 
 `voice`
-notice the flickering
-drawing a character in the command line is actually really slow.
-lets implement a timer to see how long it takes to render things
+notice the flickering. we can see how each shape is drawn right after the other, and the last drawn shapes are the most difficult to see when the game is active.
+this flickering wouldn't be so bad if the game was faster.
+lets implement a timer to see how long it takes to render the graphics.
 and let's put the key input behind a check, so the game iteractes as quickly as possible, without blocking the game loop.
 
 `scene`
@@ -780,19 +796,20 @@ and let's put the key input behind a check, so the game iteractes as quickly as 
 		static void Main(string[] args) {
 			// initialization
 			//...
-			char input;
+			char input = (char)0;
 			Stopwatch timer = new Stopwatch();
 			while (running) {
 				Draw();
+				Console.SetCursorPosition(0, (int)height);
 				Console.WriteLine($"{timer.ElapsedMilliseconds}   ");
-				ProcessInput();
+				Input();
 				Update();
 				timer.Restart();
 			}
 			//...
-			void ProcessInput() {
+			void Input() {
 				if (Console.KeyAvailable) {
-					input = Console.ReadKey().keyChar;
+					input = Console.ReadKey().KeyChar;
 				} else {
 					input = (char)0;
 				}
@@ -802,16 +819,18 @@ and let's put the key input behind a check, so the game iteractes as quickly as 
 ```
 compile and test. also, comment out Draw and test again.
 
-I've changed ProcessInput so that it doesn't wait for a user key press. this is also called Non-Blocking input.
-Notice the flickering. that flickering indicates a performance problem.
-My computer is pretty fast, but this game engine is really slow. it looks like it's running at around 10 frames per second.
-As with most game engines, the biggest reason for this performance is probably because of Draw.
+I've changed Input so that it doesn't wait for a user key press. this is also called Non-Blocking input.
+My computer is pretty fast, but this game engine is really slow. it looks like it's running at around 100 milliseconds of delay between updates, or about 10 frames per second.
+As with most games, the biggest reason for this performance is probably because of Draw.
 
-The code that claculates timing feels pretty bad, so before we continue, I want to implement a time-keeping class
+The code that claculates timing feels pretty bad, so before we continue, I want to implement a better time-keeping class
 `scene`
-Time.cs
+src/MrV/Time.cs
 
 ```
+using System;
+using System.Diagnostics;
+
 namespace MrV {
 	/// <summary>
 	/// Keeps track of timing, specifically for frame-based update in a game loop.
@@ -823,60 +842,61 @@ namespace MrV {
 	/// </list>
 	/// </summary>
 	public partial class Time {
-		protected Stopwatch timer;
-		public long deltaTimeMs;
-		public float deltaTimeSeconds;
-		protected long lastUpdateTimeMs;
-		protected double lastUpdateTimeSeconds;
+		protected Stopwatch _timer;
+		protected long _deltaTimeMs;
+		protected float _deltaTimeSec;
+		protected long _timeMsOfCurrentFrame;
+		protected double _timeSecOfCurrentFrame;
 		protected static Time _instance;
+		public long deltaTimeMs => _deltaTimeMs;
+		public float deltaTimeSec => _deltaTimeSec;
+		public long DeltaTimeMsCalculateNow => _timer.ElapsedMilliseconds - _timeMsOfCurrentFrame;
+		public float DeltaTimeSecCalculateNow => (float)(_timer.Elapsed.TotalSeconds - _timeSecOfCurrentFrame);
 		public static Time Instance => _instance != null ? _instance : _instance = new Time();
 		public static long DeltaTimeMs => Instance.deltaTimeMs;
-		public static float DeltaTimeSeconds => Instance.deltaTimeSeconds;
-		public static double TimeSeconds => Instance.timer.Elapsed.TotalSeconds;
-		public static long TimeMs => (long)Instance.timer.Elapsed.TotalMilliseconds;
+		public static float DeltaTimeSec => Instance.deltaTimeSec;
 		public static void Update() => Instance.UpdateTiming();
-		public static void SleepWithoutConsoleKeyPress(int ms) => Instance.ThrottleUpdate(ms, ()=>Console.KeyAvailable);
+		public static void SleepWithoutConsoleKeyPress(int ms) => Instance.ThrottleUpdate(ms, () => Console.KeyAvailable);
 		public Time() {
-			timer = new Stopwatch();
-			timer.Start();
-			lastUpdateTimeSeconds = timer.Elapsed.TotalSeconds;
-			lastUpdateTimeMs = timer.ElapsedMilliseconds;
+			_timer = new Stopwatch();
+			_timer.Start();
+			_timeSecOfCurrentFrame = _timer.Elapsed.TotalSeconds;
+			_timeMsOfCurrentFrame = _timer.ElapsedMilliseconds;
 			UpdateTiming();
 		}
-		public long DeltaTimeUpdatedMs => timer.ElapsedMilliseconds - lastUpdateTimeMs;
-		public float DeltaTimeUpdatedSeconds => (float)(timer.Elapsed.TotalSeconds - lastUpdateTimeSeconds);
 		public void UpdateTiming() {
-			deltaTimeMs = DeltaTimeUpdatedMs;
-			deltaTimeSeconds = DeltaTimeUpdatedSeconds;
-			lastUpdateTimeSeconds = timer.Elapsed.TotalSeconds;
-			lastUpdateTimeMs = timer.ElapsedMilliseconds;
+			_deltaTimeMs = DeltaTimeMsCalculateNow;
+			_deltaTimeSec = DeltaTimeSecCalculateNow;
+			_timeSecOfCurrentFrame = _timer.Elapsed.TotalSeconds;
+			_timeMsOfCurrentFrame = _timer.ElapsedMilliseconds;
 		}
-		public void ThrottleUpdate(int ms, Func<bool> interruptSleep = null) {
-			long soon = lastUpdateTimeMs + ms;
-			while((interruptSleep == null || !interruptSleep.Invoke()) && timer.ElapsedMilliseconds < soon) {
+		public void ThrottleUpdate(int idealFrameDelayMs, Func<bool> interruptSleep = null) {
+			long soon = _timeMsOfCurrentFrame + idealFrameDelayMs;
+			while ((interruptSleep == null || !interruptSleep.Invoke()) && _timer.ElapsedMilliseconds < soon) {
 				System.Threading.Thread.Sleep(1);
 			}
 		}
 	}
 }
+
 ```
 
 `voice`
 Timing is a really important part of a real-time game engine.
-It is required for physics simulation, tracking performance, and with throttling, a tool to intentionally reduce CPU usage.
+It is required for physics simulation calculations. Tracking duration is critical to performance metrics. And it can be used to throttle the game loop, to intentionally reduce CPU usage.
 Making a separate time-keeping system like this leaves design space for time-related features in the future, like pausing our simulation, or slowing down time.
 
 This implementation is a wrapper around the C# Stopwatch object, which is a high-resolution timer standard to the C# API.
 It is keeping track of the passage of time as seconds and milliseconds separately.
 Floating point values for time are most convenient for physics calculations.
 Millisecond values are more accurate over long durations, and most convenient for system-level calculations.
-  As floating point values increase, they reduce in precision.
+  As floating point values increase, they reduce in precision. This is because the exponent value increases, the scale of values being tracked changes.
 
 `scene`
 show floating point number's exponent change as it increases in value
 
 `voice`
-  Specifically, a game that has running for more than 4.5 hours will be more accurate if it uses integer-based millisecond calculations instead of floating points.
+  Specifically, a game that has running for more than 4.5 hours will be more accurate using integer-based millisecond calculations instead of floating points.
 
 `scene`
 back to code
@@ -886,24 +906,28 @@ This class is a singleton, which allows details about the passage of time to be 
 I'm not making the entire class static because pure static classes create design hazards similar to global variables.
   These would be most apparent if we were designing a game with variable passage of time, like time dialation in different regions of space.
 You might also notice that DeltaTime gives the same value until UpdateSelf is called. This will keep timing math consistent when DeltaTime is checked at multiple different times of the same update frame.
-You may also realize that this code is actually giving a measurement of how long the last frame took. This works in practice because frames tend to require similar amounts of compute. In the worst case
+You may also realize that this code is actually giving a measurement of how long the last frame took. This works in practice because consecutive frames tend to require similar amounts of compute.
+In the worst case:
   a one frame lag-spike will cause a very laggy frame to use the faster timing value of the previous frame
   the next fast frame will use the long frame time of the previous laggy frame, but do so very quickly
-  to a keen-eyed observer, this will look like a strange stutter, where the game slows down a lot, and then speeds up a lot, over the course of a few milliseconds.
-The ThrottleUpdate function is used to smooth out frames, and reduce CPU burden. The ThrottleWithoutConsoleKeyPress interrrupts the throttling when a keypress is detected, so that the game always updates quickly to user input.
+  to a very keen-eyed observer, this will look like a strange stutter, where the game slows down a lot, and then speeds up a lot, over the course of only a few milliseconds.
+  the proper solution to this problem would not be a change to the timing system, but a change to the code causing the lag spike, which is outside the scope of this tutorial.
+The ThrottleUpdate function is used to smooth out frames, and reduce CPU burden.
+The ThrottleWithoutConsoleKeyPress interrrupts the throttling when a keypress is detected, so that the game always updates quickly to user input.
 lets test this out.
 
 `scene`
 ```
 			//...
-			char input;
+			char input = (char)0;
 			float targetFps = 20;
 			int targetMsDelay = (int)(1000 / targetFps);
 			while (running) {
-				Draw();
-				Console.WriteLine($"{Time.DeltaTimeMs}   ");
-				ProcessInput();
 				Time.Update();
+				Draw();
+				Console.SetCursorPosition(0, (int)height);
+				Console.WriteLine($"{Time.DeltaTimeMs}   ");
+				Input();
 				Update();
 				Time.SleepWithoutConsoleKeyPress(targetMsDelay);
 			}
@@ -915,6 +939,8 @@ It's possible to design the Time class without a necessary Update method, but do
 This implementation tries to artificially set the gameloop speed to 20 frames per second. Feel free to experiment with this value.
 A lower framerate reduces the burden that this program puts on the CPU. A lower CPU burden improves performance of the rest of your computer while this game is running.
 
+Notice that Time.Update(); is called in the game loop, to track the passage of time and guage the cost of the entire process for SleepWithoutConsoleKeyPress.
+
 ---
 
 `scene`
@@ -922,12 +948,28 @@ the game is running, with the DeltaTimeMs value fluctuating
 
 `voice`
 Performance is incredibly important to a realtime simulation, and a game especially. User experience is tightly bound to game loop performance.
-So, let's improve the performance a bit more before moving on.
-This tutorial will not be an exaustive exploration about solving performance problems.
-However, a three specific classes of problems have major impacts on simulation performance: Drawing, Memory Allocation, and Collision detection.
 
-For now, let's improve drawing. We can significantly reduce the cost of drawing and the appearance of flickering by only redrawing what has change between frames.
-In a traditional graphics setting, this technique is called 'Dirty Rectangle' or 'Dirty Pixel'.
+For example, I can't stand the lag created from input spam when testing my app. For a quick fix, I will flush the entire input buffer in the input function, like this:
+
+```
+			void Input() {
+				if (Console.KeyAvailable) {
+					while (Console.KeyAvailable) {
+						input = Console.ReadKey().KeyChar;
+					}
+				} else {
+					input = (char)0;
+				}
+			}
+```
+
+Let's improve the actual performance before moving on. Speeding up the game while it is still simple will improve our ability to test, and iterate more quickly.
+This tutorial will not be an exaustive exploration about solving performance problems.
+However, a three specific classes of problems have major impacts on simulation performance that I'll address with some solutions: Drawing, Memory Allocation, and Collision detection.
+
+For now, let's improve drawing. We can significantly reduce the cost of drawing and the appearance of flickering by only drawing each character once.
+And after that, we can improve things more by redrawing only what has change between frames.
+//In a traditional graphics setting, this technique is called 'Dirty Rectangle' or 'Dirty Pixel'.
 To do this optimization, we need to keep track of what was drawn last frame so it can be compared to the new frame. We'll do that by writing both into separate buffers. We'll call this the Front Buffer and Back Buffer.
 
 `scene`
