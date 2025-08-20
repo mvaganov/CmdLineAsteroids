@@ -12,7 +12,14 @@ demo reel of the LowFiRockBlaster game
 `voice`
 This is a tutorial series teaching how to build a real-time simulation in C#. It simulates basic physics and collision detection.
 I'll show how to do everything from an empty project, in the TTY Command Line Console. Including the graphics, math, and collision detection.
-I'll also offer in-context advice and best practices from my decades of experience as a professional game developer and computer science instructor.
+I'll offer in-context advice and best practices from my decades of experience as a professional game developer and computer science instructor.
+Also, I'll identify some of the Invisible Wizard Problems that define modern computer programming, and game development especially.
+
+TODO mark Invisible Wizard Problems (IWP):
+	top-down planning
+	refactoring
+	good naming
+	function separation
 
 `voice`
 The simulation is a space-shooter game inspired by Spacewar! from 1962, written for the command line console.
@@ -309,10 +316,10 @@ the programming in this tutorial will get much more conceptually complex beyond 
 ---
 
 `scene`
-Create a src folder, MrV folder, Math folder. create Vec2.cs inside of src/MrV/Math
+Create a src folder, MrV folder, Math folder. create Vec2.cs inside of src/MrV/Geometry
 Vec2.cs
 ```
-namespace MrV.Math {
+namespace MrV.Geometry {
 	public struct Vec2 {
 		public float x, y;
 		public Vec2(float x, float y) { this.x = x; this.y = y; }
@@ -378,9 +385,9 @@ There are plenty of additional tutorials on the internet about 2D vectors, check
 
 `scene`
 AABB.cs
-create in the src/MrV/Math folder
+create in the src/MrV/Geometry folder
 ```
-namespace MrV.Math {
+namespace MrV.Geometry {
 	public struct AABB {
 		public Vec2 Min, Max;
 		public float Width => (Max.x - Min.x);
@@ -433,7 +440,7 @@ the form is mostly stylistic. however, in an inner-loop, using the constructor i
 `scene`
 Circle.cs
 ```
-namespace MrV.Math {
+namespace MrV.Geometry {
 	public struct Circle {
 		public Vec2 center;
 		public float radius;
@@ -449,7 +456,7 @@ A circle can be described as a Vector with one additional value for radius.
 `scene`
 Polygon.cs
 ```
-namespace MrV.Math {
+namespace MrV.Geometry {
 	public struct PolygonShape {
 		public Vec2[] points;
 		public PolygonShape(Vec2[] points) {
@@ -948,8 +955,9 @@ the game is running, with the DeltaTimeMs value fluctuating
 
 `voice`
 Performance is incredibly important to a realtime simulation, and a game especially. User experience is tightly bound to game loop performance.
+Good performance also improves out ability to test, which is critical to development.
 
-For example, I can't stand the lag created from input spam when testing my app. For a quick fix, I will flush the entire input buffer in the input function, like this:
+To improve performance immediately for testing, I want to do two quick things: flush the entire input buffer in the input function, like this:
 
 ```
 			void Input() {
@@ -963,63 +971,277 @@ For example, I can't stand the lag created from input spam when testing my app. 
 			}
 ```
 
-Let's improve the actual performance before moving on. Speeding up the game while it is still simple will improve our ability to test, and iterate more quickly.
-This tutorial will not be an exaustive exploration about solving performance problems.
-However, a three specific classes of problems have major impacts on simulation performance that I'll address with some solutions: Drawing, Memory Allocation, and Collision detection.
+and reduce the amount of drawing going on, like this:
+```
+			void Draw() {
+				DrawRectangle(0, 0, width, height, letterToPrint);
+				//DrawRectangle((2, 3), new Vec2(20, 15), '*');
+				//DrawRectangle(new AABB((10, 1), (15, 20)), '|');
+				DrawCircle(position, radius, '.');
+				//DrawPolygon(polygonShape, '-');
+				Console.SetCursorPosition(0, (int)height);
+			}
+```
 
-For now, let's improve drawing. We can significantly reduce the cost of drawing and the appearance of flickering by only drawing each character once.
-And after that, we can improve things more by redrawing only what has change between frames.
+There are three specific classes of problems have major impacts on simulation performance that I'll address with some solutions: Drawing, Memory Allocation, and Collision detection.
+
+For now, let's improve drawing.
+We can significantly reduce the cost of drawing and the appearance of flickering by only drawing each character once.
+//And after that, we can improve things more by redrawing only what has change between frames.
 //In a traditional graphics setting, this technique is called 'Dirty Rectangle' or 'Dirty Pixel'.
-To do this optimization, we need to keep track of what was drawn last frame so it can be compared to the new frame. We'll do that by writing both into separate buffers. We'll call this the Front Buffer and Back Buffer.
+//To do it, we need to keep track of what was drawn last frame so it can be compared to the new frame. 
+We'll do that by writing our graphics into a separate buffer, and draw that once.
 
 `scene`
 artist painting a picture, then painting a different picture behind it, and swapping between them
 
 `voice`
-This technique dramatically reduces flickering by replacing the entire image at once instead of redrawing all different parts one at a time.
+This technique dramatically reduces flickering by replacing the entire image at once instead of redrawing all different parts one at a time
 It requires a Front Buffer, and a Back Buffer.
-  The Front Buffer is displayed to the user. In our program, it is already there, in the command line console.
+  The Front Buffer is displayed to the user. In our program, it is already there. It is the command line console.
   The Back Buffer is where the graphics are rendered in sequence before overwriting the Front Buffer all at once
 
 `scene`
+MrV/CommandLine/DrawBuffer.cs
+```
+using MrV.Geometry;
+using System;
+
+namespace MrV.CommandLine {
+	public partial class DrawBuffer {
+		protected char[,] _currentBuffer;
+		public int Height => GetHeight(_currentBuffer);
+		public static int GetHeight(char[,] buffer) => buffer.GetLength(0);
+		public int Width => GetWidth(_currentBuffer);
+		public static int GetWidth(char[,] buffer) => buffer.GetLength(1);
+		public Vec2 Size => new Vec2(Width, Height);
+		public char this[int y, int x] {
+			get => _currentBuffer[y, x];
+			set => _currentBuffer[y, x] = value;
+		}
+		public DrawBuffer(int height, int width) {
+			SetSize(height, width);
+		}
+		public void SetSize(int height, int width) {
+			ResizeBuffer(ref _currentBuffer, height, width);
+		}
+		private static void ResizeBuffer(ref char[,] buffer, int height, int width) {
+			char[,] oldBuffer = buffer;
+			buffer = new char[height, width];
+			if (oldBuffer == null) {
+				return;
+			}
+			int oldH = GetHeight(oldBuffer), oldW = GetWidth(oldBuffer);
+			int rowsToCopy = Math.Min(height, oldH), colsToCopy = Math.Min(width, oldW);
+			for (int y = 0; y < rowsToCopy; ++y) {
+				for (int x = 0; x < colsToCopy; ++x) {
+					buffer[y, x] = oldBuffer[y, x];
+				}
+			}
+		}
+		public Vec2 WriteAt(string text, int row, int col) => WriteAt(text.ToCharArray(), row, col);
+		public Vec2 WriteAt(char[] text, int row, int col) {
+			for (int i = 0; i < text.Length; i++) {
+				char glyph = text[i];
+				switch (glyph) {
+					case '\n': ++row; col = 0; break;
+					default: WriteAt(glyph, row, col++); break;
+				}
+			}
+			return new Vec2(col, row);
+		}
+		public void WriteAt(char glyph, int row, int col) {
+			if (!IsValidLocation(row, col)) {
+				return;
+			}
+			_currentBuffer[row, col] = glyph;
+		}
+		bool IsValidLocation(int y, int x) => x >= 0 && x < Width && y >= 0 && y < Height;
+		public void Clear() => Clear(_currentBuffer, ' ');
+		public static void Clear(char[,] buffer, char background) {
+			for (int row = 0; row < GetHeight(buffer); ++row) {
+				for (int col = 0; col < GetWidth(buffer); ++col) {
+					buffer[row, col] = background;
+				}
+			}
+		}
+		public virtual void Print() => PrintBuffer(_currentBuffer);
+		public static void PrintBuffer(char[,] buffer) {
+			int height = GetHeight(buffer), width = GetWidth(buffer);
+			for (int row = 0; row < height; ++row) {
+				Console.SetCursorPosition(0, row);
+				for (int col = 0; col < width; ++col) {
+					char glyph = buffer[row, col];
+					Console.Write(glyph);
+				}
+			}
+		}
+	}
+}
 ```
 
+This buffer for drawing will wrap around, and act like a 2D array, with some additional convenience methods.
+The class is a partial class so that we can split it's impementation across multiple files. We'll put drawing methods in a separate place.
+This implementation uses C-sharp's contiguous block 2D array allocation.
+Notice that Height is the first dimension and Width is the second. These values can be in either order, but it needs to be consistent.
+	I choose Height first because it intuitively follows the existing rectangle code, and also improves CPU cache locality when scanning horizontally, which is historically how graphics work.
+The square-bracket operator is overloaded so that it can act like a 2D array in our code.
+	If you want to change the order of x/y you can do it here. Doing so is a great exercise in resolving confusion, and internalizing the value of consistent dimension ordering.
+	Generations of graphics programmers before you have internalized the ambiguity of dimension order, and unlocked mental resiliency in the process.
+	(IWP) this is one of the invisible wizard problems that creates undocumented skills shared by game programmers.
+This ResizeBuffer method is more robust than we need it to be, because it will copy old data into the new buffer to maintain consistency.
+	This feature will probably not be needed, so it could be argued that writing this extra code is a waste of time and mental space, according to the YAGNI or You Aint Gunna Need It principle.
+	However, this feature fulfills my intuition of how the ResizeBuffer function should work.
+	For me, the cognitive load of writing the functionality now is less than the cognitive load of remembering that the feature doesn't exist in the future.
+The buffer needs methods to write glyphs into it, one to clear the buffer before every draw.
+And a a convenience method for printing to the command line console.
+
+`scene`
+MrV/DrawBuffer_geometry.cs
+```
+using MrV.Geometry;
+
+namespace MrV.CommandLine {
+	public partial class DrawBuffer {
+		public delegate bool IsInsideShapeDelegate(Vec2 position);
+		public void DrawShape(IsInsideShapeDelegate isInsideShape, Vec2 start, Vec2 end, char letterToPrint) {
+			for (int y = (int)start.y; y < end.y; ++y) {
+				for (int x = (int)start.x; x < end.x; ++x) {
+					if (!IsValidLocation(y, x)) { continue; }
+					bool pointIsInside = isInsideShape == null || isInsideShape(new Vec2(x, y));
+					if (!pointIsInside) { continue; }
+					WriteAt(letterToPrint, y, x);
+				}
+			}
+		}
+		public void DrawRectangle(Vec2 position, Vec2 size, char letterToPrint) {
+			DrawShape(null, position, position+size, letterToPrint);
+		}
+		public void DrawRectangle(int x, int y, int width, int height, char letterToPrint) {
+			DrawShape(null, new Vec2(x, y), new Vec2(x + width, y + height), letterToPrint);
+		}
+		public void DrawRectangle(AABB aabb, char letterToPrint) {
+			DrawShape(null, aabb.Min, aabb.Max, letterToPrint);
+		}
+		public void DrawCircle(Circle c, char letterToPrint) {
+			DrawCircle(c.center, c.radius, letterToPrint);
+		}
+		public void DrawCircle(Vec2 pos, float radius, char letterToPrint) {
+			Vec2 extent = new Vec2(radius, radius);
+			Vec2 start = pos - extent;
+			Vec2 end = pos + extent;
+			float r2 = radius * radius;
+			DrawShape(IsInCircle, start, end, letterToPrint);
+			bool IsInCircle(Vec2 point) {
+				float dx = point.x - pos.x;
+				float dy = point.y - pos.y;
+				return dx * dx + dy * dy < r2;
+			}
+		}
+		public void DrawPolygon(Vec2[] poly, char letterToPrint) {
+			PolygonShape.TryGetAABB(poly, out Vec2 start, out Vec2 end);
+			DrawShape(IsInPolygon, start, end, letterToPrint);
+			bool IsInPolygon(Vec2 point) => PolygonShape.IsInPolygon(poly, point);
+		}
+	}
+}
 ```
 
-Many APIs have the concept of a Graphics Context, to handle this kind of graphics logic.
+drawing shapes can be generalized to the DrawShape method here. A delegate defines if the coordinage is in the given shape, and checks each point in a given region.
 
 let's test this out
 
+`scene`
+Program.cs
+```
+			char input = (char)0;
+			float targetFps = 20;
+			int targetMsDelay = (int)(1000 / targetFps);
+			DrawBuffer graphics = new DrawBuffer(height, width); // <-- add the draw buffer
+			while (running) {
 ```
 ```
-the circle is drawing without flickering. But it is still slow.
+			void Draw() {
+				graphics.Clear();
+				graphics.DrawRectangle(0, 0, width, height, letterToPrint);
+				graphics.DrawRectangle((2, 3), new Vec2(20, 15), '*');
+				graphics.DrawRectangle(new AABB((10, 1), (15, 20)), '|');
+				graphics.DrawCircle(position, radius, '.');
+				graphics.DrawPolygon(polygonShape, '-');
+				graphics.Print();
+				Console.SetCursorPosition(0, (int)height);
+			}
+```
 
+`voice`
+we can and should remove the previous draw methods now, since we shouldn't print directly to the command line anymore, and equivalent logic is in DrawBuffer_geometry.cs.
 
-the circle more quickly now. but the sape is still not correct,
-	* because the command line console's characters are not perfect squares
-* lets implement a function that will draw the circle with the scale of the command line taken into account
+Our code is now using the DrawBuffer as a GraphicsContext, which is a complex computer graphics concept where we can include anything related to graphics. We'll expand this idea soon.
+
+We can also add back all of the test drawing, since the buffer has created such a significant optimization.
+
+the circle more quickly now. but the shape is not actually correct,
+
+`scene`
+diagram of console, showing width/height ratio of glyphs
+
+`voice`
+because the command line console's characters are not perfect squares
+we can take that into account with our shape drawing code if we can scale our 2D vectors
+Add a Scale method to Vec2
+
+`scene`
+MrV/Geometry/Vec2.cs
 ```
-		public static void DrawCircle(char letterToPrint, Vec2 pos, float radius, Vec2 pixelSize, Vec2 bufferOrigin) {
-			Vec2 extent = (radius, radius);
-			extent.Scale(pixelSize);
-			Vec2 start = pos.Scaled(pixelSize) - extent;
-			Vec2 end = pos.Scaled(pixelSize) + extent;
-			Vec2 coord = start;
-			float r2 = radius * radius;
-			for (; coord.Y < end.Y; coord.Y += 1) {
-				coord.X = start.X;
-				for (; coord.X < end.X; coord.X += 1) {
-					if (coord.X < 0 || coord.Y < 0) { continue; }
-					float dx = (coord.X / pixelSize.X - pos.X);
-					float dy = (coord.Y / pixelSize.Y - pos.Y);
-					if (dx * dx + dy * dy < r2) {
-						Console.SetCursorPosition((int)(coord.X + bufferOrigin.X), (int)(coord.Y + bufferOrigin.Y));
-						Console.Write(letterToPrint);
-					}
+		public void Scale(Vec2 scale) { x *= scale.x; y *= scale.y; }
+		public void InverseScale(Vec2 scale) { x /= scale.x; y /= scale.y; }
+		public void Floor() { x = MathF.Floor(x); y = MathF.Floor(y); }
+		public void Ceil() { x = MathF.Ceiling(x); y = MathF.Ceiling(y); }
+
+```
+
+`voice`
+in addition to Scale, we should be able to undo scaling.
+we'll also want methods to clip vectors to integrer boundaries, since we're converting floating point vectors to integer based positions in the buffer.
+
+`scene`
+MrV/DrawBuffer_geometry.cs
+```
+	public partial class DrawBuffer {
+		public Vec2 ShapeScale = new Vec2(0.5f, 1);
+		public delegate bool IsInsideShapeDelegate(Vec2 position);
+		public void DrawShape(IsInsideShapeDelegate isInsideShape, Vec2 start, Vec2 end, char letterToPrint) {
+			Vec2 renderStart = start;
+			Vec2 renderEnd = end;
+			renderStart.InverseScale(ShapeScale);
+			renderEnd.InverseScale(ShapeScale);
+			for (int y = (int)renderStart.y; y < renderEnd.y; ++y) {
+				for (int x = (int)renderStart.x; x < renderEnd.x; ++x) {
+					if (!IsValidLocation(y, x)) { continue; }
+					bool pointIsInside = isInsideShape == null || isInsideShape(new Vec2(x * ShapeScale.x, y * ShapeScale.y));
+					if (!pointIsInside) { continue; }
+					WriteAt(letterToPrint, y, x);
 				}
 			}
 		}
 ```
+
+`voice`
+we need to keep track of the desired scale. for that, we'll add a scale variable to DrawBuffer.
+	arguably, the ShapeScale variable added to the DrawBuffer class is bad design.
+	this partial class implementation could instead be a subclass, to keep a clearer boundary between buffer management and drawing with a scale.
+	I am making the intentional choice to combine these ideas into the same class, to reduce my cognitive load for this system. Managing cognitive load is one of those Invisible Wizard Problems.
+	If you are a stickler for Object Oriented Design, feel free to subclass this as 'ShapeDrawingBuffer' or something. Though I recommend you do that after you finish the tutorial.
+to draw the shape in a scaled way, we need to inverse-scale the bounding rectangle being drawn in, to put it in the correct position in the buffer
+then we need to test against the scaled point, which is being printed to the unscaled position in the buffer.
+
+Because we added the scale member to the class, we don't need to change any of the other method signitures. that's nice.
+
+I want to be able to test my app without having to press keys to do it. For that, I will impliment an event queue system, which we can use for many other purposes later as well.
+
+`scene`
+MrV/EventQueue.cs
+
 // TODO <----------------------
 * create graphics context class to handle drawing in a double buffer
 * show how changing  the scale will change how the system draws, so y can increase up if we want

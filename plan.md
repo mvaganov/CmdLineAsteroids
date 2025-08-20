@@ -35,9 +35,16 @@
 * calculate cost of calculation
 * throttle code
 
-## Double Buffering
+## Buffering
 * graphics context class with draw buffer
-* test double buffering
+
+## Shape drawing
+* create the draw method with delegate
+
+## Scaled shape drawing
+* add scale member, modify drawing code
+
+## Automatic testing with queued events
 
 ## Value Over Time To Test Circle Radius
 * ValueOverTime class
