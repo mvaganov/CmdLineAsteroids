@@ -1237,12 +1237,151 @@ then we need to test against the scaled point, which is being printed to the uns
 
 Because we added the scale member to the class, we don't need to change any of the other method signitures. that's nice.
 
-I want to be able to test my app without having to press keys to do it. For that, I will impliment an event queue system, which we can use for many other purposes later as well.
+`scene`
+(run test)
+
+
+`voice`
+I want to be able to test my app without having to press keys to do it. For that, I will impliment a task queue system, which we can use for many other purposes later as well.
 
 `scene`
-MrV/EventQueue.cs
+MrV/Task/Tasks.cs
+```
+using System.Collections.Generic;
+using System.Diagnostics;
 
-// TODO <----------------------
+namespace MrV.Task {
+	public class Tasks {
+		protected class Task {
+			public System.Action WhatToDo;
+			public long WhenToDoIt;
+			public string Source;
+			public Task(System.Action whatToDo, long whenToDoIt) {
+				WhatToDo = whatToDo; WhenToDoIt = whenToDoIt;
+				StackFrame stackFrame = new StackTrace(true).GetFrame(3);
+				Source = $"{stackFrame.GetFileName()}:{stackFrame.GetFileLineNumber()}";
+			}
+			public void Invoke() => WhatToDo?.Invoke();
+		}
+		protected List<Task> tasks = new List<Task>();
+		protected static Tasks _instance;
+		public static Tasks Instance => _instance != null ? _instance : _instance = new Tasks();
+		public static void Add(System.Action whatToDo, long delay = 0) => Instance.Enqueue(whatToDo, delay);
+		public static bool Update() => Instance.RunUpdate();
+		public void Enqueue(System.Action whatToDo, long delay = 0) {
+			long when = Time.TimeMsCurrentFrame + delay;
+			int index = Algorithm.BinarySearchWithInsertionPoint(tasks, when, GetTimeFromTask, LongLessThan);
+			long GetTimeFromTask(Task t) => t.WhenToDoIt;
+			bool LongLessThan(long a, long b) => a < b;
+			if (index < 0) {
+				index = ~index;
+			}
+			tasks.Insert(index, new Task(whatToDo, when));
+		}
+		public bool RunUpdate() {
+			if (tasks.Count == 0 || Time.TimeMsCurrentFrame < tasks[0].WhenToDoIt) {
+				return false;
+			}
+			List<Task> toExecuteNow = new List<Task>();
+			while (tasks.Count > 0 && Time.TimeMsCurrentFrame >= tasks[0].WhenToDoIt) {
+				toExecuteNow.Add(tasks[0]);
+				tasks.RemoveAt(0);
+			}
+			for (int i = 0; i < toExecuteNow.Count; ++i) {
+				toExecuteNow[i].Invoke();
+			}
+			return true;
+		}
+	}
+}
+```
+
+This is a very simple task queue system, which executes functions at a given delay. This is similar to Javascript's SetTimeout.
+In this simple implementation, a Tasks.Task is just a function to invoke, and a time to invoke it.
+Each task also keeps track of what line of code added the task. This is very valuable information when debugging asynchronous functionality.
+Execution of tasks happen in an Update method, where the next Task to execute is at the front of a the Tasks list.
+Ordering is done by a Binary Search algorithm, generalized to work on generic records. The implementation of this binary search looks like this:
+
+`scene`
+MrV/Algorithm
+```
+using System;
+using System.Collections.Generic;
+
+namespace MrV {
+	public static class Algorithm {
+		public static int BinarySearchWithInsertionPoint<ElementType, KeyType>(
+		IList<ElementType> arr, KeyType target, Func<ElementType, KeyType> getKey, Func<KeyType, KeyType, bool> lessThan) {
+			int low = 0, high = arr.Count - 1;
+			while (low <= high) {
+				int mid = low + (high - low);
+				KeyType value = getKey.Invoke(arr[mid]);
+				if (value.Equals(target)) {
+					return mid;
+				} else if (lessThan.Invoke(value, target)) {
+					low = mid + 1;
+				} else {
+					high = mid - 1;
+				}
+			}
+			return ~low;
+		}
+	}
+}
+```
+
+`voice`
+Binary search works on a list of ordered values.
+it repeatedly narrows down the search space by half because being sorted allows it to make make assumptions. This makes it quite fast.
+in the inner loop, BinarySearch checks if the value being searched for is directly in the middle.
+	if the value is found, BinarySearch provides it's index in the list
+	if the value is higher, the next search will be in the top half of the current search space
+	if the value is lower, the next search will be in the bottom half of the current search space
+if the search space is reduced to zero, the value was not found.
+this algorithm then returns the 2's compliment of where the algorithm stopped searching, which is where the value should have been.
+	2's compliment flips all of the binary bits in an integer value. the operation will undo itself.
+	2's compliment of a positive index will always be a negative value, so we can detect if the value already exists or needs to be inserted by checking the sign of the return.
+
+`scene`
+```
+			Record search = new Record(null, when);
+			Comparer<Record> RecordComparer = Comparer<Record>.Create((a, b) => a.WhenToDoIt.CompareTo(b.WhenToDoIt));
+			int index = actions.BinarySearch(search, RecordComparer);
+```
+
+`voice`
+I could have also just used the BinarySearch method already in C#'s List class.
+As long as the RecordComparer is created as a static member, there isn't any significant performance gain in using my custom algorithm.
+However, my algorithm saves time and complexity if the Task class becomes more complex, because my search algorithm doesn't need to create an empty search element.
+	This means you can add more complexity to your Task class without worrying about search side-effects.
+Also, this is an excellent example of a templated function using lambda expressions, which my target audience might appreciate.
+
+`scene`
+src/Program.cs
+```
+			DrawBuffer graphics = new DrawBuffer(height, width);
+			int time = 0;
+			for (int i = 0; i < 10; ++i) {
+				Tasks.Add(() => input = 'd', time);
+				time += 100;
+				Tasks.Add(() => input = 'e', time);
+				time += 100;
+			}
+			for (int i = 0; i < 20; ++i) {
+				Tasks.Add(() => input = 'w', time);
+				time += 100;
+				Tasks.Add(() => input = 'r', time);
+				time += 100;
+			}
+			Tasks.Add(() => running = false, time);
+			while (running) {
+```
+
+`voice`
+// TODO <---------------------- explain use in Program
+
+
+
 * create graphics context class to handle drawing in a double buffer
 * show how changing  the scale will change how the system draws, so y can increase up if we want
 ```
