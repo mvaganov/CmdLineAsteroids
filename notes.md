@@ -1270,9 +1270,8 @@ namespace MrV.Task {
 		public static bool Update() => Instance.RunUpdate();
 		public void Enqueue(System.Action whatToDo, long delay = 0) {
 			long when = Time.TimeMsCurrentFrame + delay;
-			int index = Algorithm.BinarySearchWithInsertionPoint(tasks, when, GetTimeFromTask, LongLessThan);
+			int index = Algorithm.BinarySearch(tasks, when, GetTimeFromTask);
 			long GetTimeFromTask(Task t) => t.WhenToDoIt;
-			bool LongLessThan(long a, long b) => a < b;
 			if (index < 0) {
 				index = ~index;
 			}
@@ -1297,9 +1296,11 @@ namespace MrV.Task {
 ```
 
 This is a very simple task queue system, which executes functions at a given delay. This is similar to Javascript's SetTimeout.
-In this simple implementation, a Tasks.Task is just a function to invoke, and a time to invoke it.
-Each task also keeps track of what line of code added the task. This is very valuable information when debugging asynchronous functionality.
-Execution of tasks happen in an Update method, where the next Task to execute is at the front of a the Tasks list.
+In this implementation, a Tasks.Task is a container for a function to invoke, and a time to invoke it.
+Each task also keeps track of what line of code added the task, which is very valuable information when debugging asynchronous functionality like this.
+Execution of tasks happen in the Update method, where the next Task to execute is at the front of a the Tasks list.
+A seperate list gathers tasks to execute before the execution.
+	If the tasks executing add more tasks to the task list, this separation prevents an infinite loop.
 Ordering is done by a Binary Search algorithm, generalized to work on generic records. The implementation of this binary search looks like this:
 
 `scene`
@@ -1310,15 +1311,16 @@ using System.Collections.Generic;
 
 namespace MrV {
 	public static class Algorithm {
-		public static int BinarySearchWithInsertionPoint<ElementType, KeyType>(
-		IList<ElementType> arr, KeyType target, Func<ElementType, KeyType> getKey, Func<KeyType, KeyType, bool> lessThan) {
+		public static int BinarySearch<ElementType, KeyType>(IList<ElementType> arr, KeyType target,
+		Func<ElementType, KeyType> getKey) where KeyType : IComparable {
 			int low = 0, high = arr.Count - 1;
 			while (low <= high) {
 				int mid = low + (high - low);
 				KeyType value = getKey.Invoke(arr[mid]);
-				if (value.Equals(target)) {
+				int comparison = value.CompareTo(target);
+				if (comparison == 0) {
 					return mid;
-				} else if (lessThan.Invoke(value, target)) {
+				} else if (comparison < 0) {
 					low = mid + 1;
 				} else {
 					high = mid - 1;
@@ -1331,86 +1333,220 @@ namespace MrV {
 ```
 
 `voice`
-Binary search works on a list of ordered values.
-it repeatedly narrows down the search space by half because being sorted allows it to make make assumptions. This makes it quite fast.
-in the inner loop, BinarySearch checks if the value being searched for is directly in the middle.
+Binary search works on a list of ordered values. The method assumes the list is ordered, and will not work if it isn't sorted.
+In the inner loop, BinarySearch checks if the value being searched for is directly in the middle of the search space.
 	if the value is found, BinarySearch provides it's index in the list
-	if the value is higher, the next search will be in the top half of the current search space
-	if the value is lower, the next search will be in the bottom half of the current search space
+	if the value is higher than what was found, the next search space will be in the top half of the current search space
+	if the value is lower than what was found, the next search space will be in the bottom half of the current search space
 if the search space is reduced to zero, the value was not found.
-this algorithm then returns the 2's compliment of where the algorithm stopped searching, which is where the value should have been.
+this algorithm returns the 2's compliment of where the algorithm stopped searching, which is where the value should have been.
 	2's compliment flips all of the binary bits in an integer value. the operation will undo itself.
 	2's compliment of a positive index will always be a negative value, so we can detect if the value already exists or needs to be inserted by checking the sign of the return.
 
 `scene`
 ```
-			Record search = new Record(null, when);
+			Record searchElement = new Record(null, when);
 			Comparer<Record> RecordComparer = Comparer<Record>.Create((a, b) => a.WhenToDoIt.CompareTo(b.WhenToDoIt));
-			int index = actions.BinarySearch(search, RecordComparer);
+			int index = actions.BinarySearch(searchElement, RecordComparer);
 ```
 
 `voice`
 I could have also just used the BinarySearch method already in C#'s List class.
 As long as the RecordComparer is created as a static member, there isn't any significant performance gain in using my custom algorithm.
-However, my algorithm saves time and complexity if the Task class becomes more complex, because my search algorithm doesn't need to create an empty search element.
-	This means you can add more complexity to your Task class without worrying about search side-effects.
+However, my search algorithm doesn't need to create a mostly empty search element.
+	That means my algorithm becomes better if the Task class becomes more complex
 Also, this is an excellent example of a templated function using lambda expressions, which my target audience might appreciate.
+	I will keep using more functional programming like this.
+
+`scene`
+src/Program.cs
+```
+			void Update() {
+				Tasks.Update();
+				switch (input) {
+```
+```
+			DrawBuffer graphics = new DrawBuffer(height, width);
+			int timeMs = 0;
+			int keyDelayMs = 100;
+			for (int i = 0; i < 10; ++i) {
+				Tasks.Add(() => input = 'd', timeMs);
+				timeMs += keyDelayMs;
+				Tasks.Add(() => input = 'e', timeMs);
+				timeMs += keyDelayMs;
+			}
+			for (int i = 0; i < 20; ++i) {
+				Tasks.Add(() => input = 'w', timeMs);
+				timeMs += keyDelayMs;
+				Tasks.Add(() => input = 'r', timeMs);
+				timeMs += keyDelayMs;
+			}
+			while (running) {
+```
+`voice`
+I need to make sure the Tasks are regularly Updated, so I'll include Tasks.Update in the Update section of my code.
+Before the gameloop, this code creates an automatic test of my application by synthetically setting the program's input variable.
+the first for-loop moves the circle to the right with the 'd' key, and expands the radius with the 'e' key
+the second for-loop moves the circle up with the 'w' keu, and reduces the radius with the 'r' key.
+each of the key input changes should happen about 100 milliseconds apart.
+
+If the timing is reduced to less than the deltaTime of a frame, some of these inputs will become lost, and the circle will not move the same amount.
+This bug, and many others, are because my key event system is currently just one switch statement and one variable. Lets make a Key Input system.
+
+`scene`
+src/MrV/CommandLine/KeyInput.cs
+```
+using System;
+using System.Collections.Generic;
+
+namespace MrV.CommandLine {
+	public class KeyInput : DispatchTable<char> {
+		private static KeyInput _instance;
+		public static KeyInput Instance => _instance != null ? _instance : _instance = new KeyInput();
+		public static void Bind(char keyPress, KeyResponse response) => Instance.BindEvent(keyPress, response);
+		public static void Read() => Instance.ReadConsoleKeys();
+		public static void TriggerEvents() => Instance.TriggerBindings(true);
+		public static void Add(char key) => Instance.AddEvent(key);
+		public void ReadConsoleKeys() {
+			while (Console.KeyAvailable) {
+				ConsoleKeyInfo key = Console.ReadKey();
+				AddEvent(key.KeyChar);
+			}
+		}
+		public override string ToString() {
+			StringBuilder sb = new StringBuilder();
+			foreach(var kvp in keyBinding) {
+				sb.Append($"'{kvp.Key}': ").Append(string.Join(", ", kvp.Value.ConvertAll(r => r.Method.Name))).Append("\n");
+			}
+			return sb.ToString();
+		}
+	}
+	public class DispatchTable<KeyType> {
+		public delegate void KeyResponse(DispatchTable<KeyType> handler);
+		public Dictionary<KeyType, List<KeyResponse>> keyBinding = new Dictionary<KeyType, List<KeyResponse>>();
+		protected List<KeyType> keysToProcess = new List<KeyType>();
+		private List<KeyType> _currentlyProcessingKeys = new List<KeyType>();
+		private List<List<KeyResponse>> _currentlyProcessingResponses = new List<List<KeyResponse>>();
+		private KeyType _currentlyProcessing;
+		/// <summary>Identifies <see cref="KeyType"/> that triggered a <see cref="KeyResponse"/> function</summary>
+		public KeyType CurrentlyProcessing => _currentlyProcessing;
+		public int Count => keysToProcess.Count;
+		public KeyType this[int index] => GetEvent(index);
+		public KeyType GetEvent(int index) => keysToProcess[index];
+		public void AddEvent(KeyType key) => keysToProcess.Add(key);
+		public void TriggerBindings(bool consumeEvents) {
+			for (int i = 0; i < keysToProcess.Count; i++) {
+				KeyType key = keysToProcess[i];
+				if (keyBinding.TryGetValue(key, out List<KeyResponse> responses)) {
+					_currentlyProcessingKeys.Add(key);
+					_currentlyProcessingResponses.Add(responses);
+				}
+			}
+			if (consumeEvents) {
+				ClearEvents();
+			}
+			for (int i = 0; i < _currentlyProcessingResponses.Count; i++) {
+				_currentlyProcessing = _currentlyProcessingKeys[i];
+				List<KeyResponse> responses = _currentlyProcessingResponses[i];
+				responses.ForEach(a => a.Invoke(this));
+			}
+			_currentlyProcessing = default;
+			_currentlyProcessingKeys.Clear();
+			_currentlyProcessingResponses.Clear();
+		}
+		public void ClearEvents() => keysToProcess.Clear();
+		public List<KeyResponse> BindEvent(KeyType key, KeyResponse response) {
+			if (!keyBinding.TryGetValue(key, out List<KeyResponse> responses)) {
+				keyBinding[key] = responses = new List<KeyResponse>();
+			}
+			responses.Add(response);
+			return responses;
+		}
+	}
+}
+```
+
+`voice`
+A good key input system design is based on the concept of a DispatchTable.
+This implementation extends a DispatchTable and creates a singleton, for easy access.
+If you want to have different keybindings in different user-interface states, you could create different KeyInput instances and swap as needed.
+The KeyInput class reads specifically from the C# Console, so it has a convenient place for that logic.
+The ToString method shows how to dynamically query what is bound to each key, which could be useful for dynamic key binding at runtime.
+
+The DispatchTable is a more general concept that is highly useful in many domains, like compilers, operating systems, networking, robotics, simulations, and of course games.
+This DispatchTable is tuned for game development, with it's TriggerBindings method removing events before executing them.
+	Just like the TaskQueue, this separation keeps the event queue safe from recursive addition, which can happen in complex logic.
+I chose to pass the DispatchTable as an argument to each response to provide some context about the triggered event to the event response.
+	This code is yours, so feel free to add more context to the DispatchEvent class as you need.
 
 `scene`
 src/Program.cs
 ```
 			DrawBuffer graphics = new DrawBuffer(height, width);
-			int time = 0;
+			KeyInput.Bind('w', MoveCircleUp);
+			KeyInput.Bind('a', MoveCircleLeft);
+			KeyInput.Bind('s', MoveCircleDown);
+			KeyInput.Bind('d', MoveCircleRight);
+			KeyInput.Bind('e', ExpandCircleRadius);
+			KeyInput.Bind('r', ReduceCircleRadius);
+			void MoveCircleUp(DispatchTable<char> keyInput) => position.y -= moveIncrement;
+			void MoveCircleLeft(DispatchTable<char> keyInput) => position.x -= moveIncrement;
+			void MoveCircleDown(DispatchTable<char> keyInput) => position.y += moveIncrement;
+			void MoveCircleRight(DispatchTable<char> keyInput) => position.x += moveIncrement;
+			void ExpandCircleRadius(DispatchTable<char> keyInput) => radius += moveIncrement;
+			void ReduceCircleRadius(DispatchTable<char> keyInput) => radius -= moveIncrement;
+			int timeMs = 0;
+			int keyDelayMs = 10;
 			for (int i = 0; i < 10; ++i) {
-				Tasks.Add(() => input = 'd', time);
-				time += 100;
-				Tasks.Add(() => input = 'e', time);
-				time += 100;
+				Tasks.Add(() => KeyInput.Add('d'), timeMs);
+				timeMs += keyDelayMs;
+				Tasks.Add(() => KeyInput.Add('e'), timeMs);
+				timeMs += keyDelayMs;
 			}
 			for (int i = 0; i < 20; ++i) {
-				Tasks.Add(() => input = 'w', time);
-				time += 100;
-				Tasks.Add(() => input = 'r', time);
-				time += 100;
+				Tasks.Add(() => KeyInput.Add('w'), timeMs);
+				timeMs += keyDelayMs;
+				Tasks.Add(() => KeyInput.Add('r'), timeMs);
+				timeMs += keyDelayMs;
 			}
-			Tasks.Add(() => running = false, time);
 			while (running) {
+```
+`voice`
+Now keys are bound to functions during initialization.
+This example names the functions to create more clarity.
+I personally like this style a lot, it allows key binding code to happen closer any important context instead of being trapped in the Input function.
+Notice that changes to the input variable have been replaced with manual additions to the KeyInput queue.
+
+`scene`
+src/Program.cs
+```
+			void Input() {
+				KeyInput.Read();
+			}
+			void Update() {
+				KeyInput.TriggerEvents();
+				Tasks.Update();
+			}
 ```
 
 `voice`
-// TODO <---------------------- explain use in Program
+now that all of the input logic is early in the program, the Input function can be dramatically simplified, and so can Update.
 
+now when we run the program to test it, key events are not lost, even when the keyDelay is lowered to much less than the Update's DeltaTime.
 
+// TODO <---------------------- 
 
 * create graphics context class to handle drawing in a double buffer
-* show how changing  the scale will change how the system draws, so y can increase up if we want
-```
-```
-* Circle.cs
-* this circle class is far from complete, but it's enough to test.
-```
-		public class Circle {
-			public Vec2 position;
-			public float radius;
-		}
-```
-
-* * --explain that this integration into the graphics context is being built now because this is the second time I wrote thos program.
+* * --explain that this design integrating the graphics context is being built now because this is the second time I wrote thos program.
 * the first time I didn't do that graphics integration until I finished experimenting without it using static functions, including drawing a polygon
 * add super-sampling to the graphics context, for antialiasing
-```
-```
-* add some code to change the circle size as a test
 ```
 ```
 * add color gradient system for the antialiasing, including ConsoleColorPair and ConsoleGlyph.
   * note that ConsoleColorPair could be optimized to 8bits, but it's probably not worth it.
 ```
 ```
-* create a Time class to manage deltaTime, so we can check the passage of time during updates
-```
-```
-* make a circle that moves. which we'll call a Particle
+* make a circle that moves independently, with it's own update. which we'll call a Particle
 ```
 	public class Particle {
 		public Circle circle;
@@ -1455,18 +1591,13 @@ src/Program.cs
 * trigger the particles with a key press
 ```
 ```
-* we're doing a lot of input. we should create a key-input class
-```
-```
 * add zoom in/out to graphics buffer
 ```
 ```
-* draw the polygon
+* moving polygon (with offset)
 ```
 ```
 * rotate functionality for the polygon
-* offset functionality for the polygon
-* move the polygon in real time
 ```
 ```
 * refactor the game loop before adding new functionality...
