@@ -35,9 +35,6 @@
 * calculate cost of calculation
 * throttle code
 
-## Buffering
-* graphics context class with draw buffer
-
 ## Shape drawing
 * create the draw method with delegate
 
@@ -64,9 +61,16 @@
 * implement two child classes
 * move circle position over time
 
-## Dirty Console Glyph
-
 ## Proper Scale
+
+## Draw buffering
+* graphics context class with draw buffer
+
+## Task scheduler
+
+## KeyInput Class
+
+## Dirty Console Glyph
 
 ## Anti Aliasing With Super Sampling Using ASCII
 
@@ -112,8 +116,6 @@
 ## RangeF and Rand Class For Particle Randomness
 
 ## Particle System class
-
-## KeyInput Class
 
 ## Use KeyInput For Different Particle Triggers
 

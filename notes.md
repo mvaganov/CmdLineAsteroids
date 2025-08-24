@@ -10,10 +10,28 @@ pause for 5 seconds
 demo reel of the LowFiRockBlaster game
 
 `voice`
-This is a tutorial series teaching how to build a real-time simulation in C#. It simulates basic physics and collision detection.
-I'll show how to do everything from an empty project, in the TTY Command Line Console. Including the graphics, math, and collision detection.
-I'll offer in-context advice and best practices from my decades of experience as a professional game developer and computer science instructor.
-Also, I'll identify some of the Invisible Wizard Problems that define modern computer programming, and game development especially.
+This is a tutorial series teaching how to build a real-time simulation in C#.
+It simulates basic physics and collision detection and implements other essential games and simulation systems
+
+`scene`
+list with the following
+	2D Vector math
+	basic physics
+	primitive rendering
+	rendering primitives
+	time tracking
+	a task scheduler
+	a key input buffer based on a dispatch table
+	some basic graphics optimizations
+	memory pooling
+	particle systems
+	collision detection
+	cell space partition tree
+
+`voice`
+I'll explain everything starting from an empty project, in the TTY Command Line Console. Including the graphics, math, and collision detection, and all data structures.
+I'll also offer in-context advice and best practices from my decades of experience as a game developer and computer science instructor.
+And I'll give some of my own opinions about the Invisible Wizard Problems that define modern computer programming, and game development especially.
 
 TODO mark Invisible Wizard Problems (IWP):
 	top-down planning
@@ -1242,7 +1260,7 @@ Because we added the scale member to the class, we don't need to change any of t
 
 
 `voice`
-I want to be able to test my app without having to press keys to do it. For that, I will impliment a task queue system, which we can use for many other purposes later as well.
+I want to be able to test my app without having to press keys to do it. For that, I will impliment a task scheduler, which we can use for many other purposes later as well.
 
 `scene`
 MrV/Task/Tasks.cs
@@ -1295,7 +1313,7 @@ namespace MrV.Task {
 }
 ```
 
-This is a very simple task queue system, which executes functions at a given delay. This is similar to Javascript's SetTimeout.
+This is a very simple task scheduler, which executes functions at a given delay. This is similar to Javascript's SetTimeout.
 In this implementation, a Tasks.Task is a container for a function to invoke, and a time to invoke it.
 Each task also keeps track of what line of code added the task, which is very valuable information when debugging asynchronous functionality like this.
 Execution of tasks happen in the Update method, where the next Task to execute is at the front of a the Tasks list.
@@ -1398,12 +1416,17 @@ src/MrV/CommandLine/KeyInput.cs
 ```
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace MrV.CommandLine {
-	public class KeyInput : DispatchTable<char> {
+	public delegate void KeyResponse();
+	public class KeyInput : Dispatcher<char> {
 		private static KeyInput _instance;
-		public static KeyInput Instance => _instance != null ? _instance : _instance = new KeyInput();
-		public static void Bind(char keyPress, KeyResponse response) => Instance.BindEvent(keyPress, response);
+		public static KeyInput Instance {
+			get => _instance != null ? _instance : _instance = new KeyInput();
+			set => _instance = value;
+		}
+		public static void Bind(char keyPress, KeyResponse response) => Instance.BindKeyResponse(keyPress, response);
 		public static void Read() => Instance.ReadConsoleKeys();
 		public static void TriggerEvents() => Instance.TriggerBindings(true);
 		public static void Add(char key) => Instance.AddEvent(key);
@@ -1415,64 +1438,68 @@ namespace MrV.CommandLine {
 		}
 		public override string ToString() {
 			StringBuilder sb = new StringBuilder();
-			foreach(var kvp in keyBinding) {
+			foreach(var kvp in KeyBinding) {
 				sb.Append($"'{kvp.Key}': ").Append(string.Join(", ", kvp.Value.ConvertAll(r => r.Method.Name))).Append("\n");
 			}
 			return sb.ToString();
 		}
 	}
-	public class DispatchTable<KeyType> {
-		public delegate void KeyResponse(DispatchTable<KeyType> handler);
-		public Dictionary<KeyType, List<KeyResponse>> keyBinding = new Dictionary<KeyType, List<KeyResponse>>();
-		protected List<KeyType> keysToProcess = new List<KeyType>();
-		private List<KeyType> _currentlyProcessingKeys = new List<KeyType>();
-		private List<List<KeyResponse>> _currentlyProcessingResponses = new List<List<KeyResponse>>();
-		private KeyType _currentlyProcessing;
+	public class Dispatcher<KeyType> {
+		protected DispatchTable<KeyType> dispatchTable = new DispatchTable<KeyType>();
+		protected List<KeyType> eventsToProcess = new List<KeyType>();
+		private List<KeyType> _currentEventCodes = new List<KeyType>();
+		private List<List<KeyResponse>> _currentResponses = new List<List<KeyResponse>>();
+		private KeyType _currentlyEvent;
+		public Dictionary<KeyType, List<KeyResponse>> KeyBinding => dispatchTable.keyBinding;
 		/// <summary>Identifies <see cref="KeyType"/> that triggered a <see cref="KeyResponse"/> function</summary>
-		public KeyType CurrentlyProcessing => _currentlyProcessing;
-		public int Count => keysToProcess.Count;
+		public KeyType CurrentlyEvent => _currentlyEvent;
+		public int Count => eventsToProcess.Count;
 		public KeyType this[int index] => GetEvent(index);
-		public KeyType GetEvent(int index) => keysToProcess[index];
-		public void AddEvent(KeyType key) => keysToProcess.Add(key);
+		public KeyType GetEvent(int index) => eventsToProcess[index];
+		public void AddEvent(KeyType key) => eventsToProcess.Add(key);
+		public void BindKeyResponse(KeyType key, KeyResponse response) => dispatchTable.BindKeyResponse(key, response);
 		public void TriggerBindings(bool consumeEvents) {
-			for (int i = 0; i < keysToProcess.Count; i++) {
-				KeyType key = keysToProcess[i];
-				if (keyBinding.TryGetValue(key, out List<KeyResponse> responses)) {
-					_currentlyProcessingKeys.Add(key);
-					_currentlyProcessingResponses.Add(responses);
+			for (int i = 0; i < eventsToProcess.Count; i++) {
+				KeyType key = eventsToProcess[i];
+				if (dispatchTable.keyBinding.TryGetValue(key, out List<KeyResponse> responses)) {
+					_currentEventCodes.Add(key);
+					_currentResponses.Add(responses);
 				}
 			}
 			if (consumeEvents) {
 				ClearEvents();
 			}
-			for (int i = 0; i < _currentlyProcessingResponses.Count; i++) {
-				_currentlyProcessing = _currentlyProcessingKeys[i];
-				List<KeyResponse> responses = _currentlyProcessingResponses[i];
-				responses.ForEach(a => a.Invoke(this));
+			for (int i = 0; i < _currentResponses.Count; i++) {
+				_currentlyEvent = _currentEventCodes[i];
+				List<KeyResponse> responses = _currentResponses[i];
+				responses.ForEach(a => a.Invoke());
 			}
-			_currentlyProcessing = default;
-			_currentlyProcessingKeys.Clear();
-			_currentlyProcessingResponses.Clear();
+			_currentlyEvent = default;
+			_currentEventCodes.Clear();
+			_currentResponses.Clear();
 		}
-		public void ClearEvents() => keysToProcess.Clear();
-		public List<KeyResponse> BindEvent(KeyType key, KeyResponse response) {
+		public void ClearEvents() => eventsToProcess.Clear();
+	}
+	public class DispatchTable<KeyType> {
+		public Dictionary<KeyType, List<KeyResponse>> keyBinding = new Dictionary<KeyType, List<KeyResponse>>();
+		public void BindKeyResponse(KeyType key, KeyResponse response) {
 			if (!keyBinding.TryGetValue(key, out List<KeyResponse> responses)) {
 				keyBinding[key] = responses = new List<KeyResponse>();
 			}
 			responses.Add(response);
-			return responses;
 		}
 	}
 }
 ```
 
 `voice`
-A good key input system design is based on the concept of a DispatchTable.
-This implementation extends a DispatchTable and creates a singleton, for easy access.
-If you want to have different keybindings in different user-interface states, you could create different KeyInput instances and swap as needed.
+A good key input system design is based on the concept of a DispatchTable, allowing key binding at runtime, and runtime introspection.
+This implementation creates a singleton for easy access. The structure which extends a Dispatcher, using a DispatchTable to route keys.
+This design will allow different keybindings in different user-interface states, and swapping as needed.
 The KeyInput class reads specifically from the C# Console, so it has a convenient place for that logic.
 The ToString method shows how to dynamically query what is bound to each key, which could be useful for dynamic key binding at runtime.
 
+The Dispatcher is like a Task Scheduler <-- TODO MORE DETAILS
 The DispatchTable is a more general concept that is highly useful in many domains, like compilers, operating systems, networking, robotics, simulations, and of course games.
 This DispatchTable is tuned for game development, with it's TriggerBindings method removing events before executing them.
 	Just like the TaskQueue, this separation keeps the event queue safe from recursive addition, which can happen in complex logic.
