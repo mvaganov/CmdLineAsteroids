@@ -1040,10 +1040,10 @@ namespace MrV.CommandLine {
 		public DrawBuffer(int height, int width) {
 			SetSize(height, width);
 		}
-		public void SetSize(int height, int width) {
+		public virtual void SetSize(int height, int width) {
 			ResizeBuffer(ref _currentBuffer, height, width);
 		}
-		private static void ResizeBuffer(ref char[,] buffer, int height, int width) {
+		public static void ResizeBuffer(ref char[,] buffer, int height, int width) {
 			char[,] oldBuffer = buffer;
 			buffer = new char[height, width];
 			if (oldBuffer == null) {
@@ -1315,7 +1315,8 @@ namespace MrV.Task {
 
 This is a very simple task scheduler, which executes functions at a given delay. This is similar to Javascript's SetTimeout.
 In this implementation, a Tasks.Task is a container for a function to invoke, and a time to invoke it.
-Each task also keeps track of what line of code added the task, which is very valuable information when debugging asynchronous functionality like this.
+The System.Action type is a variable that stores a function to invoke later. This can also be accomplished with a delegate, as we'll see in other code soon.
+Each task also keeps track of what line of code called Tasks.Add, which is very valuable information when debugging asynchronous functionality like this.
 Execution of tasks happen in the Update method, where the next Task to execute is at the front of a the Tasks list.
 A seperate list gathers tasks to execute before the execution.
 	If the tasks executing add more tasks to the task list, this separation prevents an infinite loop.
@@ -1352,8 +1353,11 @@ namespace MrV {
 
 `voice`
 Binary search works on a list of ordered values. The method assumes the list is ordered, and will not work if it isn't sorted.
+It also works by testing IComparable values, which extend CompareTo. All primitive types are IComparable.
+	A negative value means the left-value is smaller than the right-value.
+	A zero value means the left-value and right-value are equal.
 In the inner loop, BinarySearch checks if the value being searched for is directly in the middle of the search space.
-	if the value is found, BinarySearch provides it's index in the list
+	if the exact value is found in the middle, BinarySearch provides it's index in the list
 	if the value is higher than what was found, the next search space will be in the top half of the current search space
 	if the value is lower than what was found, the next search space will be in the bottom half of the current search space
 if the search space is reduced to zero, the value was not found.
@@ -1374,7 +1378,7 @@ As long as the RecordComparer is created as a static member, there isn't any sig
 However, my search algorithm doesn't need to create a mostly empty search element.
 	That means my algorithm becomes better if the Task class becomes more complex
 Also, this is an excellent example of a templated function using lambda expressions, which my target audience might appreciate.
-	I will keep using more functional programming like this.
+	I will continue using more functional programming like this, so please to any additional research to understand this as needed before watching more.
 
 `scene`
 src/Program.cs
@@ -1409,7 +1413,7 @@ the second for-loop moves the circle up with the 'w' keu, and reduces the radius
 each of the key input changes should happen about 100 milliseconds apart.
 
 If the timing is reduced to less than the deltaTime of a frame, some of these inputs will become lost, and the circle will not move the same amount.
-This bug, and many others, are because my key event system is currently just one switch statement and one variable. Lets make a Key Input system.
+Lets make a Key Input system to solve this and other bugs.
 
 `scene`
 src/MrV/CommandLine/KeyInput.cs
@@ -1420,15 +1424,46 @@ using System.Text;
 
 namespace MrV.CommandLine {
 	public delegate void KeyResponse();
+	public struct KeyResponseRecord<KeyType> {
+		public KeyType Key;
+		public KeyResponse Response;
+		public string Note;
+		public KeyResponseRecord(KeyType key, KeyResponse response, string note) {
+			Key = key; Response = response; Note = note;
+		}
+	}
+	public class Dispatcher<KeyType> {
+		protected List<KeyType> eventsToProcess = new List<KeyType>();
+		protected Dictionary<KeyType, List<KeyResponseRecord<KeyType>>> dispatchTable
+			= new Dictionary<KeyType, List<KeyResponseRecord<KeyType>>>();
+		public void BindKeyResponse(KeyType key, KeyResponse response, string note) {
+			if (!dispatchTable.TryGetValue(key, out List<KeyResponseRecord<KeyType>> responses)) {
+				dispatchTable[key] = responses = new List<KeyResponseRecord<KeyType>>();
+			}
+			responses.Add(new KeyResponseRecord<KeyType>(key, response, note));
+		}
+		public void AddEvent(KeyType key) => eventsToProcess.Add(key);
+		public void ConsumeEvents() {
+			List<KeyType> processNow = new List<KeyType>(eventsToProcess);
+			eventsToProcess.Clear();
+			for (int i = 0; i < processNow.Count; i++) {
+				KeyType key = processNow[i];
+				if (dispatchTable.TryGetValue(key, out List<KeyResponseRecord<KeyType>> responses)) {
+					responses.ForEach(responseRecord => responseRecord.Response.Invoke());
+				}
+			}
+		}
+	}
 	public class KeyInput : Dispatcher<char> {
 		private static KeyInput _instance;
 		public static KeyInput Instance {
 			get => _instance != null ? _instance : _instance = new KeyInput();
 			set => _instance = value;
 		}
-		public static void Bind(char keyPress, KeyResponse response) => Instance.BindKeyResponse(keyPress, response);
+		public static void Bind(char keyPress, KeyResponse response, string note)
+			=> Instance.BindKeyResponse(keyPress, response, note);
 		public static void Read() => Instance.ReadConsoleKeys();
-		public static void TriggerEvents() => Instance.TriggerBindings(true);
+		public static void TriggerEvents() => Instance.ConsumeEvents();
 		public static void Add(char key) => Instance.AddEvent(key);
 		public void ReadConsoleKeys() {
 			while (Console.KeyAvailable) {
@@ -1438,92 +1473,46 @@ namespace MrV.CommandLine {
 		}
 		public override string ToString() {
 			StringBuilder sb = new StringBuilder();
-			foreach(var kvp in KeyBinding) {
-				sb.Append($"'{kvp.Key}': ").Append(string.Join(", ", kvp.Value.ConvertAll(r => r.Method.Name))).Append("\n");
+			foreach(var kvp in dispatchTable) {
+				string listKeyResponses = string.Join(", ", kvp.Value.ConvertAll(r => r.Note));
+				sb.Append($"'{kvp.Key}': {listKeyResponses}\n");
 			}
 			return sb.ToString();
-		}
-	}
-	public class Dispatcher<KeyType> {
-		protected DispatchTable<KeyType> dispatchTable = new DispatchTable<KeyType>();
-		protected List<KeyType> eventsToProcess = new List<KeyType>();
-		private List<KeyType> _currentEventCodes = new List<KeyType>();
-		private List<List<KeyResponse>> _currentResponses = new List<List<KeyResponse>>();
-		private KeyType _currentlyEvent;
-		public Dictionary<KeyType, List<KeyResponse>> KeyBinding => dispatchTable.keyBinding;
-		/// <summary>Identifies <see cref="KeyType"/> that triggered a <see cref="KeyResponse"/> function</summary>
-		public KeyType CurrentlyEvent => _currentlyEvent;
-		public int Count => eventsToProcess.Count;
-		public KeyType this[int index] => GetEvent(index);
-		public KeyType GetEvent(int index) => eventsToProcess[index];
-		public void AddEvent(KeyType key) => eventsToProcess.Add(key);
-		public void BindKeyResponse(KeyType key, KeyResponse response) => dispatchTable.BindKeyResponse(key, response);
-		public void TriggerBindings(bool consumeEvents) {
-			for (int i = 0; i < eventsToProcess.Count; i++) {
-				KeyType key = eventsToProcess[i];
-				if (dispatchTable.keyBinding.TryGetValue(key, out List<KeyResponse> responses)) {
-					_currentEventCodes.Add(key);
-					_currentResponses.Add(responses);
-				}
-			}
-			if (consumeEvents) {
-				ClearEvents();
-			}
-			for (int i = 0; i < _currentResponses.Count; i++) {
-				_currentlyEvent = _currentEventCodes[i];
-				List<KeyResponse> responses = _currentResponses[i];
-				responses.ForEach(a => a.Invoke());
-			}
-			_currentlyEvent = default;
-			_currentEventCodes.Clear();
-			_currentResponses.Clear();
-		}
-		public void ClearEvents() => eventsToProcess.Clear();
-	}
-	public class DispatchTable<KeyType> {
-		public Dictionary<KeyType, List<KeyResponse>> keyBinding = new Dictionary<KeyType, List<KeyResponse>>();
-		public void BindKeyResponse(KeyType key, KeyResponse response) {
-			if (!keyBinding.TryGetValue(key, out List<KeyResponse> responses)) {
-				keyBinding[key] = responses = new List<KeyResponse>();
-			}
-			responses.Add(response);
 		}
 	}
 }
 ```
 
 `voice`
-A good key input system design is based on the concept of a DispatchTable, allowing key binding at runtime, and runtime introspection.
-This implementation creates a singleton for easy access. The structure which extends a Dispatcher, using a DispatchTable to route keys.
-This design will allow different keybindings in different user-interface states, and swapping as needed.
-The KeyInput class reads specifically from the C# Console, so it has a convenient place for that logic.
-The ToString method shows how to dynamically query what is bound to each key, which could be useful for dynamic key binding at runtime.
+A KeyResponse is just some function, which happens in response to a keypress.
+I could have used System.Action instead, but using a named delegate type means we can change this easily later.
+A structure keeps the relationship of each Key and KeyResponse, along with a note about the purpose of the key binding.
+	The KeyType is templated because this implementation will just use characters, but any type of input should work as well.
+A Dispatcher manages a queue of events, and those events are mapped in a DispatchTable to responses.
+	This is a general concept that is useful in many domains beyond key input handling.
+BindKeyResponse will bind a KeyResponse to a key. If the key has never been bound before, a list of KeyResponses will be created for the key.
+Events added to the dispatcher will be Consumed all at once.
+Just like the task scheduler, execution will happen from a list that can't be added to while actions are processed.
 
-The Dispatcher is like a Task Scheduler <-- TODO MORE DETAILS
-The DispatchTable is a more general concept that is highly useful in many domains, like compilers, operating systems, networking, robotics, simulations, and of course games.
-This DispatchTable is tuned for game development, with it's TriggerBindings method removing events before executing them.
-	Just like the TaskQueue, this separation keeps the event queue safe from recursive addition, which can happen in complex logic.
-I chose to pass the DispatchTable as an argument to each response to provide some context about the triggered event to the event response.
-	This code is yours, so feel free to add more context to the DispatchEvent class as you need.
+This KeyInput implementation creates a singleton for easy access.
+This design will allow the KeyInput system to swap out at runtime, in case different different user-interface states use different keybindings.
+Otherwise, this class can be accessed statically, for convenience.
+The KeyInput class reads specifically from the C# Console, so it has a conveniently labeled place for that logic.
+The ToString method shows how to dynamically query what is bound to each key, which could be useful for dynamic key binding at runtime.
 
 `scene`
 src/Program.cs
 ```
 			DrawBuffer graphics = new DrawBuffer(height, width);
-			KeyInput.Bind('w', MoveCircleUp);
-			KeyInput.Bind('a', MoveCircleLeft);
-			KeyInput.Bind('s', MoveCircleDown);
-			KeyInput.Bind('d', MoveCircleRight);
-			KeyInput.Bind('e', ExpandCircleRadius);
-			KeyInput.Bind('r', ReduceCircleRadius);
-			void MoveCircleUp(DispatchTable<char> keyInput) => position.y -= moveIncrement;
-			void MoveCircleLeft(DispatchTable<char> keyInput) => position.x -= moveIncrement;
-			void MoveCircleDown(DispatchTable<char> keyInput) => position.y += moveIncrement;
-			void MoveCircleRight(DispatchTable<char> keyInput) => position.x += moveIncrement;
-			void ExpandCircleRadius(DispatchTable<char> keyInput) => radius += moveIncrement;
-			void ReduceCircleRadius(DispatchTable<char> keyInput) => radius -= moveIncrement;
+			KeyInput.Bind('w', () => position.y -= moveIncrement, "move circle up");
+			KeyInput.Bind('a', () => position.x -= moveIncrement, "move circle left");
+			KeyInput.Bind('s', () => position.y += moveIncrement, "move circle down");
+			KeyInput.Bind('d', () => position.x += moveIncrement, "move circle right");
+			KeyInput.Bind('e', () => radius += moveIncrement, "expand radius");
+			KeyInput.Bind('r', () => radius -= moveIncrement, "reduce radius");
+			KeyInput.Bind((char)27, () => running = false, "quit");
 			int timeMs = 0;
-			int keyDelayMs = 10;
+			int keyDelayMs = 20;
 			for (int i = 0; i < 10; ++i) {
 				Tasks.Add(() => KeyInput.Add('d'), timeMs);
 				timeMs += keyDelayMs;
@@ -1540,9 +1529,11 @@ src/Program.cs
 ```
 `voice`
 Now keys are bound to functions during initialization.
-This example names the functions to create more clarity.
-I personally like this style a lot, it allows key binding code to happen closer any important context instead of being trapped in the Input function.
-Notice that changes to the input variable have been replaced with manual additions to the KeyInput queue.
+This example inlines the very simple functions, and takes advantage of the Note field to create more clarity in the code.
+I personally like this style of keybinding a lot. It feels like how rules of a boardgame are explained before the game starts.
+	It could also allow definitions of controls to happen closer other important context.
+
+Notice that setting the input variable has been replaced with additions to the KeyInput queue.
 
 `scene`
 src/Program.cs
@@ -1557,9 +1548,75 @@ src/Program.cs
 ```
 
 `voice`
-now that all of the input logic is early in the program, the Input function can be dramatically simplified, and so can Update.
+Because KeyInput takes care of input logic, the Input function can be dramatically simplified, and so can Update.
 
 now when we run the program to test it, key events are not lost, even when the keyDelay is lowered to much less than the Update's DeltaTime.
+
+but we still want to reduce that deltaTime, and we have a technique to do it still.
+The image doesn't actually need to be fully refresh every frame, only a few characters change each frame.
+
+`scene`
+src/MrV/CommandLine/GraphicsContext.cs
+```
+using MrV.Geometry;
+using System;
+
+namespace MrV.CommandLine {
+	public class GraphicsContext {
+		public DrawBuffer currentBuffer;
+		public DrawBuffer lastBuffer;
+		public int Width => currentBuffer.Width;
+		public int Height => currentBuffer.Height;
+		public Vec2 Size => currentBuffer.Size;
+		public char this[int y, int x] {
+			get => currentBuffer[y, x];
+			set => currentBuffer[y, x] = value;
+		}
+		public GraphicsContext(int width, int height) {
+			SetSize(width, height);
+		}
+		public void SetSize(int width, int height) {
+			currentBuffer.SetSize(width, height);
+			lastBuffer.SetSize(width, height);
+		}
+		public Vec2 WriteAt(string text, int row, int col) => currentBuffer.WriteAt(text, row, col);
+		public Vec2 WriteAt(char[] text, int col, int row) => currentBuffer.WriteAt(text, row, col);
+		public void WriteAt(char glyph, int col, int row) => WriteAt(glyph, row, col);
+		public bool IsValidCoordinate(int y, int x) => currentBuffer.IsValidLocation(y, x);
+		public virtual void Print() => currentBuffer.Print();
+		public virtual void PrintModifiedCharactersOnly() {
+			for (int row = 0; row < Height; ++row) {
+				for (int col = 0; col < Width; ++col) {
+					bool isSame = currentBuffer[row, col] == lastBuffer[row, col];
+					if (isSame) {
+						continue;
+					}
+					char glyph = currentBuffer[row, col];
+					Console.SetCursorPosition(col, row);
+					Console.Write(glyph);
+				}
+			}
+		}
+		public void FinishedRender() {
+			SwapBuffers();
+			Clear();
+		}
+		public void SwapBuffers() {
+			DrawBuffer swap = currentBuffer;
+			currentBuffer = lastBuffer;
+			lastBuffer = swap;
+		}
+		public void Clear() => currentBuffer.Clear();
+	}
+}
+```
+
+`voice`
+The GraphicsContext class is a wrapper around two buffers, one current buffer which needs to be drawn, and one previous buffer which was already drawn.
+Most of the class is pushing forward the functionality of DrawBuffer.
+It could be argued that GraphicsContext should just inherit from DrawBuffer to reduce code.
+While I agree that it would reduce code, it might not increase clarity:
+	In my mind, a GraphicsContext HAS TWO buffers, it isn't 
 
 // TODO <---------------------- 
 
