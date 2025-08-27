@@ -1554,75 +1554,143 @@ now when we run the program to test it, key events are not lost, even when the k
 
 but we still want to reduce that deltaTime, and we have a technique to do it still.
 The image doesn't actually need to be fully refresh every frame, only a few characters change each frame.
+This is similar to a graphics optimization technique called Pixel Caching, done here with character glyphs.
 
 `scene`
 src/MrV/CommandLine/GraphicsContext.cs
 ```
-using MrV.Geometry;
 using System;
 
 namespace MrV.CommandLine {
-	public class GraphicsContext {
-		public DrawBuffer currentBuffer;
-		public DrawBuffer lastBuffer;
-		public int Width => currentBuffer.Width;
-		public int Height => currentBuffer.Height;
-		public Vec2 Size => currentBuffer.Size;
-		public char this[int y, int x] {
-			get => currentBuffer[y, x];
-			set => currentBuffer[y, x] = value;
+	public class GraphicsContext : DrawBuffer {
+		private char[,] _lastBuffer;
+		public GraphicsContext(int height, int width) : base(height, width) {}
+		public override void SetSize(int height, int width) {
+			base.SetSize(height, width);
+			ResizeBuffer(ref _lastBuffer, height, width);
 		}
-		public GraphicsContext(int width, int height) {
-			SetSize(width, height);
-		}
-		public void SetSize(int width, int height) {
-			currentBuffer.SetSize(width, height);
-			lastBuffer.SetSize(width, height);
-		}
-		public Vec2 WriteAt(string text, int row, int col) => currentBuffer.WriteAt(text, row, col);
-		public Vec2 WriteAt(char[] text, int col, int row) => currentBuffer.WriteAt(text, row, col);
-		public void WriteAt(char glyph, int col, int row) => WriteAt(glyph, row, col);
-		public bool IsValidCoordinate(int y, int x) => currentBuffer.IsValidLocation(y, x);
-		public virtual void Print() => currentBuffer.Print();
 		public virtual void PrintModifiedCharactersOnly() {
 			for (int row = 0; row < Height; ++row) {
 				for (int col = 0; col < Width; ++col) {
-					bool isSame = currentBuffer[row, col] == lastBuffer[row, col];
+					bool isSame = this[row, col] == _lastBuffer[row, col];
 					if (isSame) {
 						continue;
 					}
-					char glyph = currentBuffer[row, col];
+					char glyph = this[row, col];
 					Console.SetCursorPosition(col, row);
 					Console.Write(glyph);
 				}
 			}
 		}
-		public void FinishedRender() {
-			SwapBuffers();
-			Clear();
-		}
 		public void SwapBuffers() {
-			DrawBuffer swap = currentBuffer;
-			currentBuffer = lastBuffer;
-			lastBuffer = swap;
+			char[,] swap = _buffer;
+			_buffer = _lastBuffer;
+			_lastBuffer = swap;
 		}
-		public void Clear() => currentBuffer.Clear();
 	}
 }
 ```
 
 `voice`
-The GraphicsContext class is a wrapper around two buffers, one current buffer which needs to be drawn, and one previous buffer which was already drawn.
-Most of the class is pushing forward the functionality of DrawBuffer.
-It could be argued that GraphicsContext should just inherit from DrawBuffer to reduce code.
-While I agree that it would reduce code, it might not increase clarity:
-	In my mind, a GraphicsContext HAS TWO buffers, it isn't 
+The GraphicsContext class is a DrawBuffer, and it also keeps track of previous buffer data which was already drawn.
+The decision to inherit DrawBuffer instead could be argued here.
+Conceptually, GraphicsContext has two DrawBuffers instead of being a buffer with spare data.
+I decided to use inheritance because GraphicsContext an API surface similar to DrawBuffer, and _lastBuffer can be an internal array.
+PrintModifiedCharactersOnly checks every character to determine if it is the same as the last character printed.
+only different characters are printed.
+after every print, which is commonly called a Render, the current active buffer and last buffer can switch places
+PrintModifiedCharactersOnly could be further optimized to reduce calls to SetCursorPosition, which is an expensive call in the Console API.
 
-// TODO <---------------------- 
+```
+		public virtual void PrintModifiedCharactersOnly() {
+			for (int row = 0; row < Height; ++row) {
+				bool mustMoveCursorToNewLocation = true;
+				for (int col = 0; col < Width; ++col) {
+					bool isSame = this[row, col] == _lastBuffer[row, col];
+					if (isSame) {
+						mustMoveCursorToNewLocation = true;
+						continue;
+					}
+					char glyph = this[row, col];
+					if (mustMoveCursorToNewLocation) {
+						Console.SetCursorPosition(col, row);
+						mustMoveCursorToNewLocation = false;
+					}
+					Console.Write(glyph);
+				}
+			}
+		}
+```
 
-* create graphics context class to handle drawing in a double buffer
-* * --explain that this design integrating the graphics context is being built now because this is the second time I wrote thos program.
-* the first time I didn't do that graphics integration until I finished experimenting without it using static functions, including drawing a polygon
+`voice`
+Console.Write implicitly moves the cursor position.
+The cursor position only needs to be set if there is a new row, or if the last glyph was skipped.
+
+src/Program.cs
+```
+			int targetMsDelay = (int)(1000 / targetFps);
+			GraphicsContext graphics = new GraphicsContext(height, width);
+			KeyInput.Bind('w', () => position.y -= moveIncrement, "move circle up");
+```
+
+`voice`
+The GraphicsContext has almost the same API surface as DrawBuffer, so it can be substituted without incident
+
+`scene`
+```
+				graphics.DrawPolygon(polygonShape, '-');
+				graphics.PrintModifiedCharactersOnly();
+				graphics.SwapBuffers();
+				Console.SetCursorPosition(0, (int)height);
+```
+
+`voice`
+Using the optimized draw happens in the same way as the previous print, except that FinishedRender is called to swap the draw buffer data.
+A call to SwapBuffers might seem like an overly verbose requirement. However, it's very common in graphics APIs, so it's worth getting used to the idea.
+
+The first time I wrote this program, I didn't separate DrawBuffer with GraphicsContext, I just wrote them all in the same class.
+I want to make a special note about it because I want to remind the audience that software design is difficult.
+	and I want to emphasize that doing something for the first time means you should be comfortable with imperfect design.
+	In every major computer programming problem I have ever solved started with a relatively messy intuitive solution.
+	My messy code didn't evolve into something that made sense until I sat with it for a while and re-wrote it.
+	Be patient with yourself as a developer. Give yourself the grace to rewrite messy code later.
+
+Running this program is *much* faster than it used to be. Most of the time draw happens, there is actually no change at all.
+And sometimes, only small amounts of the screen need to change. Dirty Rectangle (or Scissoring) is the name of another similar technique for pixel graphics.
+
+<--------- TODO
+
+The graphics context needs to use colors, as part of the original game design.
+
+`scene`
+src/MrV/CommandLine/ConsoleColorPair.cs
+```
+using System;
+
+namespace MrV.CommandLine {
+	public struct ConsoleColorPair {
+		private byte _fore, _back;
+		public ConsoleColor fore { get => (ConsoleColor)_fore; set => _fore = (byte)value; }
+		public ConsoleColor back { get => (ConsoleColor)_back; set => _back = (byte)value; }
+		public ConsoleColorPair(ConsoleColor fore, ConsoleColor back) {
+			_back = (byte)back;
+			_fore = (byte)fore;
+		}
+		public void Apply() {
+			Console.ForegroundColor = fore;
+			Console.BackgroundColor = back;
+		}
+		public static ConsoleColorPair Default = new ConsoleColorPair(ConsoleColor.Gray, ConsoleColor.Black);
+		public static ConsoleColorPair Current => new ConsoleColorPair(Console.ForegroundColor, Console.BackgroundColor);
+		static ConsoleColorPair() {
+			Default = Current;
+		}
+	}
+}
+```
+
+C-sharp's console API gives us access to 16 colors, in both the foreground and background
+
 * add super-sampling to the graphics context, for antialiasing
 ```
 ```
