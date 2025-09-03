@@ -74,8 +74,6 @@
 
 ## Anti Aliasing With Super Sampling Using ASCII
 
-## Draw Line antialiased
-
 ## Antialiasing With Console Color
 * ConsoleColorPair
 * ConsoleGlyph
@@ -84,14 +82,7 @@
 
 ## Write Text At
 
-## Polygon
-* Polygon class
-* Draw polygon
-* Draw rotated polygon
-
-## Testing
-* Proof Of Life
-* This is not Test Driven Development, this is Game Development.
+## Draw Line antialiased
 
 ---
 
@@ -130,6 +121,15 @@
 * Circle class
 * MobileObject class
 * Create multiple asteroids using ObjectPool
+
+## Polygon
+* Polygon class
+* Draw polygon
+* Draw rotated polygon
+
+## Testing
+* Proof Of Life
+* This is not Test Driven Development, this is Game Development.
 
 ## Basic Mobile Polygon
 * MobilePolygon class

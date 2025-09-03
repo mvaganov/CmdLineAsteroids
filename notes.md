@@ -32,11 +32,11 @@ list with the following
 I'll explain everything starting from an empty project, in the TTY Command Line Console. Including the graphics, math, and collision detection, and all data structures.
 I'll also offer in-context advice and best practices from my decades of experience as a game developer and computer science instructor.
 And I'll give some of my own opinions about the Invisible Wizard Problems that define modern computer programming, and game development especially.
+One invisible wizard problem that I can mention now is the tradeoff of robustness vs accessibility of this simulation.
+	many of my example implementations will fall short of being highly robust and maximally efficient.
+	In this tutorial, I intend to practically introduce many concepts, and accept that the audience will do further research from these starting points.
 
 TODO mark Invisible Wizard Problems (IWP):
-	top-down planning
-	refactoring
-	good naming
 	function separation
 
 `voice`
@@ -164,11 +164,13 @@ Work Breakdown Structure
 		* avoid moving asteroids, or else be destroyed
 
 `voice`
-Before I start writing the game, I want to have a clear set of goals. An imagined vision of the game is a necessary starting point.
-A durable list of features and expectations is a valuable next step. This is essential for a project that will take several days.
-For game development, this is often called a Game Design Document. An effective form of a Game Design Document is a Work Breakdown Structure, like this.
-More experienced developers will need fewer details and less structure to create a product.
-Add just enough detail to your list of expectations that you feel you will remember your game vision when you read this document again. Avoid adding more detail than that.
+Before I start writing the game, I want to have a clear set of goals.
+An imagined vision of the game is a necessary starting point.
+A list of features and expectations is an essential next step for a project that will take several days.
+This kind of Top-Down design addresses some confusion and scope, which are Invisible Wizard Problems that a software developer should keep in mind.
+Project managers might call this a Work Breakdown Structure. Game Developers might call this a Game Design Document.
+More experienced developers will need fewer details and less structure to create a product. If this seems to sparse for your own projects, please add more details.
+Add just enough detail to your list of expectations that you feel you will remember your game vision when you read the document again. Avoid adding more detail than that.
 Spending too much time writing a design or specification is sometimes called Analysis Paralisys, and it is a real cause for projects to fail before they even start.
 Identify clear goals that you can start implementing, and give yourself the grace to updatee the document later.
 
@@ -366,10 +368,12 @@ We should get serious about 2 dimensional structures.
 This simulation will have many of them, and we should start using 2D concepts in this rectangle drawing code.
 Also, this program will need many source files, and I want to organize them with folders.
 
-I'll be doing this kind of code refactoring a lot during my tutorial.
+I'll be doing more of this kind of code refactoring during my tutorial, but not nearly as much as normal.
+Real programmers constantly rewrite code, often renaming variables, and adding or removing new code structures for many different reasons.
+Know that this tutorial is the result of lots of such rewrites.
 If you are new to programming, you need to know that this is how big projects are written: one step at a time, with lots of rewrites, and tests between changes.
-It will be slower for you, and that's fine.
-I apologize for speeding it up. Please pause and rewind the video for yourself as needed.
+If you are new, programming will probably be slower for you, and that's fine.
+I sincerely apologize for speeding it up my development process. Please learn what you can from my compressed examples, and do pause and rewind the video for yourself as needed.
 
 Notice that I'm using the old DrawRectangle class in this new function.
 
@@ -434,9 +438,10 @@ A box can be described with two Vec2 structures, bounded by edges aligned on the
 This is a simple description of space in a simulation, and it is used for many kinds of clalculations. 
 notice I'm again using public static functions, and calling a common function that has the logic written once
 	computer programmers need to have a Single Point Of Truth wherever possible, even at the cost of performance.
+	Being undisciplined about a Single Point of Truth will lead to technical debt, which is one of the Invisible Wizard Problems that I'm trying to avoid in this tutorial.
 	Single Point Of Truth is an optimization for the Programmer, not for the computer.
-	If we can keep complicated logic in one place, then we only need to fix one place when there is a bug in it.
-	We can always inline our functions as a final optimization step.
+	If we can keep complicated logic in one place, then we only need to fix one place when there is a bug in it. It limits how many places we can be confused.
+	If you are concerned about runtime efficiency, stop. We can always inline our functions as a final optimization step, after our code works exactly how we want.
 
 `scene`
 writing and compiling program.cs
@@ -1098,21 +1103,21 @@ namespace MrV.CommandLine {
 }
 ```
 
-This buffer for drawing will wrap around, and act like a 2D array, with some additional convenience methods.
-The class is a partial class so that we can split it's impementation across multiple files. We'll put drawing methods in a separate place.
-This implementation uses C-sharp's contiguous block 2D array allocation.
-Notice that Height is the first dimension and Width is the second. These values can be in either order, but it needs to be consistent.
+This buffer for drawing console characters, which I'll refer to as glyphs. The buffer is a 2D array of these glyphs, with some additional convenience methods.
+The class is a partial class so that we can split it's impementation across multiple files. We'll put specialized drawing methods in a separate place.
+This code uses C-sharp's contiguous block 2D array allocation instead of an array-of-arrays, which some progammers might be more familiar with.
+Notice that Height is the first dimension and Width is the second. These dimensions can be in either order, but it should be consistent.
 	I choose Height first because it intuitively follows the existing rectangle code, and also improves CPU cache locality when scanning horizontally, which is historically how graphics work.
-The square-bracket operator is overloaded so that it can act like a 2D array in our code.
+The square-bracket operator is overloaded so the class can be accessed like a 2D array in our code.
 	If you want to change the order of x/y you can do it here. Doing so is a great exercise in resolving confusion, and internalizing the value of consistent dimension ordering.
 	Generations of graphics programmers before you have internalized the ambiguity of dimension order, and unlocked mental resiliency in the process.
-	(IWP) this is one of the invisible wizard problems that creates undocumented skills shared by game programmers.
+	(IWP) this is one of the invisible wizard problems that creates undocumented skills shared by many game programmers.
 This ResizeBuffer method is more robust than we need it to be, because it will copy old data into the new buffer to maintain consistency.
-	This feature will probably not be needed, so it could be argued that writing this extra code is a waste of time and mental space, according to the YAGNI or You Aint Gunna Need It principle.
-	However, this feature fulfills my intuition of how the ResizeBuffer function should work.
-	For me, the cognitive load of writing the functionality now is less than the cognitive load of remembering that the feature doesn't exist in the future.
-The buffer needs methods to write glyphs into it, one to clear the buffer before every draw.
-And a a convenience method for printing to the command line console.
+	This feature will probably not be needed, so it could be argued the extra code is a waste of time and mental energy, according to the YAGNI or You Aint Gunna Need It principle.
+	However, this feature fulfills my intuition of how the ResizeBuffer function should work. That allows me to comfortably forget about how it actually works later.
+	For me, the cognitive load of writing the functionality now is less than the cognitive load of having to remember that the feature doesn't exist in the future.
+The buffer needs methods to write glyphs into it. We need a moethod to clear the buffer before every draw.
+And a a convenience method for printing to the command line console, with a static implementation that could be useful for debugging.
 
 `scene`
 MrV/DrawBuffer_geometry.cs
@@ -1565,7 +1570,7 @@ namespace MrV.CommandLine {
 			base.SetSize(height, width);
 			ResizeBuffer(ref _lastBuffer, height, width);
 		}
-		public virtual void PrintModifiedCharactersOnly() {
+		public virtual void PrintModifiedOnly() {
 			for (int row = 0; row < Height; ++row) {
 				for (int col = 0; col < Width; ++col) {
 					bool isSame = this[row, col] == _lastBuffer[row, col];
@@ -1592,13 +1597,13 @@ The GraphicsContext class is a DrawBuffer, and it also keeps track of previous b
 The decision to inherit DrawBuffer instead could be argued here.
 Conceptually, GraphicsContext has two DrawBuffers instead of being a buffer with spare data.
 I decided to use inheritance because GraphicsContext an API surface similar to DrawBuffer, and _lastBuffer can be an internal array.
-PrintModifiedCharactersOnly checks every character to determine if it is the same as the last character printed.
+PrintModifiedOnly checks every character to determine if it is the same as the last character printed.
 only different characters are printed.
 after every print, which is commonly called a Render, the current active buffer and last buffer can switch places
-PrintModifiedCharactersOnly could be further optimized to reduce calls to SetCursorPosition, which is an expensive call in the Console API.
+PrintModifiedOnly could be further optimized to reduce calls to SetCursorPosition, which is an expensive call in the Console API.
 
 ```
-		public virtual void PrintModifiedCharactersOnly() {
+		public virtual void PrintModifiedOnly() {
 			for (int row = 0; row < Height; ++row) {
 				bool mustMoveCursorToNewLocation = true;
 				for (int col = 0; col < Width; ++col) {
@@ -1635,7 +1640,7 @@ The GraphicsContext has almost the same API surface as DrawBuffer, so it can be 
 `scene`
 ```
 				graphics.DrawPolygon(polygonShape, '-');
-				graphics.PrintModifiedCharactersOnly();
+				graphics.PrintModifiedOnly();
 				graphics.SwapBuffers();
 				Console.SetCursorPosition(0, (int)height);
 ```
@@ -1715,7 +1720,7 @@ namespace MrV.CommandLine {
 		public ConsoleColor fore { get { return colorPair.fore; } set { colorPair.fore = value; } }
 		public ConsoleColor back { get { return colorPair.back; } set { colorPair.back = value; } }
 		public ConsoleGlyph(char letter, ConsoleColorPair colorPair) { this.letter = letter; this.colorPair = colorPair; }
-		public ConsoleGlyph(ConsoleColor color) : this(' ', new ConsoleColorPair(Default.fore, color)) {}
+		public static implicit operator ConsoleGlyph(ConsoleColor color) => new ConsoleGlyph(' ', Default.fore, color);
 		public ConsoleGlyph(char letter, ConsoleColor fore, ConsoleColor back) :
 			this(' ', new ConsoleColorPair(fore, back)) { }
 		public static readonly ConsoleGlyph Default = new ConsoleGlyph(' ', ConsoleColorPair.Default);
@@ -1750,21 +1755,303 @@ namespace MrV.CommandLine {
 }
 ```
 
-Each glyph on the screen is a character which has the ConsoleColorPair qualities.
+Each glyph on the screen should have the ConsoleColorPair qualities, so we can change the color.
 Because each structure is a struct, there can't be inheritance, the glyph must be composed.
 If we want to conveniently access a glyph's colors, we should do it with a properties.
-There are three constructors, all referencing the same base constructor.
-A few readonly constant-like values will help conveniently define things like empty graphics buffers.
+There are two constructors, and an implicit constructor, all eventually calling the same base constructor, so we keep a Single Point of Truth.
+A few readonly constant-like values will help conveniently define things like a default clear canvas, which is different from an explicitly empty canvas.
 
-We'll use 
+Some convenience methods will help convert text to and from ConsoleGlyphs.
 
-* add super-sampling to the graphics context, for antialiasing
+`scene`
+src/MrV/CommandLine/DrawBuffer.cs
+```
+	public partial class DrawBuffer {
+		protected ConsoleGlyph[,] _buffer;
+		public int Height => GetHeight(_buffer);
+		public static int GetHeight(ConsoleGlyph[,] buffer) => buffer.GetLength(0);
+		public int Width => GetWidth(_buffer);
+		public static int GetWidth(ConsoleGlyph[,] buffer) => buffer.GetLength(1);
+		public Vec2 Size => new Vec2(Width, Height);
+		public ConsoleGlyph this[int y, int x] {
+			get => _buffer[y, x];
+			set => _buffer[y, x] = value;
+		}
 ```
 ```
-* add color gradient system for the antialiasing, including ConsoleColorPair and ConsoleGlyph.
-  * note that ConsoleColorPair could be optimized to 8bits, but it's probably not worth it.
+		protected static void ResizeBuffer(ref ConsoleGlyph[,] buffer, int height, int width) {
+			ConsoleGlyph[,] oldBuffer = buffer;
+			buffer = new ConsoleGlyph[height, width];
 ```
 ```
+		public Vec2 WriteAt(string text, int row, int col) => WriteAt(ConsoleGlyph.Convert(text), row, col);
+		public Vec2 WriteAt(ConsoleGlyph[] text, int row, int col) {
+			for (int i = 0; i < text.Length; i++) {
+				ConsoleGlyph glyph = text[i];
+				switch (glyph.Letter) {
+```
+```
+		public void WriteAt(ConsoleGlyph glyph, int row, int col) {
+```
+```
+		public void Clear() => Clear(_buffer, ConsoleGlyph.Default);
+		public static void Clear(ConsoleGlyph[,] buffer, ConsoleGlyph background) {
+```
+```
+		public static void PrintBuffer(ConsoleGlyph[,] buffer) {
+			int height = GetHeight(buffer), width = GetWidth(buffer);
+			for (int row = 0; row < height; ++row) {
+				Console.SetCursorPosition(0, row);
+				for (int col = 0; col < width; ++col) {
+					ConsoleGlyph glyph = buffer[row, col];
+					glyph.ApplyColor();
+					Console.Write(glyph);
+				}
+			}
+			ConsoleGlyph.Default.ApplyColor();
+		}
+```
+`voice`
+The DrawBuffer should use an array of ConsoleGlyph instead an array of characters.
+To make this change, I made changes in DrawBuffer:
+	did a search/replace of char with ConsoleGlyph
+	replaced text.ToCharArray() with ConsoleGlyph.Convert(text)
+	set the switch statement in WriteAt to use glyph.Letter
+	changed the Clear() method to call Clear(_buffer, ConsoleGlyph.Default)
+	in PrintBuffer, 
+		just before Console.Write(glyph);, add
+			glyph.ApplyColor();
+		at the very end of the method
+			ConsoleGlyph.Default.ApplyColor();
+`scene`
+src/MrV/CommandLine/DrawBuffer_geometry
+```
+		public void DrawShape(IsInsideShapeDelegate isInsideShape, Vec2 start, Vec2 end, ConsoleGlyph letterToPrint) {
+```
+```
+		public void DrawRectangle(Vec2 position, Vec2 size, ConsoleGlyph letterToPrint) {
+```
+```
+		public void DrawRectangle(int x, int y, int width, int height, ConsoleGlyph letterToPrint) {
+```
+```
+		public void DrawRectangle(AABB aabb, ConsoleGlyph letterToPrint) {
+```
+```
+		public void DrawCircle(Circle c, ConsoleGlyph letterToPrint) {
+```
+```
+		public void DrawCircle(Vec2 pos, float radius, ConsoleGlyph letterToPrint) {
+```
+```
+		public void DrawPolygon(Vec2[] poly, ConsoleGlyph letterToPrint) {
+```
+
+`voice`
+In DrawBuffer_geometry:
+	did a search/replace of char with ConsoleGlyph
+
+`scene`
+src/MrV/CommandLine/GraphicsContext
+```
+		public virtual void PrintModifiedOnly() {
+			for (int row = 0; row < Height; ++row) {
+				bool mustMoveCursorToNewLocation = true;
+				for (int col = 0; col < Width; ++col) {
+					bool isSame = this[row, col].Equals(_lastBuffer[row, col]);
+					if (isSame) {
+						mustMoveCursorToNewLocation = true;
+						continue;
+					}
+					ConsoleGlyph glyph = this[row, col];
+					if (mustMoveCursorToNewLocation) {
+						Console.SetCursorPosition(col, row);
+						mustMoveCursorToNewLocation = false;
+					}
+					glyph.ApplyColor();
+					Console.Write(glyph);
+				}
+			}
+			ConsoleGlyph.Default.ApplyColor();
+		}
+		public void SwapBuffers() {
+			ConsoleGlyph[,] swap = _buffer;
+			_buffer = _lastBuffer;
+			_lastBuffer = swap;
+		}
+```
+in GraphicsContext
+	did a search/replace of char with ConsoleGlyph
+	in PrintModifiedOnly(), replaced the isSame variable initialization using a double-equal operator with
+		bool isSame = this[row, col].Equals(_lastBuffer[row, col]);
+	in PrintModiefiedOnly,
+		just before Console.Write(glyph);, add
+			glyph.ApplyColor();
+		at the very end of the method
+			ConsoleGlyph.Default.ApplyColor();
+
+`scene`
+src/Program
+```
+			void Draw() {
+				Vec2 scale = (0.5f, 1);
+				graphics.Clear();
+				graphics.DrawRectangle(0, 0, width, height, ConsoleGlyph.Default);
+				graphics.DrawRectangle((2, 3), new Vec2(20, 15), ConsoleColor.Red);
+				graphics.DrawRectangle(new AABB((10, 1), (15, 20)), ConsoleColor.Green);
+				graphics.DrawCircle(position, radius, ConsoleColor.Blue);
+				graphics.DrawPolygon(polygonShape, ConsoleColor.Yellow);
+				graphics.PrintModifiedOnly();
+				graphics.SwapBuffers();
+				Console.SetCursorPosition(0, (int)height);
+			}
+
+```
+test the code
+
+`voice`
+now we can test these changes and see that our graphics are colored squares instead of plain gray special characters
+
+the graphics are very low resolution.
+
+there is a programming trick called AntiAliasing that allows graphics to look like they have higher resolution than they really do.
+
+`scene`
+video showing anti-aliasing
+
+`voice`
+this technique requires a large color space to work best. still, even with only 16 colors, we can implement a basic anti-aliasing.
+
+The technique requires that we calculate a higher-resolution than we can actually draw, which we call a super-sample.
+once we have a super-sample for each pixel that we are drawing, we can decide how to draw that pixel with more information.
+
+`scene`
+src/MrV/DrawBuffer_geometry
+```
+	public partial class DrawBuffer {
+		public static ConsoleColorPair[,] AntiAliasColorMap;
+		static DrawBuffer() {
+			int countColors = 16;
+			int maxSuperSample = 4;
+			AntiAliasColorMap = new ConsoleColorPair[countColors, maxSuperSample];
+			for (int i = 0; i < countColors; ++i) {
+				for (int s = 0; s < maxSuperSample; ++s) {
+					AntiAliasColorMap[i, s] = new ConsoleColorPair(ConsoleColor.Gray, (ConsoleColor)i);
+				}
+			}
+			// for light colors, the least-populated half should use the darker color
+			for (int i = (int)ConsoleColor.Blue; i <= (int)ConsoleColor.White; ++i) {
+				for (int s = 0; s < maxSuperSample/2; ++s) {
+					AntiAliasColorMap[i, s] = new ConsoleColorPair(ConsoleColor.Gray, (ConsoleColor)(i-8));
+				}
+			}
+			// gray is a special case because DarkGray is 1 value after Gray
+			int grayIndex = (int)ConsoleColor.Gray;
+			AntiAliasColorMap[grayIndex, 0] = new ConsoleColorPair(ConsoleColor.Gray, ConsoleColor.DarkGray);
+			AntiAliasColorMap[grayIndex, 1] = new ConsoleColorPair(ConsoleColor.Gray, ConsoleColor.DarkGray);
+		}
+
+		public Vec2 ShapeScale = new Vec2(0.5f, 1);
+		public delegate bool IsInsideShapeDelegate(Vec2 position);
+		public void DrawShape(IsInsideShapeDelegate isInsideShape, Vec2 start, Vec2 end, ConsoleGlyph glyphToPrint) {
+			Vec2 renderStart = start;
+			Vec2 renderEnd = end;
+			renderStart.InverseScale(ShapeScale);
+			renderEnd.InverseScale(ShapeScale);
+			int TotalSamplesPerGlyph = AntiAliasColorMap.GetLength(1);
+			int SamplesPerDimension = (int)Math.Sqrt(TotalSamplesPerGlyph);
+			float SuperSampleIncrement = 1f / SamplesPerDimension;
+			for (int y = (int)renderStart.y; y < renderEnd.y; ++y) {
+				for (int x = (int)renderStart.x; x < renderEnd.x; ++x) {
+					if (!IsValidLocation(y, x)) { continue; }
+					int countSamples = 0;
+					if (isInsideShape != null) {
+						for (float sampleY = 0; sampleY < 1; sampleY += SuperSampleIncrement) {
+							for (float sampleX = 0; sampleX < 1; sampleX += SuperSampleIncrement) {
+								bool pointIsInside = isInsideShape(new Vec2((x + sampleX) * ShapeScale.x, (y + sampleY) * ShapeScale.y));
+								if (pointIsInside) {
+									++countSamples;
+								}
+							}
+						}
+					} else {
+						countSamples = TotalSamplesPerGlyph;
+					}
+					if (countSamples == 0) { continue; }
+					ConsoleGlyph glyph = glyphToPrint;
+					glyph.back = AntiAliasColorMap[(int)glyphToPrint.back, countSamples - 1].back;
+					WriteAt(glyph, y, x);
+				}
+			}
+		}
+```
+
+`voice`
+I must admit that this implementation of antialiasing is very naive, and doesn't take color mixing from overlapping geometry into account.
+	This is an intentional choice made in the robustness vs accessability tradeoff.
+
+because all of the draw methods use DrawShape, we can accomplish all of our AntiAliasing by only modifying that one method.
+
+at the beginning of the implementation of this partial class, I'll define the anti-alias gradients for each color.
+	this will only be meaningful for the bright colors in out 16 color range
+
+the DrawShape method needs to do more checks per glyph, to count samples.
+the additional nested for-loop counts how many times the isInsideShape function would trigger in each glyph's space.
+then, before the glyph is printed, a copy is made with the correct background color based on it's starting background color and sample count.
+
+`scene`
+src/MrV/DrawBuffer_geometry
+```
+		public void DrawLine(Vec2 start, Vec2 end, float thickness, ConsoleGlyph letterToPrint) {
+			Vec2 delta = end - start;
+			Vec2 direction = delta.Normalized;
+			Vec2 perp = direction.Perpendicular * thickness;
+			Vec2[] line = new Vec2[] { start - perp, start + perp, end + perp, end - perp };
+			DrawPolygon(line, letterToPrint); 
+		}
+```
+
+`voice`
+drawing lines is an essential part of debugging vector math, which we will need to do soon.
+while we are in the drawing code, we should add a method to draw lines.
+this creates a thin rectangle, with the center of two of it's opposite edges at the given start and end coordinate.
+
+```
+		public float MagnitudeSqr => x * x + y * y;
+		public float Magnitude => MathF.Sqrt(MagnitudeSqr);
+		public static Vec2 operator *(Vec2 vector, float scalar) => new Vec2(vector.x * scalar, vector.y * scalar);
+		public static Vec2 operator /(Vec2 vector, float scalar) => new Vec2(vector.x / scalar, vector.y / scalar);
+		public Vec2 Normalized => this / Magnitude;
+		public Vec2 Perpendicular => new Vec2(y, -x);
+```
+
+`voice`
+Vec2 needs some additional math to support this math.
+
+`scene`
+image of point A and point B
+
+`voice`
+if you have 2 points in space, you can calculate their difference, or Delta with simple subtraction.
+the distance, also called the Magnitude of the Delta, can be determined with the pythagorean theorum, 'a' squared plus 'b' squared equals 'c' squared.
+the square root operation is fairly expensive for a computer to do accurately, so for performance reasons, it's best to do math that doesn't need square root as much as possible.
+	for this reason, game engine APIs will often include a MagnitudeSqr, to eliminate a call to the square-root function.
+if we divide the entire vector by it's Magnitude, we get it's Normalized value, which we can think of as a direction.
+	the x and y components of a normal value are identical to the cosine and sine values of this Normalized vector.
+	I felt I was terrible at math in high-school, when I studied trigonometry.
+	As a game developer, I have never needed to know my trig-identities, but using a unit vector to describe direction has been necessary.
+Swapping the x and y components of a vector and making one of them negative will give a perpendicular vector.
+we need this perpendicular vector to create the thin rectangle for our line drawing code.
+
+`scene`
+src/MrV/Program <----------- TODO
+```
+// velocity line, circle called particle, update circle position by velocity
+```
+
+`voice`
+This code draws a line in our app. this line is the velocity of a circle called particle.
+
 * make a circle that moves independently, with it's own update. which we'll call a Particle
 ```
 	public class Particle {
