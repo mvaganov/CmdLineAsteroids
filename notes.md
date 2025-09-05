@@ -2012,7 +2012,7 @@ src/MrV/DrawBuffer_geometry
 ```
 
 `voice`
-drawing lines is an essential part of debugging vector math, which we will need to do soon.
+drawing lines is an essential part of testing and debugging vector math, which we may need to do soon.
 while we are in the drawing code, we should add a method to draw lines.
 this creates a thin rectangle, with the center of two of it's opposite edges at the given start and end coordinate.
 
@@ -2023,13 +2023,14 @@ this creates a thin rectangle, with the center of two of it's opposite edges at 
 		public static Vec2 operator /(Vec2 vector, float scalar) => new Vec2(vector.x / scalar, vector.y / scalar);
 		public Vec2 Normalized => this / Magnitude;
 		public Vec2 Perpendicular => new Vec2(y, -x);
+		public bool Equals(Vec2 v) => x == v.x && y == v.y;
 ```
 
 `voice`
 Vec2 needs some additional math to support this math.
 
 `scene`
-image of point A and point B
+code with overlay of image of point A and point B. animation happens over the extra image as details are explained.
 
 `voice`
 if you have 2 points in space, you can calculate their difference, or Delta with simple subtraction.
@@ -2044,41 +2045,77 @@ Swapping the x and y components of a vector and making one of them negative will
 we need this perpendicular vector to create the thin rectangle for our line drawing code.
 
 `scene`
-src/MrV/Program <----------- TODO
+src/MrV/GameEngine/Particle.cs
 ```
-// velocity line, circle called particle, update circle position by velocity
+using MrV.CommandLine;
+using MrV.Geometry;
+using System;
+
+namespace MrV.GameEngine {
+	public class Particle {
+		public Circle Circle;
+		public ConsoleColor Color;
+		public Vec2 Velocity;
+		public Particle(Circle circle, Vec2 velocity, ConsoleColor color) {
+			Circle = circle;
+			Velocity = velocity;
+			Color = color;
+		}
+		public void Draw(GraphicsContext g) {
+			g.DrawCircle(Circle, Color);
+			float speed = Velocity.Magnitude;
+			if (speed > 0) {
+				Vec2 direction = Velocity / speed;
+				Vec2 rayStart = Circle.center + direction * Circle.radius;
+				g.DrawLine(rayStart, rayStart + Velocity, 0.5f, Color);
+			}
+		}
+		public void Update() {
+			Vec2 moveThisFrame = Velocity * Time.DeltaTimeSec;
+			Circle.center += moveThisFrame;
+		}
+	}
+}
 ```
 
 `voice`
-This code draws a line in our app. this line is the velocity of a circle called particle.
+We can use the line to visualize the velocity of a moving particle.
 
-* make a circle that moves independently, with it's own update. which we'll call a Particle
+This simple particle class is just a circle with a color that moves along a linear path, which is defined by velocity vector.
+
+When it draws itself, it shows represents velocity as a line coming out of the edge of the circle.
+	if the circle has no velocity, it doesn't draw the velocity line
+	the direction is calculated by dividing the velocity by the magnitude.
+	This is the same as just calling the Normalized property, but doing the extra math step here saves the computer from recalculating the same square root value again.
+
+the Update method changes the position of the particle's cirle based on the velocity, and the amount of time passed.
+
+`scene`
+src/Program
 ```
-	public class Particle {
-		public Circle circle;
-		private Vec2 _velocity;
-		private ConsoleColor _color;
-		public float CurrentLife;
-		public float Lifetime;
-		public Vec2 Position { get => circle.center; set => circle.center = value; }
-		public float Radius { get => circle.Radius; set => circle.Radius = value; }
-		public Vec2 Velocity { get => _velocity; set => _velocity = value; }
-		public ConsoleColor Color { get => _color; set => _color = value; }
-		public Particle(Vec2 position, float size, Vec2 velocity, ConsoleColor color) {
-			circle = new Circle(position, size);
-			_velocity = velocity;
-			_color = color;
-		}
-		public void Draw(CommandLineCanvas canvas) {
-			canvas.SetColor(Color);
-			circle.Draw(canvas);
-		}
-		public void Update() {
-			Vec2 moveThisFrame = _velocity * Time.DeltaTimeSeconds;
-			Position += moveThisFrame;
-		}
-	}
+			}
+			Particle particle = new Particle(new Circle((10,10), 3), (3,4), ConsoleColor.White);
+			while (running) {
 ```
+```
+				graphics.DrawPolygon(polygonShape, ConsoleColor.Yellow);
+				particle.Draw(graphics);
+				graphics.PrintModifiedOnly();
+```
+```
+				Tasks.Update();
+				particle.Update();
+			}
+```
+
+`voice`
+To include the moving particle in our app, we need to: initalize it, and add it's draw and update methods to the game loop.
+
+`scene`
+test
+
+<----------- TODO
+
 * create multiple particles in a particle explosion
 ```
 ```
