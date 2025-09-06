@@ -40,6 +40,8 @@ namespace MathMrV {
 		public void Floor() { x = MathF.Floor(x); y = MathF.Floor(y); }
 		public void Ceil() { x = MathF.Ceiling(x); y = MathF.Ceiling(y); }
 		public static float DegreesToRadians(float degrees) => degrees * MathF.PI / 180;
+		public static Vec2 NormalFromRadians(float radians) => new Vec2(MathF.Cos(radians), MathF.Sin(radians));
+		public static Vec2 NormalFromDegrees(float degrees) => NormalFromRadians(DegreesToRadians(degrees));
 		public float NormalToRadians() => WrapRadian(MathF.Atan2(y, x));
 		public float NormalToDegrees() => NormalToRadians() * 180 / MathF.PI;
 		public static float WrapRadian(float radian) {
@@ -52,8 +54,6 @@ namespace MathMrV {
 			while (degree <= -MathF.PI) { degree += 2 * 180; }
 			return degree;
 		}
-		public static Vec2 NormalFromRadians(float radians) => new Vec2(MathF.Cos(radians), MathF.Sin(radians));
-		public static Vec2 NormalFromDegrees(float degrees) => NormalFromRadians(DegreesToRadians(degrees));
 		public Vec2 RotatedRadians(float radians) => Rotated(NormalFromRadians(radians));
 		public Vec2 Rotated(Vec2 dir) => new Vec2(dir.x * x - dir.y * y, dir.y * x + dir.x * y);
 		public void Rotate(Vec2 dir) => this = Rotated(dir);

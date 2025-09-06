@@ -2083,12 +2083,12 @@ We can use the line to visualize the velocity of a moving particle.
 
 This simple particle class is just a circle with a color that moves along a linear path, which is defined by velocity vector.
 
-When it draws itself, it shows represents velocity as a line coming out of the edge of the circle.
-	if the circle has no velocity, it doesn't draw the velocity line
-	the direction is calculated by dividing the velocity by the magnitude.
-	This is the same as just calling the Normalized property, but doing the extra math step here saves the computer from recalculating the same square root value again.
+While drawing, it represents velocity as a line coming out of the edge of its circle.
+	if the particle has no velocity, it doesn't draw the velocity line
+	direction is calculated by dividing the velocity by the magnitude. This is the same as just calling the Normalized property.
+	I avoid using Normalized to avoid recalculating the same square root value again. Again, an accurate square-root value is expensive to compute.
 
-the Update method changes the position of the particle's cirle based on the velocity, and the amount of time passed.
+the Update method will change the position of the particle's cirle based on the velocity, and the amount of time passed.
 
 `scene`
 src/Program
@@ -2114,11 +2114,105 @@ To include the moving particle in our app, we need to: initalize it, and add it'
 `scene`
 test
 
-<----------- TODO
+`voice`
+this looks pretty satisfying. I wonder if more particles will be even more satisfying. Let's make many of them.
 
-* create multiple particles in a particle explosion
+`scene`
+```
+			}
+			Particle[] particles = new Particle[10];
+			for (int i = 0; i < particles.Length; ++i) {
+				Vec2 direction = Vec2.ConvertDegrees(i * (360f / 10));
+				float speed = 5;
+				particles[i] = new Particle(new Circle((10, 10), 3), direction * speed, ConsoleColor.White);
+			}
+			while (running) {
 ```
 ```
+				graphics.DrawPolygon(polygonShape, ConsoleColor.Yellow);
+				for (int i = 0; i < particles.Length; ++i) {
+					particles[i].Draw(graphics);
+				}
+				graphics.PrintModifiedOnly();
+```
+```
+				Tasks.Update();
+				for (int i = 0; i < particles.Length; ++i) {
+					particles[i].Update();
+				}
+			}
+```
+
+`voice`
+instead of one particle, I want an array. Let's say 10 elements.
+
+these need to be initailized, drawn, and updated, just like the old singular particle.
+
+`scene`
+src/MrV/Geometry/Vec2
+```
+		public static float DegreesToRadians(float degrees) => degrees * MathF.PI / 180;
+		public static float RadiansToDegrees(float radians) => radians * 180 / MathF.PI;
+		public static Vec2 ConvertRadians(float radians) => new Vec2(MathF.Cos(radians), MathF.Sin(radians));
+		public static Vec2 ConvertDegrees(float degrees) => ConvertRadians(DegreesToRadians(degrees));
+		public float NormalToDegrees() => RadiansToDegrees(NormalToRadians());
+		public float NormalToRadians() => WrapRadian(MathF.Atan2(y, x));
+		public static float WrapRadian(float radian) {
+			while (radian > MathF.PI) { radian -= 2 * MathF.PI; }
+			while (radian <= -MathF.PI) { radian += 2 * MathF.PI; }
+			return radian;
+		}
+```
+
+`voice`
+for the sake of conveniently using normal vectors instead of angles, I'll add these methods to do conversions.
+
+I'm doing conversions to both Radians and Degrees because the standard C# math library uses Radians based on Pi, even though most schools teach angles based on 360 degrees per circle.
+Doing the math in pure radians does mean the computer will need to do less math total.
+	but if we only need the math done during initialization, it makes sense to use the more intuitive format
+
+`scene`
+test
+
+`voice`
+this looks cool, but I want a particle explosion. This is a common graphic feature of games, and it's an effective tool for making games feel very alive.
+to do the explosion well, I need a random number generator.
+C-sharp does provide a random number generator class, but I want something more convenient. I want a singleton that I can call statically.
+
+`scene`
+src/MrV/GameEngine/Rand.cs
+```
+namespace MrV.GameEngine {
+	public class Rand {
+		private static Rand _instance;
+		public static Rand Instance => _instance != null ? _instance : _instance = new Rand();
+		uint seed = 2463534242; // seed (must be non-zero)
+		/// <summary>XorShift32</summary>
+		uint Next() {
+			seed ^= seed << 13;
+			seed ^= seed >> 17;
+			seed ^= seed << 5;
+			return seed;
+		}
+		private Rand() {}
+		public static float Number => (Instance.Next() & 0xffffff) / (float)(0xffffff);
+	}
+}
+```
+
+`voice`
+This random number generator uses XorShift32 to generate fast random numbers.
+It isn't a high-quality random number generator for statistically robust simulations, but it is very fast.
+If you want a higher quality generator that is still very fast, look up SplitMix32
+
+`scene`
+src/MrV/Time.cs
+```
+		public static long CurrentTimeMs => DateTimeOffset.Now.ToUnixTimeMilliseconds();
+```
+
+to seed our random number generator, we should add an extra static method to Time, so we can have every program use a unique starting point for the random numbers.
+
 * create a random generator, to create random directions
 ```
 ```
