@@ -2186,24 +2186,29 @@ namespace MrV.GameEngine {
 	public class Rand {
 		private static Rand _instance;
 		public static Rand Instance => _instance != null ? _instance : _instance = new Rand();
-		uint seed = 2463534242; // seed (must be non-zero)
-		/// <summary>XorShift32</summary>
+		public uint Seed = 2463534242; // seed (must be non-zero)
+		/// <summary>Xorshift32</summary>
 		uint Next() {
-			seed ^= seed << 13;
-			seed ^= seed >> 17;
-			seed ^= seed << 5;
-			return seed;
+			Seed ^= Seed << 13;
+			Seed ^= Seed >> 17;
+			Seed ^= Seed << 5;
+			return Seed;
 		}
-		private Rand() {}
-		public static float Number => (Instance.Next() & 0xffffff) / (float)(0xffffff);
+		public float GetNumber() => (Instance.Next() & 0xffffff) / (float)(0xffffff);
+		public float GetNumber(float min, float max) => (Instance.Next() * (max-min)) + min;
+		public static float Number => Instance.GetNumber();
+		public static float Range(float min, float max) => Instance.GetNumber(min, max);
 	}
 }
 ```
 
 `voice`
-This random number generator uses XorShift32 to generate fast random numbers.
+This random number generator uses XorShift32 to generate fast random numbers. It is a Pseudo-Random Number Generator, which Software develoepers call a PRNG.
+PRNG systems create the illusion of randomness while being exactly reproducable as long as the same starting seed is used.
+	this reproducability is extremely useful for simulation debugging.
 It isn't a high-quality random number generator for statistically robust simulations, but it is very fast.
-If you want a higher quality generator that is still very fast, look up SplitMix32
+If you want a higher quality generator that is a little bit slower, look up SplitMix32
+Like the other singleton classes, this one has a separate static API for convenience, and can also be created as an instance for specific number sequences.
 
 `scene`
 src/MrV/Time.cs
@@ -2213,10 +2218,99 @@ src/MrV/Time.cs
 
 to seed our random number generator, we should add an extra static method to Time, so we can have every program use a unique starting point for the random numbers.
 
-* create a random generator, to create random directions
+`scene`
+test, the particles 
+src/Program.cs
+```
+			Particle[] particles = new Particle[10];
+			Rand.Instance.Seed = (uint)Time.CurrentTimeMs;
+			for (int i = 0; i < particles.Length; ++i) {
+				Vec2 direction = Vec2.ConvertDegrees(Rand.Number * 360);
+				float speed = 5;
+				particles[i] = new Particle(new Circle((10, 10), Rand.Number * 3), direction * speed, ConsoleColor.White);
+			}
+```
+
+`voice`
+the particles explode out differently with each runtime. but they don't look like an explosion yet.
+
+<------------ TODO
+
+`scene`
+src/MrV/GameEngine/Particle.cs
+```
+// add lifetime
+```
+
+`scene`
+src/Program.cs
+```
+// add random lifetime setting and enabled state
+```
+
+`voice`
+this looks a bit more like an explosion. but we should be able to test this more easily
+
+`scene`
+```
+// bind explosion initialization to keypress, including new init method
+```
+
+`voice`
+we don't want to re-create the particles each time we press a key.
+the new keyword prompts memory allocation, which is one of the most time consuming basic things the computer does. we want to avoice allocation as much as possible.
+we'll create an initialization function that re-purposes the existing particle
+
+`scene`
+test
+
+`voice`
+it still doesn't look enough like an explosion for me. I want to see the particles change size as they move.
+
+`scene`
+src/MrV/GameEngine/ValueOverTime.cs
 ```
 ```
-* give the particles a lifetime
+
+`voice`
+//explosion the value over time class
+
+`scene`
+// use value over time in main's update on each particle
+
+`voice`
+// for a quick test, I'll just use this structure directly in Update
+
+`scene`
+test
+
+`voice`
+this looks good. but writing this much specific logic directly in Update feels bad to me.
+I want a separate class that will handle the particle, including making changes during update with size over lifetime
+
+`scene`
+src/MrV/GameEngine/ParticleSystem.cs
+
+`voice`
+//explain
+the idea of creating a pool of objects that I can reuse many times is really important in game development. the concept is called an object pool
+
+`scene`
+src/MrV/GameEngine/ObjectPool.cs
+```
+```
+
+`voice`
+// explain object pool
+
+`scene`
+RangF
+
+`scene`
+test, with new bound key
+
+
+* * give the particles a lifetime
 * change their size over time with a ValueOverTime class
 * create an ObjectPool class to manage multiple particles. we can use this later for other things, like game objects
 * create a specialized particle system class
