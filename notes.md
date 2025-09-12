@@ -2195,7 +2195,7 @@ namespace MrV.GameEngine {
 			return Seed;
 		}
 		public float GetNumber() => (Instance.Next() & 0xffffff) / (float)(0xffffff);
-		public float GetNumber(float min, float max) => (Instance.Next() * (max-min)) + min;
+		public float GetNumber(float min, float max) => (Instance.GetNumber() * (max - min)) + min;
 		public static float Number => Instance.GetNumber();
 		public static float Range(float min, float max) => Instance.GetNumber(min, max);
 	}
@@ -2226,82 +2226,320 @@ src/Program.cs
 			Rand.Instance.Seed = (uint)Time.CurrentTimeMs;
 			for (int i = 0; i < particles.Length; ++i) {
 				Vec2 direction = Vec2.ConvertDegrees(Rand.Number * 360);
-				float speed = 5;
-				particles[i] = new Particle(new Circle((10, 10), Rand.Number * 3), direction * speed, ConsoleColor.White);
+				float speed = 5, rad = 3;
+				particles[i] = new Particle(new Circle((10, 10), Rand.Number * rad), direction * (Rand.Number * speed), ConsoleColor.White);
 			}
 ```
 
 `voice`
 the particles explode out differently with each runtime. but they don't look like an explosion yet.
 
-<------------ TODO
-
 `scene`
 src/MrV/GameEngine/Particle.cs
 ```
-// add lifetime
+	public class Particle {
+		public Circle Circle;
+		public ConsoleColor Color;
+		public Vec2 Velocity;
+		public bool enabled;
+		public float lifetimeMax, lifetimeCurrent;
+		public Particle(Circle circle, Vec2 velocity, ConsoleColor color, float lifetime) {
+			Circle = circle;
+			Velocity = velocity;
+			Color = color;
+			enabled = true;
+			lifetimeMax = lifetime;
+		}
+		public void Draw(GraphicsContext g) {
+			if (!enabled) { return; }
+			g.DrawCircle(Circle, Color);
+			//float speed = Velocity.Magnitude;
+			//if (speed > 0) {
+			//	Vec2 direction = Velocity / speed;
+			//	Vec2 rayStart = Circle.center + direction * Circle.radius;
+			//	g.DrawLine(rayStart, rayStart + Velocity, 0.5f, Color);
+			//}
+		}
+		public void Update() {
+			if (!enabled) { return; }
+			lifetimeCurrent += Time.DeltaTimeSec;
+			if (lifetimeCurrent >= lifetimeMax) {
+				enabled = false;
+				return;
+			}
+			Vec2 moveThisFrame = Velocity * Time.DeltaTimeSec;
+			Circle.center += moveThisFrame;
+		}
+	}
 ```
+
+`voice`
+I need to add variables to track lifetime, and an enabled state to flip off when lifetime is exceeded.
+update and draw should stop working when enabled is false.
+
+also, I want to stop drawing the direction lines. those were nice for debugging motion, but they don't help the explosion graphic.
 
 `scene`
 src/Program.cs
 ```
-// add random lifetime setting and enabled state
+				particles[i] = new Particle(new Circle((10, 10), Rand.Number * rad), direction * (Rand.Number * speed), ConsoleColor.White, Rand.Range(.25f, 1));
 ```
 
 `voice`
-this looks a bit more like an explosion. but we should be able to test this more easily
+this looks more like an explosion, but it's hard to tell from just one run. we should be able to test this more easily
 
 `scene`
 ```
-// bind explosion initialization to keypress, including new init method
+			KeyInput.Bind(' ', () => {
+				for (int i = 0; i < particles.Length; ++i) {
+					Vec2 direction = Vec2.ConvertDegrees(Rand.Number * 360);
+					float speed = 5, rad = 3;
+					particles[i] = new Particle(new Circle((10, 10), Rand.Number * rad), direction * (Rand.Number * speed), ConsoleColor.White, Rand.Range(.25f, 1));
+				}
+			}, "explosion");
 ```
 
 `voice`
-we don't want to re-create the particles each time we press a key.
-the new keyword prompts memory allocation, which is one of the most time consuming basic things the computer does. we want to avoice allocation as much as possible.
-we'll create an initialization function that re-purposes the existing particle
+This works, but we don't want to re-create the particles each time we press a key.
+the new keyword prompts memory allocation, which is one of the most time consuming basic things the computer does.
+to be clear, this program is not suffering very much from this allocation. this is a very small amount of memory.
+But if we want to scale this explosion up to hundreds or thousands of circles, using new like this will become a problem. we want to avoice allocation as much as possible.
 
 `scene`
-test
+src/MrV/GameEngine/Particle.cs
+```
+		public Particle(Circle circle, Vec2 velocity, ConsoleColor color, float lifetime) {
+			Init(circle, velocity, color, lifetime);
+		}
+		public void Init(Circle circle, Vec2 velocity, ConsoleColor color, float lifetime) {
+			Circle = circle;
+			Velocity = velocity;
+			Color = color;
+			enabled = true;
+			lifetimeMax = lifetime;
+			lifetimeCurrent = 0;
+		}
+```
 
 `voice`
+we want an initialization function that re-purposes the existing particle
+the need for this sort of re-initialization would be clearer in a language like C, where memory needs to be manually reclaimed.
+
+`scene`
+src/Program.cs
+```
+			KeyInput.Bind(' ', () => {
+				for (int i = 0; i < particles.Length; ++i) {
+					Vec2 direction = Vec2.ConvertDegrees(Rand.Number * 360);
+					float speed = 5, rad = 3;
+					particles[i].Init(new Circle((10, 10), Rand.Number * rad), direction * Rand.Number * speed, ConsoleColor.White, Rand.Range(.25f, 1));
+				}
+			}, "explosion");
+```
+
+`voice`
+and we want to use the init function instead of new.
+
 it still doesn't look enough like an explosion for me. I want to see the particles change size as they move.
 
 `scene`
-src/MrV/GameEngine/ValueOverTime.cs
+src/MrV/GameEngine/FloatOverTime.cs
 ```
+using System.Collections.Generic;
+
+namespace MrV.GameEngine {
+	public class FloatOverTime : ValueOverTime<float> {
+		public static FloatOverTime GrowAndShrink = new FloatOverTime(new Frame<float>[] {
+			new Frame<float>(0, 0), new Frame<float>(0.5f, 1), new Frame<float>(1, 0)
+		});
+		public FloatOverTime(IList<Frame<float>> curve) : base(curve) {}
+		public override float Lerp(float percentageProgress, float start, float end) {
+			float delta = end - start;
+			return start + delta * percentageProgress;
+		}
+	}
+	public abstract class ValueOverTime<T> {
+		public struct Frame<T> {
+			public float time;
+			public T value;
+			public Frame(float time, T value) {
+				this.time = time;
+				this.value = value;
+			}
+		}
+		public bool WrapTime = false;
+		public IList<Frame<T>> curve;
+		public float StartTime => curve[0].time;
+		public float EndTime => curve[curve.Count - 1].time;
+		public abstract T Lerp(float t, T start, T end);
+		public ValueOverTime(IList<Frame<T>> curve) {
+			this.curve = curve;
+		}
+		public bool TryGetValue(float time, out T value) {
+			if (curve == null || curve.Count == 0) {
+				value = default;
+				return false;
+			}
+			int index = Algorithm.BinarySearch(curve, time, frame => frame.time);
+			if (index >= 0) {
+				value = curve[index].value;
+				return true;
+			}
+			index = ~index;
+			if (index == 0) {
+				value = curve[0].value;
+				return true;
+			}
+			if (index >= curve.Count) {
+				value = curve[curve.Count - 1].value;
+				return true;
+			}
+			Frame<T> prev = curve[index - 1];
+			Frame<T> next = curve[index];
+			float normalizedTimeProgress = CalcProgressBetweenStartAndEnd(time, prev.time, next.time);
+			value = Lerp(normalizedTimeProgress, prev.value, next.value);
+			return true;
+		}
+		public static float CalcProgressBetweenStartAndEnd(float t, float start, float end) {
+			float timeDelta = end - start;
+			float timeProgress = t - start;
+			return timeProgress / timeDelta;
+		}
+	}
+}
 ```
 
 `voice`
-//explosion the value over time class
+this class interpolates a value over time, with frames given at different points in time.
+
+It's a templated class because this idea, interpolating a value, is useful for many different kinds of values.
+It's going to be used for changing the radius of a particle over time.
+it could also be used for changing a particle's color, position, or any concept that can be interpolated between.
+
+Any implementation will need to implement a Lerp method, which explains how to interpolate between values of the used type.
+A list of frames will define the curve of the value, which is how the value interpolates.
+a convenient static constructor that grows and then shrinks a value is included here, which we need for the particle.
+
+the ValueOverTime abstract class defines how the math works.
+notably, this class interpolates a curve with sharp transitions from frame to frame.
+the interpolation could be smoother with a spline, which is a clear opportunity for to improve this class later.
+for now, this is sufficient for our simulation.
 
 `scene`
-// use value over time in main's update on each particle
+src/Program.cs
+```
+			}, "explosion");
+			FloatOverTime growAndShrink = FloatOverTime.GrowAndShrink;
+			while (running) {
+```
+```
+				for (int i = 0; i < particles.Length; ++i) {
+					particles[i].Update();
+					float timeProgress = particles[i].lifetimeCurrent / particles[i].lifetimeMax;
+					if (growAndShrink.TryGetValue(timeProgress, out float nextRadius)) {
+						particles[i].Circle.radius = nextRadius;
+					}
+				}
+```
 
 `voice`
-// for a quick test, I'll just use this structure directly in Update
+for a quick test, I'll just initialize the FloatOverTime object as normal game data
+	and use the structure to modify particle radius directly in Update.
 
 `scene`
 test
 
 `voice`
-this looks good. but writing this much specific logic directly in Update feels bad to me.
-I want a separate class that will handle the particle, including making changes during update with size over lifetime
-
-`scene`
-src/MrV/GameEngine/ParticleSystem.cs
-
-`voice`
-//explain
-the idea of creating a pool of objects that I can reuse many times is really important in game development. the concept is called an object pool
+this actually looks pretty good now. but writing this much specific logic directly in Update feels bad to me.
+I want a separate class that will handle all of the particles.
+I want the class to generate and re-use particles easily and transparently as well.
+That kind of object re-use is done with a data structure called an ObjectPool
 
 `scene`
 src/MrV/GameEngine/ObjectPool.cs
 ```
+using System;
+using System.Collections.Generic;
+
+namespace MrV.GameEngine {
+	public class ObjectPool<T> {
+		private List<T> allObjects = new List<T>();
+		private int freeObjectCount = 0;
+
+		public DelegateCreate CreateDelegate;
+		public DelegateDestroy DestroyDelegate;
+		public DelegateCommission CommissionDelegate;
+		public DelegateDecommission DecommissionDelegate;
+
+		public delegate T DelegateCreate();
+		public delegate void DelegateCommission(T obj);
+		public delegate void DelegateDecommission(T obj);
+		public delegate void DelegateDestroy(T obj);
+
+		public int Count => allObjects.Count - freeObjectCount;
+		public T this[int index] => index < Count
+			? allObjects[index] : throw new ArgumentOutOfRangeException();
+		public ObjectPool() { }
+		public void Setup(DelegateCreate create, DelegateCommission commission = null,
+			DelegateDecommission decommission = null, DelegateDestroy destroy = null) {
+			CreateDelegate = create; CommissionDelegate = commission;
+			DecommissionDelegate = decommission; DestroyDelegate = destroy;
+		}
+		public T Commission() {
+			T freeObject = default;
+			if (freeObjectCount == 0) {
+				freeObject = CreateDelegate.Invoke();
+				allObjects.Add(freeObject);
+			} else {
+				freeObject = allObjects[allObjects.Count - freeObjectCount];
+				--freeObjectCount;
+			}
+			if (CommissionDelegate != null) { CommissionDelegate(freeObject); }
+			return freeObject;
+		}
+		public void Decommission(T obj) => Decommission(allObjects.IndexOf(obj));
+		public void Decommission(int indexOfObject) {
+			if (indexOfObject >= (allObjects.Count - freeObjectCount)) {
+				throw new Exception($"trying to free object twice: {allObjects[indexOfObject]}");
+			}
+			T obj = allObjects[indexOfObject];
+			++freeObjectCount;
+			int beginningOfFreeList = allObjects.Count - freeObjectCount;
+			allObjects[indexOfObject] = allObjects[beginningOfFreeList];
+			allObjects[beginningOfFreeList] = obj;
+			if (DecommissionDelegate != null) { DecommissionDelegate.Invoke(obj); }
+		}
+		public void Clear() {
+			for (int i = allObjects.Count - freeObjectCount - 1; i >= 0; --i) {
+				Decommission(allObjects[i]);
+			}
+		}
+		public void Destroy() {
+			Clear();
+			if (DestroyDelegate != null) { ForEach(DestroyDelegate.Invoke); }
+			allObjects.Clear();
+		}
+		public void ForEach(Action<T> action) {
+			for (int i = 0; i < allObjects.Count; ++i) {
+				action.Invoke(allObjects[i]);
+			}
+		}
+	}
+}
 ```
 
 `voice`
 // explain object pool
+
+`scene`
+src/MrV/GameEngine/ParticleSystem.cs
+```
+
+```
+
+`voice`
+//explain
+the idea of creating a pool of objects that I can reuse many times is really important in game development. the concept is called an object pool
 
 `scene`
 RangF
