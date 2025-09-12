@@ -2241,17 +2241,20 @@ src/MrV/GameEngine/Particle.cs
 		public Circle Circle;
 		public ConsoleColor Color;
 		public Vec2 Velocity;
-		public bool enabled;
-		public float lifetimeMax, lifetimeCurrent;
+		public bool Enabled;
+		public float LifetimeMax, LifetimeCurrent;
+		public float OriginalSize;
 		public Particle(Circle circle, Vec2 velocity, ConsoleColor color, float lifetime) {
 			Circle = circle;
+			OriginalSize = circle.radius;
 			Velocity = velocity;
 			Color = color;
-			enabled = true;
-			lifetimeMax = lifetime;
+			Enabled = true;
+			LifetimeMax = lifetime;
+			LifetimeCurrent = 0;
 		}
 		public void Draw(GraphicsContext g) {
-			if (!enabled) { return; }
+			if (!Enabled) { return; }
 			g.DrawCircle(Circle, Color);
 			//float speed = Velocity.Magnitude;
 			//if (speed > 0) {
@@ -2261,10 +2264,10 @@ src/MrV/GameEngine/Particle.cs
 			//}
 		}
 		public void Update() {
-			if (!enabled) { return; }
-			lifetimeCurrent += Time.DeltaTimeSec;
-			if (lifetimeCurrent >= lifetimeMax) {
-				enabled = false;
+			if (!Enabled) { return; }
+			LifetimeCurrent += Time.DeltaTimeSec;
+			if (LifetimeCurrent >= LifetimeMax) {
+				Enabled = false;
 				return;
 			}
 			Vec2 moveThisFrame = Velocity * Time.DeltaTimeSec;
@@ -2313,11 +2316,12 @@ src/MrV/GameEngine/Particle.cs
 		}
 		public void Init(Circle circle, Vec2 velocity, ConsoleColor color, float lifetime) {
 			Circle = circle;
+			OriginalSize = circle.radius;
 			Velocity = velocity;
 			Color = color;
-			enabled = true;
-			lifetimeMax = lifetime;
-			lifetimeCurrent = 0;
+			Enabled = true;
+			LifetimeMax = lifetime;
+			LifetimeCurrent = 0;
 		}
 ```
 
@@ -2435,9 +2439,9 @@ src/Program.cs
 ```
 				for (int i = 0; i < particles.Length; ++i) {
 					particles[i].Update();
-					float timeProgress = particles[i].lifetimeCurrent / particles[i].lifetimeMax;
+					float timeProgress = particles[i].LifetimeCurrent / particles[i].LifetimeMax;
 					if (growAndShrink.TryGetValue(timeProgress, out float nextRadius)) {
-						particles[i].Circle.radius = nextRadius;
+						particles[i].Circle.radius = nextRadiusPercentage * particles[i].OriginalSize;
 					}
 				}
 ```
@@ -2465,40 +2469,33 @@ namespace MrV.GameEngine {
 	public class ObjectPool<T> {
 		private List<T> allObjects = new List<T>();
 		private int freeObjectCount = 0;
-
-		public DelegateCreate CreateDelegate;
-		public DelegateDestroy DestroyDelegate;
-		public DelegateCommission CommissionDelegate;
-		public DelegateDecommission DecommissionDelegate;
-
-		public delegate T DelegateCreate();
-		public delegate void DelegateCommission(T obj);
-		public delegate void DelegateDecommission(T obj);
-		public delegate void DelegateDestroy(T obj);
+		public Func<T> CreateObject;
+		public Action<T> DestroyObject, CommissionObject, DecommissionObject;
+		private HashSet<int> delayedDecommission = new HashSet<int>();
 
 		public int Count => allObjects.Count - freeObjectCount;
 		public T this[int index] => index < Count
 			? allObjects[index] : throw new ArgumentOutOfRangeException();
 		public ObjectPool() { }
-		public void Setup(DelegateCreate create, DelegateCommission commission = null,
-			DelegateDecommission decommission = null, DelegateDestroy destroy = null) {
-			CreateDelegate = create; CommissionDelegate = commission;
-			DecommissionDelegate = decommission; DestroyDelegate = destroy;
+		public void Setup(Func<T> create, Action<T> commission = null,
+			Action<T> decommission = null, Action<T> destroy = null) {
+			CreateObject = create; CommissionObject = commission;
+			DecommissionObject = decommission; DestroyObject = destroy;
 		}
 		public T Commission() {
 			T freeObject = default;
 			if (freeObjectCount == 0) {
-				freeObject = CreateDelegate.Invoke();
+				freeObject = CreateObject.Invoke();
 				allObjects.Add(freeObject);
 			} else {
 				freeObject = allObjects[allObjects.Count - freeObjectCount];
 				--freeObjectCount;
 			}
-			if (CommissionDelegate != null) { CommissionDelegate(freeObject); }
+			if (CommissionObject != null) { CommissionObject(freeObject); }
 			return freeObject;
 		}
-		public void Decommission(T obj) => Decommission(allObjects.IndexOf(obj));
-		public void Decommission(int indexOfObject) {
+		public void Decommission(T obj) => DecommissionAtIndex(allObjects.IndexOf(obj));
+		public void DecommissionAtIndex(int indexOfObject) {
 			if (indexOfObject >= (allObjects.Count - freeObjectCount)) {
 				throw new Exception($"trying to free object twice: {allObjects[indexOfObject]}");
 			}
@@ -2507,16 +2504,16 @@ namespace MrV.GameEngine {
 			int beginningOfFreeList = allObjects.Count - freeObjectCount;
 			allObjects[indexOfObject] = allObjects[beginningOfFreeList];
 			allObjects[beginningOfFreeList] = obj;
-			if (DecommissionDelegate != null) { DecommissionDelegate.Invoke(obj); }
+			if (DecommissionObject != null) { DecommissionObject.Invoke(obj); }
 		}
 		public void Clear() {
 			for (int i = allObjects.Count - freeObjectCount - 1; i >= 0; --i) {
 				Decommission(allObjects[i]);
 			}
 		}
-		public void Destroy() {
+		public void Dispose() {
 			Clear();
-			if (DestroyDelegate != null) { ForEach(DestroyDelegate.Invoke); }
+			if (DestroyObject != null) { ForEach(DestroyObject.Invoke); }
 			allObjects.Clear();
 		}
 		public void ForEach(Action<T> action) {
@@ -2524,17 +2521,131 @@ namespace MrV.GameEngine {
 				action.Invoke(allObjects[i]);
 			}
 		}
+		public void DecommissionDelayedAtIndex(int indexOfObject) {
+			delayedDecommission.Add(indexOfObject);
+		}
+		public void ServiceDelayedDecommission() {
+			if (delayedDecommission.Count == 0) { return; }
+			List<int> decommisionNow = new List<int>(delayedDecommission);
+			decommisionNow.Sort();
+			delayedDecommission.Clear();
+			for (int i = decommisionNow.Count - 1; i >= 0; --i) {
+				DecommissionAtIndex(decommisionNow[i]);
+			}
+		}
 	}
 }
 ```
 
 `voice`
-// explain object pool
+we can use this object pool to cache memory for anything that we create and destroy a lot of.
+it could be particles, bullets, enemies, powerups, or really anything.
+
+the idea is that a list of objects has some unused objects that can be reused later.
+	objects at the end of the list are considred unused, or decommisioned.
+the user must define how to create the objects, how to reuse them, how to mark them as unused, and how to clean them up later.
+this class handles deferred cleanup
+	this objectpool changes the order of objects in the list when they are disposed,
+	so special care needs to be taken if an object is decommissioned while processing the list.
+when the user wants to commission an object,
+	if there are no unused objects in the list, a new one is created, added to the list, and given to the user
+	if there is an unused object, the one closest to the edge of free objects is given to the user, and that edge is moved up.
+when the user wants to decommission an object,
+	this code checks to make sure that it isn't decommissioning an already decommissioned object
+	then the object to decommission switches places in the list with the last commissioned object
+	then the boundary of decommissioned objects moves down to absorb that  object
+if an object needs to be decommissioned, but can't be decomissioned right now (because the object pool is being iterated through)
+	the index of the object to decommission is put into a set (which won't contain duplicate indexes)
+	then during a later time, outside of the objectpool iteration, those objects to decommission are decommissioned in reverse index order
+		the last objects get pushed to the end before the first objects
+
+`scene`
+src/MrV/Program.cs
+```
+			}
+			ObjectPool<Particle> particlesPool = new ObjectPool<Particle>();
+			float particleSpeed = 5, particleRad = 3;
+			particlesPool.Setup(
+				() => new Particle(new Circle(default, 1), default, ConsoleColor.White, 1),
+				p => {
+					Vec2 direction = Vec2.ConvertDegrees(Rand.Number * 360);
+					p.Init(new Circle((10, 10), Rand.Number * particleRad), direction * Rand.Number * particleSpeed,
+						ConsoleColor.White, Rand.Range(.25f, 1));
+				},
+				p => p.enabled = false);
+			Rand.Instance.Seed = (uint)Time.CurrentTimeMs;
+			KeyInput.Bind(' ', () => {
+				for (int i = 0; i < 10; ++i) {
+					particlesPool.Commission();
+				}
+			}, "explosion");
+			FloatOverTime growAndShrink = FloatOverTime.GrowAndShrink;
+			while (running) {
+```
+
+`voice`
+lets replace the Particle array with the ObjectPool of Particle objects.
+we need to define how to create a basic particle
+how to commission a new particle
+and how to decommission a particle
+we don't need to include how to destroy the particle, because our particle doesn't allocate any special resources
+
+the "explosion" KeyInput Bind should change to commission 10 particles.
+a nice side effect of using this new system is that we can create more than just 10 particles, which will help create some interesting tests.
+
+`scene`
+src/MrV/Program.cs
+```
+				graphics.DrawPolygon(polygonShape, ConsoleColor.Yellow);
+				for (int i = 0; i < particlesPool.Count; ++i) {
+					particlesPool[i].Draw(graphics);
+				}
+				graphics.PrintModifiedOnly();
+```
+
+`voice`
+the draw code needs to change, to use the particle object pool instead of the old particles array
+
+`scene`
+src/MrV/Program.cs
+```
+			void Update() {
+				KeyInput.TriggerEvents();
+				Tasks.Update();
+				for (int i = 0; i < particlesPool.Count; ++i) {
+					particlesPool[i].Update();
+					float timeProgress = particlesPool[i].LifetimeCurrent / particlesPool[i].LifetimeMax;
+					if (growAndShrink.TryGetValue(timeProgress, out float nextRadiusPercentage)) {
+						particlesPool[i].Circle.radius = nextRadiusPercentage * particlesPool[i].OriginalSize;
+					}
+					if (timeProgress >= 1) {
+						particlesPool.DecommissionDelayedAtIndex(i);
+					}
+				}
+				particlesPool.ServiceDelayedDecommission();
+			}
+```
+
+`voice`
+and the update needs to change as well.
+here we can see that particles can be decommissioned while the particles pool is being iterated through.
+after the pool is iterated through, the particlesPool can decommission those deferred particles
+
+`scene`
+test
+
+`voice`
+this looks pretty great!
+I do want to make a special note here: this tutorial took me a long time to plan, edit, rewrite, record, and edit again.
+	this particle system is not as easy as this tutorial makes it look.
+	if you are having trouble getting everything working, know that there is nothing wrong with you.
+	you are practicing programming right now. it's good practice when it's difficult. slow down, pay attention, and take a break if you need to.
+	you don't need to rush through this. slow is smooth, and smooth is fast.
 
 `scene`
 src/MrV/GameEngine/ParticleSystem.cs
 ```
-
+// TODO <--------------
 ```
 
 `voice`
