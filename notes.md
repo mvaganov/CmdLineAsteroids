@@ -2636,42 +2636,158 @@ test
 
 `voice`
 this looks pretty great!
-I do want to make a special note here: this tutorial took me a long time to plan, edit, rewrite, record, and edit again.
-	this particle system is not as easy as this tutorial makes it look.
-	if you are having trouble getting everything working, know that there is nothing wrong with you.
-	you are practicing programming right now. it's good practice when it's difficult. slow down, pay attention, and take a break if you need to.
-	you don't need to rush through this. slow is smooth, and smooth is fast.
+but there is too much particle-specific code in the main loop code for my taste.
+
+`scene`
+src/MrV/GameEngine/RangF
+```
+namespace MrV.GameEngine {
+	public class RangeF {
+		public float Min, Max;
+		public float Delta => Max - Min;
+		public float Random => Min + Delta * Rand.Number;
+		public RangeF(float min, float max) { Min = min; Max = max; }
+		public static implicit operator RangeF((float min, float max) tuple) => new RangeF(tuple.min, tuple.max);
+		public static implicit operator RangeF(float singleValue) => new RangeF(singleValue, singleValue);
+	}
+}
+```
+
+`voice`
+before I implement the ParticleSystem class, I want to implement a RangeF class, which is a distributable way of considering a random number in a range.
 
 `scene`
 src/MrV/GameEngine/ParticleSystem.cs
 ```
-// TODO <--------------
+using MrV.Geometry;
+using System;
+
+namespace MrV.GameEngine {
+	internal class ParticleSystem {
+		public ObjectPool<Particle> ParticlePool = new ObjectPool<Particle>();
+		public FloatOverTime SizeOverLifetime;
+		public ConsoleColor Color = ConsoleColor.White;
+		public Vec2 Position;
+		public RangeF ParticleLifetime;
+		public RangeF ParticleSize;
+		public RangeF ParticleSpeed;
+		public RangeF SpawnRadius;
+
+		public ParticleSystem(RangeF particleLifetime, RangeF particleSize, RangeF particleSpeed,
+		RangeF spawnRadius, ConsoleColor color, FloatOverTime sizeOverLifetime) {
+			ParticlePool.Setup(CreateParticle, CommissionParticle, DecommissionParticle);
+			ParticleLifetime = particleLifetime;
+			ParticleSize = particleSize;
+			ParticleSpeed = particleSpeed;
+			SpawnRadius = spawnRadius;
+			Color = color;
+			SizeOverLifetime = sizeOverLifetime;
+		}
+		public Particle CreateParticle() => new Particle(new Circle(Position,0), default, Color, 0);
+		public void CommissionParticle(Particle particle) {
+			particle.Enabled = true;
+			particle.LifetimeCurrent = 0;
+			particle.OriginalSize = ParticleSize.Random;
+			particle.Circle.radius = particle.OriginalSize * GetSizeAtTime(0);
+			particle.Velocity = default;
+			particle.Color = Color;
+			particle.LifetimeMax = ParticleLifetime.Random;
+			Vec2 direction = Vec2.ConvertDegrees(360 * Rand.Number);
+			particle.Velocity = direction * ParticleSpeed.Random;
+			particle.Circle.center = Position + direction * SpawnRadius.Random;
+		}
+		public void DecommissionParticle(Particle particle) {
+			particle.Enabled = false;
+		}
+		public float GetSizeAtTime(float lifetimePercentage) {
+			if (SizeOverLifetime == null
+			|| !SizeOverLifetime.TryGetValue(lifetimePercentage, out float value)) { return 1; }
+			return value;
+		}
+		public void Draw(GraphicsContext graphics) {
+			for (int i = 0; i < ParticlePool.Count; ++i) {
+				ParticlePool[i].Draw(graphics);
+			}
+		}
+		public void Update() {
+			for (int i = 0; i < ParticlePool.Count; ++i) {
+				ParticlePool[i].Update();
+				float timeProgress = ParticlePool[i].LifetimeCurrent / ParticlePool[i].LifetimeMax;
+				ParticlePool[i].Circle.radius = GetSizeAtTime(timeProgress) * ParticlePool[i].OriginalSize;
+				if (timeProgress >= 1) {
+					ParticlePool.DecommissionDelayedAtIndex(i);
+				}
+			}
+			ParticlePool.ServiceDelayedDecommission();
+		}
+		public void Emit(int count = 1) {
+			for (int i = 0; i < count; ++i) {
+				ParticlePool.Commission();
+			}
+		}
+	}
+}
 ```
 
 `voice`
-//explain
-the idea of creating a pool of objects that I can reuse many times is really important in game development. the concept is called an object pool
+This is a very specific particle system implementation for explosions.
+	i won't be modifying this for the rest of the tutorial, so feel free to make it more generalized if you want.
+notice that I'm using RangeF for the values that could be random between two values.
+the ObjectPool's delegate methods are defined as member functions.
+a Draw method handles drawing of all particles
+and the particle system's Update handles logic related to the Particle.
+	arguably, all Particle logic, including the movement from Velocity could be moved to this function. I'm leaving that design choice to any audience member willing to make it.
+
+I do want to make a special note here: this tutorial took me a long time to plan, edit, rewrite, record, and edit again.
+	developing this particle system is not as easy as this tutorial makes it look.
+	when I developed the app, I made the particle system later, and it was more robust for different kinds of particle systems.
+	after I realized that I really only use the explosion particle, I simplified the particle system.
+		I moved this implementation sooner in the tutorial to really utilize rendering optimizations earlier in the tutorial.
+	if you are having trouble getting everything working, know that there is nothing wrong with you.
+	you are practicing programming right now. it's good practice when it's difficult. slow down, pay attention, and take a break if you need to.
+	you don't need to rush through this. slow is smooth, and smooth is fast.
+
 
 `scene`
-RangF
+src/Program.cs
+```
+			}
+			float particleSpeed = 5, particleRad = 2;
+			ParticleSystem particles = new ParticleSystem((.25f, 1), (1, particleRad),
+				(1, particleSpeed), 0.125f, ConsoleColor.White, FloatOverTime.GrowAndShrink);
+			particles.Position = (10, 10);
+			KeyInput.Bind(' ', () => particles.Emit(10), "explosion");
+			while (running) {
+```
+```
+				graphics.DrawPolygon(polygonShape, ConsoleColor.Yellow);
+				particles.Draw(graphics);
+				graphics.PrintModifiedOnly();
+```
+```
+			void Update() {
+				KeyInput.TriggerEvents();
+				Tasks.Update();
+				particles.Update();
+			}
+```
+
+`voice`
+initialization of the particles is much simpler now
+so is drawing, and updating. all of the interesting logic related to the particle system is comfortably in a class called particle system.
 
 `scene`
-test, with new bound key
+test
 
+`scene`
+src/Program.cs
+```
+// <-- TODO zoom code and camera offset code
+```
 
-* * give the particles a lifetime
-* change their size over time with a ValueOverTime class
-* create an ObjectPool class to manage multiple particles. we can use this later for other things, like game objects
-* create a specialized particle system class
-```
-```
-* create the RangeF class for giving particles random values within a range
-```
-```
-* trigger the particles with a key press
-```
-```
-* add zoom in/out to graphics buffer
+`voice`
+if I want to see what the particles look like close up, I should be able to do that.
+
 ```
 ```
 * moving polygon (with offset)
