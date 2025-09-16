@@ -10,7 +10,7 @@ pause for 5 seconds
 demo reel of the LowFiRockBlaster game
 
 `voice`
-This is a tutorial series teaching how to build a real-time simulation in C#.
+This is a tutorial series teaching how to build a real-time simulation in C-sharp.
 It simulates basic physics and collision detection and implements other essential games and simulation systems
 
 `scene`
@@ -29,46 +29,62 @@ list with the following
 	cell space partition tree
 
 `voice`
-I'll explain everything starting from an empty project, in the TTY Command Line Console. Including the graphics, math, and collision detection, and all data structures.
+I'll show all the code and give some explaination about everything, starting from an empty project, in the TTY Command Line Console.
+	This will include graphics, math, optimization, data structures, collision detection, and more.
 I'll also offer in-context advice and best practices from my decades of experience as a game developer and computer science instructor.
 And I'll give some of my own opinions about the Invisible Wizard Problems that define modern computer programming, and game development especially.
-One invisible wizard problem that I can mention now is the tradeoff of robustness vs accessibility of this simulation.
-	many of my example implementations will fall short of being highly robust and maximally efficient.
-	In this tutorial, I intend to practically introduce many concepts, and accept that the audience will do further research from these starting points.
 
-TODO mark Invisible Wizard Problems (IWP):
-	function separation
+One invisible wizard problem that I can mention now is the tradeoff of robustness vs accessibility of this simulation.
+	many of my example implementations will fall short of being highly robust and maximally efficient. I apologize for that in advance.
+	In this tutorial, I intend to very practically introduce many concepts, and accept that the audience will do further research from these starting points.
+
+`scene`
+"These systems don’t understand the world. They just predict the next word." - Jeffery Hinton
+"As an AI I don’t believe or disbelieve anything in the human sense." - ChatGPT 2025/09/14
 
 `voice`
-The simulation is a space-shooter game inspired by Spacewar! from 1962, written for the command line console.
+Another invisible wizard problem is the rapid replacement of programmers with AI in the software development industry.
+Even if AI systems write most of the world’s code, they still lack something, which Geoffrey Hinton warned about, and the AI's will admit.
+They lack real understanding of the world.
+They need humans who can translate lived experience into software accessible simulations. These simulations help train AI, and when they augment toolchains, they help reason.
+Learning how to build simulations yourself, in a mostly agnostic tech stack like in the command line, is a powerful skill. Having it will make you useful to AI in the future.
+With this skill, you can help shape how AI connects to human reality.
+
+`scene`
+back to the montage
+
+`voice`
+The simulation tutorial is for a space-shooter game inspired by "Spacewar!" from 1962, written for the command line console.
 The idea is as old as videogames. It was the reason why the C programming language and Unix operating system were invented.
-I've summoned that ancient primordial motivation to capture your attention now, while I teach you foundational concepts for writing a game engine.
+I've summoned that ancient motivation to capture your attention now, while I teach you foundational concepts for writing a simulation and game engine.
 Check the description for the Github project link if you want the code. Continue watching if you want a thorough lesson to understand the code.
 
 I spent a few weeks creating this game, and a few months writing this script.
 Please do not misunderstand that this program just fell out of my head in one moment. Programming does not work that way.
 Your projects will take a long time to finish too, even if they use a tutorial like this as a starting point.
-Be patient with yourself. Be disciplined with your self. I believe anyone who sits with these ideas can learn them well, even if you don't consider yourself skilled with math.
-I was terrible at math in High School, and learned what I know because of practice doing projects like this.
-My guidance will follow roughly the same path I went through while making this game a few weeks ago, but it will be much faster, even with a few detours to experiment with some math.
+Be patient with yourself. Be disciplined with your self. I believe anyone who sits with these ideas can learn them well. Especially you, even if you don't consider yourself skilled with math.
+For context, I was terrible at math in High School, especially at Trigonometry, which I will touch in this tutorial. I learned what I know because of practice doing projects like this.
+My guidance will follow roughly the same path I went through while making this game a few months ago,
+	but it will be much faster, even with a few detours to experiment with math and game engine optimizations.
 Because I wrote this application once already, I have the extreme benefit of having made lots of mistakes recently.
-Please be patient with your own mistakes, and the frustration that follows. Frustration is the sweat of learning. It is a sign that your mind is growing. Take a break if you need it.
+Please be patient with your own mistakes, and the frustration that follows. Frustration is the sweat of learning. It is a sign that your mind is growing.
+	Take a break if you need it. This video will still be here when you are ready.
 
 `scene`
 montage of code and the game
 
 `voice`
-I'll be using C# as the programming language.
-I assume you already have a C# runtime, compiler, and IDE installed.
-I also assume you know the basics of how to program command line applications in C#, including object oriented programming basics.
+I'll be using C sharp as the programming language.
+I assume you already have a C sharp runtime, compiler, and IDE installed.
+I also assume you know the basics of how to program command line applications in C sharp, including object oriented programming basics.
 You can still follow along without that knowledge, but I recommend you start with that foundation.
 
 `scene`
 montage of Unity
 
 `voice`
-The Unity Game Engine is a notable reason I chose to do this in the C# language.
-This tutorial should also give new developers some insight into how a game engine like Unity works.
+The Unity Game Engine is a notable reason I chose to do this in the C sharp language.
+This tutorial should also give new game developers some insight into how a game engine like Unity works.
 
 //I also assume you are using LLMs to help you write code. Importantly:
 //  I assume you're aware of the intellectual hazard of relying on AI while programming. AI helps you **do**, not **learn**.
@@ -99,25 +115,25 @@ This tutorial should also give new developers some insight into how a game engin
 understanding is the price for power in the computer.
 
 `voice`
-If you are new to game programming, you should practice by typing all of this yourself.
+If you are new to game programming, you should practice by typing all of this yourself. I'm serious.
 This will dramatically increase how long this tutorial takes for you to do, probably 10x longer or more.
-I believe that time will be worth the understanding you gain.
-If you do not consider yourself a computer wizard yet, I recommend you practice more.
+I believe that time will be worth the understanding you gain, especially if you make mistakes while doing it.
+And if you do not consider yourself a computer wizard yet, and you want to be, I recommend you practice more.
 
 `scene`
 new project window in VS Community 2022
 
 `voice`
-Start your C# IDE. I'm using Visual Studio Community 2022.
+Start your C sharp IDE. I'm using Visual Studio Community 2022.
 As of 2025, Rider is not free for commercial content, but free for personal use.
 I should not use it for a tutorial video, but I recommend it for educational purposes.
 Rider is similar enough to Visual Studio that this tutorial will still work well for it.
 
 I'm going to call my project "LowFiRockBlaster".
-And I'll be using .NET Core 5.0, because Unity doesn't support the latest C# features, and I want this tutorial to prepare you for Unity Game Development.
+And I'll be using .NET Core 5.0, because Unity doesn't support the latest C sharp features, and I want this tutorial to prepare you for Unity Game Development specifically.
 
 `scene`
-program.cs
+src/MrV/LowFiRockBlaster/Program.cs
 ```
 using System;
 
@@ -132,7 +148,8 @@ namespace MrV.LowFiRockBlaster {
 
 `voice`
 The default Program.cs will be our entry point. This is a basic "Hello World" program.
-I'll be writing everything in my own MrV namespace, I recommend you name your own namespace yourself.
+I'm going to move it to a new folder, to organize my files as I code. src/MrV/LowFiRockBlaster
+I'll be writing everything in my own MrV namespace, I recommend you name your own namespace after yourself.
 I'll also be using a compact whitespace style, so I can fit as much code on the screen as possible.
 
 Let's run this code to make sure everything works. If your program does not compile and run, stop the video and get it working.
@@ -147,10 +164,10 @@ For example, be sure you have the .NET desktop development workload installed by
 ---
 
 `scene`
-Work Breakdown Structure
+design.md
 * game design document
 	* graphics
-		* draw: circles (asteroints, powerups)
+		* draw: circles (asteroids, powerups)
 		* draw: polygons (player, projectiles)
 		* colors in the command line, with text overlay
 	* logic
@@ -161,35 +178,21 @@ Work Breakdown Structure
 	* player choices
 		* move in cardinal directions (up/down/left/right)
 		* shoot projectile, if sufficient ammo
-		* avoid moving asteroids, or else be destroyed
+		* avoid moving into asteroids, or else be destroyed
 
 `voice`
 Before I start writing the game, I want to have a clear set of goals.
 An imagined vision of the game is a necessary starting point.
-A list of features and expectations is an essential next step for a project that will take several days.
-This kind of Top-Down design addresses some confusion and scope, which are Invisible Wizard Problems that a software developer should keep in mind.
+A written list of features and expectations is essential for a project that will take more than a few days to finish.
+This kind of Top-Down design addresses some confusion and scope, which are Invisible Wizard Problems that a software developer should always keep in mind.
 Project managers might call this a Work Breakdown Structure. Game Developers might call this a Game Design Document.
-More experienced developers will need fewer details and less structure to create a product. If this seems to sparse for your own projects, please add more details.
-Add just enough detail to your list of expectations that you feel you will remember your game vision when you read the document again. Avoid adding more detail than that.
+More experienced developers will need fewer details and less structure to create a product. If this seems too sparse for your own projects, please add more details in your own project.
+Add just enough detail to your list of expectations that you feel you will remember your vision when you read the document again. Avoid adding more detail than that. Expect it to change.
 Spending too much time writing a design or specification is sometimes called Analysis Paralisys, and it is a real cause for projects to fail before they even start.
 Identify clear goals that you can start implementing, and give yourself the grace to updatee the document later.
 
 `scene`
 back to program.cs
-
-`voice`
-Lets start our game by drawing the screen where the game will be displayed.
-I'll make a new function called DrawRectangle, and call it in my Main function. You'll notice that it's public static
-we want it to be public staic for three reasons:
-	- it doesn't have any dependencies on the Program class, so we should be able to run it from anywhere
-	- Main is in a public static context, and needs it to be public static also
-	- public static function calls are technically faster than non-public static calls. 
-		- the speed gain is so extremely small that it hardly bears mentioning.
-		- But this is game programming, and performance is important to think about.
-		- I will not be taking extreme step to optimize this game while I write it, for the sake of clarity,
-			but I will intentionally choose a more performant style, out of habit.
-			- an example of this habit can be seen in this code, where I use the prefix increment operator.
-				it's one assembly instruction faster in old compilers.
 ```
 		int width = 80, height = 23;
 		char letterToPrint = '#';
@@ -205,11 +208,25 @@ we want it to be public staic for three reasons:
 			}
 		}
 ```
+
+`voice`
+Lets start our game by drawing the screen where the game will be displayed.
+I'll make a new function called DrawRectangle, and call it in my Main function. You'll notice that it's public static
+we want it to be public staic for three reasons:
+	- it doesn't have any dependencies on the Program class, so we should be able to run it from anywhere
+	- Main is in a public static context, and needs it to be public static also
+	- public static function calls are technically faster than non-public static calls.
+		- the speed gain is so extremely small that it hardly bears mentioning.
+		- But this is game programming, and performance is always important to keep in mind. Your final product will suffer if you don't.
+		- for the sake of clarity, I will not obfuscate the game with optimizations while I write it,
+			but I will intentionally choose a more performant style, often out of habit.
+			- an example of this habit can be seen in this code, where I use the prefix increment operator.
+				it's one assembly instruction faster in old compilers.
 this is a pretty standard nested for loop iterating over a two-dimensional space.
 the logic here places the command line cursor exactly at each position in the rectangle before printing a character.
 
 Before moving on, let's take a moment to understand this logic.
-It seems pretty specific to the command line console, but gaining familiarity with this logic will help with may other kinds of problem solving in the future.
+It seems pretty specific to the command line console, but gaining familiarity with this two dimenstional iteration will help with may other kinds of problem solving in the future.
 
 `scene`
 show the code and running output
@@ -237,7 +254,7 @@ show the code and running output
 ```
 
 `voice`
-this code will write 80 times 25 hashtag characters in a row.
+this code will write 80 times 25 hashtag characters, still all in one row.
 
 `scene`
 show the code and running output
@@ -271,11 +288,11 @@ show the code and running output
 		int width = 80, height = 23;
 		char letterToPrint = '#';
 		DrawRectangle(width, height, letterToPrint);
-		DrawRectangle(width, height, letterToPrint);
+		DrawRectangle(width/2, height/2, '?');
 ```
 
 `voice`
-If we turn this into a function, we can print a new rectangle right after this one.
+If we turn this into a function, we can print a new distinct rectangle right after this one.
 Doing this allows us to call the function at any time from any place in our program.
 
 `scene`
@@ -293,9 +310,9 @@ show the code and running output
 
 `voice`
 we can use SetCursorPosition to move the commandline cursor exactly where we want it before printing any character with Console.Write
-This functionality is not easily available in all programming language console APIs, so it's nice that C# handles it for us.
+This functionality is not easily available in all programming language console APIs, so it's nice that C sharp gives it to us so cleanly.
 For example, if you want to do the same thing in Python, you need to replace SetCursorPosition with printing an escape sequence.
-And that escape sequence will not work if executed in the basic Windows console.
+That escape sequence will not work if executed in the basic Windows console. And it will cause strange errors when printing some special characters, or printing in a separate thread.
 
 `scene`
 show the code and running output
@@ -337,7 +354,7 @@ the programming in this tutorial will get much more conceptually complex beyond 
 
 `scene`
 Create a src folder, MrV folder, Math folder. create Vec2.cs inside of src/MrV/Geometry
-Vec2.cs
+src/Geometry/Vec2.cs
 ```
 namespace MrV.Geometry {
 	public struct Vec2 {
@@ -351,9 +368,12 @@ namespace MrV.Geometry {
 }
 ```
 
+`voice`
+this program will need many source files, and I want to organize them with folders.
+also, this code base needs to be serious about 2 dimensional structures.
+
 `scene`
-Program.cs
-put Program.cs into src. 
+src/LowFiRockBlaster/Program.cs
 ```
 		public static void DrawRectangle(Vec2 position, Vec2 size, char letterToPrint) {
 			DrawRectangle((int)position.x, (int)position.y, (int)size.x, (int)size.y, letterToPrint);
@@ -364,11 +384,9 @@ put Program.cs into src.
 ```
 
 `voice`
-We should get serious about 2 dimensional structures.
-This simulation will have many of them, and we should start using 2D concepts in this rectangle drawing code.
-Also, this program will need many source files, and I want to organize them with folders.
+We should start using the 2D vector concept now, in this rectangle drawing code.
 
-I'll be doing more of this kind of code refactoring during my tutorial, but not nearly as much as normal.
+I'll be doing more of this kind of code refactoring during my tutorial, but not nearly as much as I did while writing the game for myself.
 Real programmers constantly rewrite code, often renaming variables, and adding or removing new code structures for many different reasons.
 Know that this tutorial is the result of lots of such rewrites.
 If you are new to programming, you need to know that this is how big projects are written: one step at a time, with lots of rewrites, and tests between changes.
@@ -2738,16 +2756,6 @@ a Draw method handles drawing of all particles
 and the particle system's Update handles logic related to the Particle.
 	arguably, all Particle logic, including the movement from Velocity could be moved to this function. I'm leaving that design choice to any audience member willing to make it.
 
-I do want to make a special note here: this tutorial took me a long time to plan, edit, rewrite, record, and edit again.
-	developing this particle system is not as easy as this tutorial makes it look.
-	when I developed the app, I made the particle system later, and it was more robust for different kinds of particle systems.
-	after I realized that I really only use the explosion particle, I simplified the particle system.
-		I moved this implementation sooner in the tutorial to really utilize rendering optimizations earlier in the tutorial.
-	if you are having trouble getting everything working, know that there is nothing wrong with you.
-	you are practicing programming right now. it's good practice when it's difficult. slow down, pay attention, and take a break if you need to.
-	you don't need to rush through this. slow is smooth, and smooth is fast.
-
-
 `scene`
 src/Program.cs
 ```
@@ -2775,6 +2783,16 @@ src/Program.cs
 `voice`
 initialization of the particles is much simpler now
 so is drawing, and updating. all of the interesting logic related to the particle system is comfortably in a class called particle system.
+
+I do want to make a special note here: this tutorial took me a long time to plan, edit, rewrite, record, and edit again.
+	during that time, the particle system went through significant changes.
+	developing this particle system is not as easy as this tutorial made it look.
+	when I first developed the game, I made the particle system much later, and it was bigger, more robust, for different kinds of particle systems.
+	after I realized that I really only use the explosion particle, I greatly simplified the particle system.
+		I also moved this implementation earlier in the tutorial, to really utilize rendering optimizations sooner.
+	if you are having trouble getting the particle system working, know that there is nothing wrong with you. this was difficult.
+	you are practicing hard programming right now. it is good practice when it's difficult. slow down, pay attention, and take a break if you need to.
+	you don't need to feel like you have to rush through this. slow is smooth, and smooth is fast.
 
 `scene`
 test
