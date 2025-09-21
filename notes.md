@@ -2800,14 +2800,79 @@ test
 `scene`
 src/Program.cs
 ```
-// <-- TODO zoom code and camera offset code
+			KeyInput.Bind('-', () => graphics.ShapeScale *= 1.5f, "zoom out");
+			KeyInput.Bind('=', () => graphics.ShapeScale /= 1.5f, "zoom in");
+```
+also run.
+
+`voice`
+tp look at particles closer, we should zoom in with our graphics context.
+we can do that by simply modifying the ShapeScale member
+
+but doing this doesn't zoom into the center of the screen, it zooms into the origin point. that isn't what we want.
+
+`scene`
+src/MrV/CommandLine/DrawBuffer_geometry_.cs
+```
+	public partial class DrawBuffer {
+		public static ConsoleColorPair[,] AntiAliasColorMap;
+		private Vec2 _originOffsetULCorner;
+		public Vec2 Scale {
+			get => ShapeScale;
+			set {
+				Vec2 center = GetCameraCenter();
+				ShapeScale = value;
+				SetCameraCenter(center);
+			}
+		}
+		public Vec2 Offset { get => _originOffsetULCorner; set => _originOffsetULCorner = value; }
+		public Vec2 GetCameraCenter() {
+			Vec2 cameraCenterPercentage = (0.5f, 0.5f);
+			Vec2 cameraCenterOffset = Size.Scaled(cameraCenterPercentage);
+			Vec2 scaledCameraOffset = cameraCenterOffset.Scaled(Scale);
+			Vec2 position = Offset + scaledCameraOffset;
+			return position;
+		}
+		public void SetCameraCenter(Vec2 position) {
+			Vec2 cameraCenterPercentage = (0.5f, 0.5f);
+			Vec2 cameraCenterOffset = Size.Scaled(cameraCenterPercentage);
+			Vec2 scaledCameraOffset = cameraCenterOffset.Scaled(Scale);
+			Vec2 screenAnchor = position - scaledCameraOffset;
+			Offset = screenAnchor;
+		}
+		static DrawBuffer() {
+```
+```
+		public void DrawShape(IsInsideShapeDelegate isInsideShape, Vec2 start, Vec2 end, ConsoleGlyph glyphToPrint) {
+			Vec2 renderStart = start - _originOffsetULCorner;
+			Vec2 renderEnd = end - _originOffsetULCorner;
+			renderStart.InverseScale(ShapeScale);
+```
+```
+							for (float sampleX = 0; sampleX < 1; sampleX += SuperSampleIncrement) {
+								bool pointIsInside = isInsideShape(new Vec2((x + sampleX) * ShapeScale.x, (y + sampleY) * ShapeScale.y)
+									+ _originOffsetULCorner);
+								if (pointIsInside) {
 ```
 
 `voice`
-if I want to see what the particles look like close up, I should be able to do that.
+we need some real math to make this zoom look good. 
+<--- explain plz
 
+`scene`
+src/LowFiRockBlaster/Program.cs
 ```
+			KeyInput.Bind((char)27, () => running = false, "quit");
+			KeyInput.Bind('-', () => graphics.Scale *= 1.25f, "zoom out");
+			KeyInput.Bind('=', () => graphics.Scale /= 1.25f, "zoom in");
+			graphics.SetCameraCenter((10, 10));
+			int timeMs = 0;
 ```
+
+`voice`
+<--- explain plz
+
+
 * moving polygon (with offset)
 ```
 ```
