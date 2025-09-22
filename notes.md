@@ -1235,11 +1235,13 @@ Add a Scale method to Vec2
 MrV/Geometry/Vec2.cs
 ```
 		public void Scale(Vec2 scale) { x *= scale.x; y *= scale.y; }
+		public Vec2 Scaled(Vec2 scale) => new Vec2(x * scale.x, y * scale.y);
 		public void InverseScale(Vec2 scale) { x /= scale.x; y /= scale.y; }
 ```
 
 `voice`
 in addition to Scale, we should be able to undo scaling.
+Also, we will want a version of Scale that returns a new scaled structure without modifying this structure's data.
 
 `scene` 
 MrV/DrawBuffer_geometry.cs
@@ -2817,6 +2819,7 @@ src/MrV/CommandLine/DrawBuffer_geometry_.cs
 	public partial class DrawBuffer {
 		public static ConsoleColorPair[,] AntiAliasColorMap;
 		private Vec2 _originOffsetULCorner;
+		public Vec2 Offset { get => _originOffsetULCorner; set => _originOffsetULCorner = value; }
 		public Vec2 Scale {
 			get => ShapeScale;
 			set {
@@ -2825,7 +2828,6 @@ src/MrV/CommandLine/DrawBuffer_geometry_.cs
 				SetCameraCenter(center);
 			}
 		}
-		public Vec2 Offset { get => _originOffsetULCorner; set => _originOffsetULCorner = value; }
 		public Vec2 GetCameraCenter() {
 			Vec2 cameraCenterPercentage = (0.5f, 0.5f);
 			Vec2 cameraCenterOffset = Size.Scaled(cameraCenterPercentage);
@@ -2857,36 +2859,79 @@ src/MrV/CommandLine/DrawBuffer_geometry_.cs
 
 `voice`
 we need some real math to make this zoom look good. 
-<--- explain plz
+
+everything is being drawn by DrawShape, so changes need to be local to this funciton.
+a new 2D vector member keeps track of the offset of the upper-left corner of the screen
+A new Scale property modifies the ShapeScale value while keeping the center off the screen in the same place
+the math for calculating the center position and moving the offset to center on the center position is very similar.
+
+the DrawShape function doesn't need to change that much. we need to offset the rendering rectangle by the camera offset, and adjust the sampling point as well.
 
 `scene`
 src/LowFiRockBlaster/Program.cs
 ```
-			KeyInput.Bind((char)27, () => running = false, "quit");
-			KeyInput.Bind('-', () => graphics.Scale *= 1.25f, "zoom out");
-			KeyInput.Bind('=', () => graphics.Scale /= 1.25f, "zoom in");
-			graphics.SetCameraCenter((10, 10));
-			int timeMs = 0;
+			particles.Position = (10, 10);
+			KeyInput.Bind(' ', () => particles.Emit(10), "explosion");
+			float ScaleFactor = 1.25f;
+			KeyInput.Bind('-', () => graphics.Scale *= ScaleFactor, "zoom out");
+			KeyInput.Bind('=', () => graphics.Scale /= ScaleFactor, "zoom in");
+			graphics.SetCameraCenter(particles.Position);
+			while (running) {
 ```
 
 `voice`
-<--- explain plz
+In the game code, the plus and minus keys on the keyboard change the zoom by a common scale factor.
+also, we initialize the camera's center to focus on the particle system
 
+`scene`
+test
 
-* moving polygon (with offset)
+`voice`
+this particle effect looks better from far away. I think it's good enough for now.
+
+before we move on to creating game elements, lets take a look at the game loop.
+
+I think it looks mostly ok. but I think there is too much test drawing code.
+
+a game engine should have a list of drawable elements, and draw those in a uniform way.
+we should remove specific draw calls and replace them with objects to draw.
+
+also, a game should be able to draw things that are not part of the simulation, but still important to see.
+User Interface and visual effects belong in this category.
+we can refactor our existing test code into using structures for pre and post processing effects first.
+
+`scene`
+src/LowFiRockBlaster
 ```
+// pre/post processing list
 ```
-* rotate functionality for the polygon
-```
-```
+
+`voice`
+// <-- explain
+
+`scene`
+UML diagram of IGameObject, IDrawable, ICollidable
+
 * refactor the game loop before adding new functionality...
 * design the program in broad strokes. draw diagrams. create some core interfaces. emphasize the need for imagination, and clear vision.
 ```
 IGameObject, IDrawable, ICollidable
 ```
-* create the core object classes
+
+`scene`
+game diagram, naming classes. UML diagram next to it, showing class hierarchy.
+explanain that UML diagramming is useful conceptually, and can very clearly communicate system architecture to a new developer.
+	like the design document, it helps explain the concept and goals of a system.
+	it also becomes less important to make it detailed as a programmer becomes more skilled.
+
 ```
 MobileObject, MobileCircle, MobilePolygon
+```
+* moving polygon (with offset)
+```
+```
+* rotate functionality for the polygon
+```
 ```
 * create a player-controlled MobilePolygon class
   - special note be careful about class design! if you do it while you are tired, you can easily regret writing a strict structure that you later need to unmake
