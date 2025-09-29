@@ -2941,12 +2941,66 @@ we can refactor existing test code into into  pre and post processing effects as
 The simulation elements, like the player, the player's projectiles, asteroids, power ups, etc. will be drawable objects that populate a draw list.
 
 `scene`
-UML diagram of IGameObject, IDrawable, ICollidable
+UML diagram of IGameObject, IDrawable
+https://lucid.app/lucidchart/ec14ab7a-a936-4356-bb0e-0326d2a5e45e/edit?viewport_loc=-340%2C-125%2C2514%2C1365%2CHWEp-vi-RSFO&invitationId=inv_571bd2ad-b5a4-4065-9b11-780a61085d7b
 
-* refactor the game loop before adding new functionality...
-* design the program in broad strokes. draw diagrams. create some core interfaces. emphasize the need for imagination, and clear vision.
+`voice`
+My game will need floating circles to destroy, which are the conceptual asteroids.
+The game's player will be a shape visually distinct from the circles.
+The player will shoot projectiles. I want to see spinning triangles, because I think that will look cool.
+
+There are some guidelines about good object oriented design that should determine how we plan these classes.
+The most well known and well respected of these standards is the SOLID principles.
+
+`scene`
+Single Responsiblity Principle: each class does one thing.
+Open-Closed Principle: Classes should be open to extension, and closed to modification.
+Liskov Substitution Principle: Objects should be substitutable for objects of their superclass.
+Interface Segregation Principle: Multiple interfaces is better than one general-purpose interface. 
+Dependency Inversion Principle: Use abstractions so classes don't rely on specific implementations.
+
+I agree with SOLID principles for the most part. Following these reduces mental burden of the entire system over time.
+However, I intentionally break the principles as practical and sometimes stylistic choice.
+
+Yes, each class should clearly do one thing. We want few mental burdens, and clear purpose at all times. However, my code breaks the Single Responsiblity Principle:
+This is common for game programming code especially.
+Many of my classes do things that could easily be argued as extending into entirely new functionality.
+	For example, DrawBuffer does more than simply manage a buffer. It has a partial class extension where scaled rendering code exists.
+The new classes I'll write will also do a lot.
+I break the Single Responsibility Principle on purpose, to keep file count low. I want to reduce the amount of code because:
+	I want you, my audience, to have an easier time keeping up with the tutorial
+	I want fewer classes in the project so it is easier for me to fit everything my own head all at once.
+	If I can comfortably hold a problem in my head, I want the file to take advantage of that, so I can understand as much of the problem as possible in one file.
+
+My code also breaks the Open-Closed Principle:
+Yes, I create small classes that should be easy to extend, in a way that looks like good Open-Closed design.
+However, I write these classes with the expectation that you will modify the code yourself, and in a way that is easier for you to copy.
+My code is full of public members named as properties with the expectation that you will refactor that yourself in the future.
+These implementations are explicitly not closed for modification: I want you to modify the code, and make your own design changes. Then it will become your code.
+And crucially, I want you to make mistakes by making changes. Making those mistakes is how you learn. And I hope you are using this tutorial as a learning exercise.
+Personally, I think the Open-Closed principle is better for mostly finished business software.
+	Game programming in particular is not a good place to be strict about it, and certainly not game logic during prototype iteration.
+
+My code will break the Liskov Substitution Princicple:
+I want to take advantage of polymorphism, but strict adherence to Liskov Substitution creates inefficient code full of type verification.
+One easy approach to maintain this principle is to avoid inheritance, and create classes that extend functionality with lambda expressions and extra meta-data.
+	Duck Typing, which is what Python and JavaScript use, is the logical extreme of Liskov Substitution.
+		In those scripting languages, most complex objects are the same, with a different dictionary of variables and functions.
+		That is a mess for code efficiency and compile-time error checking.
+
+My code will break the Interface Segregation Principle:
+I'm not going to make fine-grained Interface separations for this program. I won't need them in practice, and writing them will the complexity of this tutorial for little gain.
+For example, it is possible that not all GameObjects will need a position. But I don't want an additional IHasPosition interface. You should feel welcome to make that addition yourself.
+
+My code already uses Singletons, which is a gross violation of the Dependency Inversion Principle.
+	To be clear, I hate the fact that my code relies on singletons. It makes a brittle design, and it limits future functionality.
+	I wrote every singleton class to be able to substitute it's the static instance for another one.
+	Still, the standard use of each singleton is as a euphamism for a global variable, which is bad.
+I write singletons like this because I accept them as well understood utilities, as an extension of the programming environment more than a program feature.
+
+`scene`
 ```
-IGameObject, IDrawable, ICollidable
+IGameObject, IDrawable
 ```
 
 `scene`
