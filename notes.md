@@ -896,13 +896,18 @@ namespace MrV {
 		protected long _timeMsOfCurrentFrame;
 		protected double _timeSecOfCurrentFrame;
 		protected static Time _instance;
-		public long deltaTimeMs => _deltaTimeMs;
-		public float deltaTimeSec => _deltaTimeSec;
+		public static long CurrentTimeMs => DateTimeOffset.Now.ToUnixTimeMilliseconds();
+		public long DeltaTimeMilliseconds => _deltaTimeMs;
+		public float DeltaTimeSeconds => _deltaTimeSec;
+		public long TimeMillisecondsCurrentFrame => _timeMsOfCurrentFrame;
+		public double TimeSecondsCurrentFrame => _timeSecOfCurrentFrame;
 		public long DeltaTimeMsCalculateNow => _timer.ElapsedMilliseconds - _timeMsOfCurrentFrame;
 		public float DeltaTimeSecCalculateNow => (float)(_timer.Elapsed.TotalSeconds - _timeSecOfCurrentFrame);
+		public static long TimeMsCurrentFrame => Instance.TimeMillisecondsCurrentFrame;
+		public static double TimeSecCurrentFrame => Instance.TimeSecondsCurrentFrame;
 		public static Time Instance => _instance != null ? _instance : _instance = new Time();
-		public static long DeltaTimeMs => Instance.deltaTimeMs;
-		public static float DeltaTimeSec => Instance.deltaTimeSec;
+		public static long DeltaTimeMs => Instance.DeltaTimeMilliseconds;
+		public static float DeltaTimeSec => Instance.DeltaTimeSeconds;
 		public static void Update() => Instance.UpdateTiming();
 		public static void SleepWithoutConsoleKeyPress(int ms) => Instance.ThrottleUpdate(ms, () => Console.KeyAvailable);
 		public Time() {
@@ -2487,15 +2492,15 @@ using System.Collections.Generic;
 
 namespace MrV.GameEngine {
 	public class ObjectPool<T> {
-		private List<T> allObjects = new List<T>();
-		private int freeObjectCount = 0;
+		private List<T> _allObjects = new List<T>();
+		private int _freeObjectCount = 0;
 		public Func<T> CreateObject;
 		public Action<T> DestroyObject, CommissionObject, DecommissionObject;
-		private HashSet<int> delayedDecommission = new HashSet<int>();
+		private HashSet<int> _delayedDecommission = new HashSet<int>();
 
-		public int Count => allObjects.Count - freeObjectCount;
+		public int Count => _allObjects.Count - _freeObjectCount;
 		public T this[int index] => index < Count
-			? allObjects[index] : throw new ArgumentOutOfRangeException();
+			? _allObjects[index] : throw new ArgumentOutOfRangeException();
 		public ObjectPool() { }
 		public void Setup(Func<T> create, Action<T> commission = null,
 			Action<T> decommission = null, Action<T> destroy = null) {
@@ -2504,51 +2509,51 @@ namespace MrV.GameEngine {
 		}
 		public T Commission() {
 			T freeObject = default;
-			if (freeObjectCount == 0) {
+			if (_freeObjectCount == 0) {
 				freeObject = CreateObject.Invoke();
-				allObjects.Add(freeObject);
+				_allObjects.Add(freeObject);
 			} else {
-				freeObject = allObjects[allObjects.Count - freeObjectCount];
-				--freeObjectCount;
+				freeObject = _allObjects[_allObjects.Count - _freeObjectCount];
+				--_freeObjectCount;
 			}
 			if (CommissionObject != null) { CommissionObject(freeObject); }
 			return freeObject;
 		}
-		public void Decommission(T obj) => DecommissionAtIndex(allObjects.IndexOf(obj));
+		public void Decommission(T obj) => DecommissionAtIndex(_allObjects.IndexOf(obj));
 		public void DecommissionAtIndex(int indexOfObject) {
-			if (indexOfObject >= (allObjects.Count - freeObjectCount)) {
-				throw new Exception($"trying to free object twice: {allObjects[indexOfObject]}");
+			if (indexOfObject >= (_allObjects.Count - _freeObjectCount)) {
+				throw new Exception($"trying to free object twice: {_allObjects[indexOfObject]}");
 			}
-			T obj = allObjects[indexOfObject];
-			++freeObjectCount;
-			int beginningOfFreeList = allObjects.Count - freeObjectCount;
-			allObjects[indexOfObject] = allObjects[beginningOfFreeList];
-			allObjects[beginningOfFreeList] = obj;
+			T obj = _allObjects[indexOfObject];
+			++_freeObjectCount;
+			int beginningOfFreeList = _allObjects.Count - _freeObjectCount;
+			_allObjects[indexOfObject] = _allObjects[beginningOfFreeList];
+			_allObjects[beginningOfFreeList] = obj;
 			if (DecommissionObject != null) { DecommissionObject.Invoke(obj); }
 		}
 		public void Clear() {
-			for (int i = allObjects.Count - freeObjectCount - 1; i >= 0; --i) {
-				Decommission(allObjects[i]);
+			for (int i = _allObjects.Count - _freeObjectCount - 1; i >= 0; --i) {
+				Decommission(_allObjects[i]);
 			}
 		}
 		public void Dispose() {
 			Clear();
 			if (DestroyObject != null) { ForEach(DestroyObject.Invoke); }
-			allObjects.Clear();
+			_allObjects.Clear();
 		}
 		public void ForEach(Action<T> action) {
-			for (int i = 0; i < allObjects.Count; ++i) {
-				action.Invoke(allObjects[i]);
+			for (int i = 0; i < _allObjects.Count; ++i) {
+				action.Invoke(_allObjects[i]);
 			}
 		}
 		public void DecommissionDelayedAtIndex(int indexOfObject) {
-			delayedDecommission.Add(indexOfObject);
+			_delayedDecommission.Add(indexOfObject);
 		}
 		public void ServiceDelayedDecommission() {
-			if (delayedDecommission.Count == 0) { return; }
-			List<int> decommisionNow = new List<int>(delayedDecommission);
+			if (_delayedDecommission.Count == 0) { return; }
+			List<int> decommisionNow = new List<int>(_delayedDecommission);
 			decommisionNow.Sort();
-			delayedDecommission.Clear();
+			_delayedDecommission.Clear();
 			for (int i = decommisionNow.Count - 1; i >= 0; --i) {
 				DecommissionAtIndex(decommisionNow[i]);
 			}
@@ -2896,18 +2901,44 @@ I think it looks mostly ok. but I think there is too much test drawing code.
 a game engine should have a list of drawable elements, and draw those in a uniform way.
 we should remove specific draw calls and replace them with objects to draw.
 
-also, a game should be able to draw things that are not part of the simulation, but still important to see.
-User Interface and visual effects belong in this category.
-we can refactor our existing test code into using structures for pre and post processing effects first.
-
 `scene`
 src/LowFiRockBlaster
 ```
-// pre/post processing list
+			graphics.SetCameraCenter(particles.Position);
+
+			List<Action<GraphicsContext>> drawPreProcessing = new List<Action<GraphicsContext>>();
+			List<Action<GraphicsContext>> drawPostProcessing = new List<Action<GraphicsContext>>();
+			void TestGraphics(GraphicsContext graphics) {
+				graphics.DrawRectangle(0, 0, width, height, ConsoleGlyph.Default);
+				graphics.DrawRectangle((2, 3), new Vec2(20, 15), ConsoleColor.Red);
+				graphics.DrawRectangle(new AABB((10, 1), (15, 20)), ConsoleColor.Green);
+				graphics.DrawCircle(position, radius, ConsoleColor.Blue);
+				graphics.DrawPolygon(polygonShape, ConsoleColor.Yellow);
+			}
+			drawPreProcessing.Add(TestGraphics);
+			drawPostProcessing.Add(particles.Draw);
+
+			while (running) {
+```
+```
+			void Draw() {
+				Vec2 scale = (0.5f, 1);
+				graphics.Clear();
+				drawPreProcessing.ForEach(a => a.Invoke(graphics));
+				// draw simulation elements here
+				drawPostProcessing.ForEach(a => a.Invoke(graphics));
+				graphics.PrintModifiedOnly();
+				graphics.SwapBuffers();
+				Console.SetCursorPosition(0, height);
+			}
 ```
 
+
 `voice`
-// <-- explain
+a game should have a clear way to draw things that are not part of the simulation, like User Interface and visual effects.
+we can refactor existing test code into into  pre and post processing effects as a test.
+
+The simulation elements, like the player, the player's projectiles, asteroids, power ups, etc. will be drawable objects that populate a draw list.
 
 `scene`
 UML diagram of IGameObject, IDrawable, ICollidable
@@ -2924,10 +2955,12 @@ explanain that UML diagramming is useful conceptually, and can very clearly comm
 	like the design document, it helps explain the concept and goals of a system.
 	it also becomes less important to make it detailed as a programmer becomes more skilled.
 
+
 ```
 MobileObject, MobileCircle, MobilePolygon
 ```
-* moving polygon (with offset)
+
+* * moving polygon (with offset)
 ```
 ```
 * rotate functionality for the polygon
