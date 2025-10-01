@@ -1,29 +1,42 @@
-## preface
+Please critique this is a script. It is for a video tutorial designed primarily to give young programmers programming practice.
+
+I want to produce a high quality, factually robust, technically novel, interesting teaching artifact that other software developers can feel good about learning from.
+
+Please summarize the script before giving feedback.
+
+Read the code. Please be specific if there are any parts of my code that could be considered bad programming.
+Consider each section labeled `scene` as a description of what is visually shown. These sections are followed by a `voice` section, narrating the visuals.
+Code will be in most scenes, between tripple back-tick '```' headings, as is common in markdown. This code will be shown in Microsoft Visual Studio Community 2022. It will be typed and high-lighted during narration.
+Read the script marked by the `voice` heading. Identify poor grammer, run-on sentences, unecessary repetition, or ineffective prose. Provide alternative phrasing where appropriate. Keep in mind this text will have to be spoken.
+Identify if there any parts of the tutorial that seem like they could be cut, to streamline the script.
+Identify parts of the script that cover content that is not well documented in other YouTube tutorials about game programming, and identify if emphasizing this content makes sense.
+
+Please be critical about your feedback. I do not want a sycophantic response.
 
 `scene`
 "If I can't create it, I don't understand it."
 -Richard Feynman
 
-pause for 5 seconds
+pause for 2 seconds
 
 `scene`
-demo reel of the LowFiRockBlaster game
+demo reel of the LowFiRockBlaster game. player ship flying around and shooting asteroids. game view zooms in and out, showing how vector graphics can be rendered using command line glyphs.
 
 `voice`
 This is a tutorial series teaching how to build a real-time simulation in C-sharp.
-It simulates basic physics and collision detection and implements other essential games and simulation systems
+It simulates basic physics and collision detection and implements essential games and simulation systems
 
 `scene`
 list with the following
 	2D Vector math
 	basic physics
-	primitive rendering
-	rendering primitives
+	simple rendering (in the command line)
+	rendering primitive shapes
 	time tracking
 	a task scheduler
 	a key input buffer based on a dispatch table
-	some basic graphics optimizations
-	memory pooling
+	basic graphics optimizations
+	memory pooling factory pattern
 	particle systems
 	collision detection
 	cell space partition tree
@@ -461,6 +474,13 @@ notice I'm again using public static functions, and calling a common function th
 	If we can keep complicated logic in one place, then we only need to fix one place when there is a bug in it. It limits how many places we can be confused.
 	If you are concerned about runtime efficiency, stop. We can always inline our functions as a final optimization step, after our code works exactly how we want.
 
+Also, notice how I am naming my variables. I make my public variables capitalized, which is the standard for C# properties.
+	I do this intentionally, with the understanding that these variables should actually be private members with public property accessors.
+	To be clear, if I were doing this tutorial myself, I would convert public members into a private member with public property get and set methods.
+	I am leaving the variables public because it is easier for you to copy, will make no difference to the syntax, and I assume you can change the code if you want.
+In my coding style, lowercase member variables are primitives, which should actually not be accessed publicly,
+	unless the class is a datastructure that exists solely to wrap around those members, like the Vec2 struct.
+
 `scene`
 writing and compiling program.cs
 ```
@@ -778,7 +798,7 @@ public class Game {
 	private int width, height;
 	private char letterToPrint;
 	private Vec2[] polygonShape;
-	public bool running;
+	public bool IsRunning;
 	private Vec2 position;
 	private float radius;
 	private float moveIncrement;
@@ -788,7 +808,7 @@ public class Game {
 		height = 24;
 		letterToPrint = '#';
 		polygonShape = new Vec2[] { (25, 5), (35, 1), (50, 20) };
-		running = true;
+		IsRunning = true;
 		position = (18, 12);
 		radius = 10;
 		moveIncrement = 0.3f;
@@ -812,7 +832,7 @@ public class Game {
 		case 'd': position.x += moveIncrement; break;
 		case 'e': radius += moveIncrement; break;
 		case 'r': radius -= moveIncrement; break;
-		case (char)27: running = false; break;
+		case (char)27: IsRunning = false; break;
 		}
 	}
 }
@@ -821,7 +841,7 @@ public class Game {
 public static void Main(string[] args) {
 	Game game = new Game();
 	game.Init();
-	while (game.running) {
+	while (game.IsRunning) {
 		game.Draw();
 		game.Input();
 		game.Update();
@@ -2566,7 +2586,7 @@ namespace MrV.GameEngine {
 we can use this object pool to cache memory for anything that we create and destroy a lot of.
 it could be particles, bullets, enemies, powerups, or really anything.
 
-the idea is that a list of objects has some unused objects that can be reused later.
+the idea of this class is that a list of objects has some unused objects that can be reused later.
 	objects at the end of the list are considred unused, or decommisioned.
 the user must define how to create the objects, how to reuse them, how to mark them as unused, and how to clean them up later.
 this class handles deferred cleanup
@@ -2583,6 +2603,9 @@ if an object needs to be decommissioned, but can't be decomissioned right now (b
 	the index of the object to decommission is put into a set (which won't contain duplicate indexes)
 	then during a later time, outside of the objectpool iteration, those objects to decommission are decommissioned in reverse index order
 		the last objects get pushed to the end before the first objects
+
+This class manages creation of objects in an automated way. The common name for this is a Factory Pattern.
+This particular Factory Pattern implementation uses Lambda expressions instead of requiring inheritance for each new kind of object.
 
 `scene`
 src/MrV/Program.cs
@@ -2941,16 +2964,20 @@ we can refactor existing test code into into  pre and post processing effects as
 The simulation elements, like the player, the player's projectiles, asteroids, power ups, etc. will be drawable objects that populate a draw list.
 
 `scene`
-UML diagram of IGameObject, IDrawable
+UML diagram of IGameObject, IDrawable, UIText, MobieObject, MobielCircle, MobilePolygon
 https://lucid.app/lucidchart/ec14ab7a-a936-4356-bb0e-0326d2a5e45e/edit?viewport_loc=-340%2C-125%2C2514%2C1365%2CHWEp-vi-RSFO&invitationId=inv_571bd2ad-b5a4-4065-9b11-780a61085d7b
 
 `voice`
-My game will need floating circles to destroy, which are the conceptual asteroids.
+UML diagramming is useful to clearly communicate system architecture.
+	like the design document, it helps explain the concept and goals of a system.
+	also, it becomes less important to make it detailed as a programmer reading it becomes more skilled.
+
+My game will need floating circles to destroy, which are the conceptual asteroids. The rocks to blast in my lowfi rockblaster game.
 The game's player will be a shape visually distinct from the circles.
 The player will shoot projectiles. I want to see spinning triangles, because I think that will look cool.
+I'll also need some user interface that stays static on the screen, to tell the user their score, ammo, and health.
 
-There are some guidelines about good object oriented design that should determine how we plan these classes.
-The most well known and well respected of these standards is the SOLID principles.
+The most well known and well respected guideline for Object Oriented Design is probably the SOLID principles.
 
 `scene`
 Single Responsiblity Principle: each class does one thing.
@@ -2963,52 +2990,93 @@ I agree with SOLID principles for the most part. Following these reduces mental 
 However, I intentionally break the principles as practical and sometimes stylistic choice.
 
 Yes, each class should clearly do one thing. We want few mental burdens, and clear purpose at all times. However, my code breaks the Single Responsiblity Principle:
-This is common for game programming code especially.
-Many of my classes do things that could easily be argued as extending into entirely new functionality.
+This is common for game programming code especially, because of how dynamic the design process is. Games are constantly trying to be more fun, which is actually moving target.
+In addition, some of my classes do things that could be argued as extending into entirely new functionality.
 	For example, DrawBuffer does more than simply manage a buffer. It has a partial class extension where scaled rendering code exists.
-The new classes I'll write will also do a lot.
-I break the Single Responsibility Principle on purpose, to keep file count low. I want to reduce the amount of code because:
-	I want you, my audience, to have an easier time keeping up with the tutorial
-	I want fewer classes in the project so it is easier for me to fit everything my own head all at once.
-	If I can comfortably hold a problem in my head, I want the file to take advantage of that, so I can understand as much of the problem as possible in one file.
+The new game classes I'll write will also do a lot. MobileCircle will be used for asteroids and for ammo powerups, with no additional subclassing. You'll see how.
+I break the Single Responsibility Principle on purpose, to keep file count low, so it's easier to copy and easier to think about.
+Personally, I will add additional functionality to a file if I can comfortably hold the addition in my head with the rest of the file.
+	I will also often refactor the code out later, sometimes to a separate file, as I did in the DrawBuffer_geometry source file._
 
 My code also breaks the Open-Closed Principle:
-Yes, I create small classes that should be easy to extend, in a way that looks like good Open-Closed design.
-However, I write these classes with the expectation that you will modify the code yourself, and in a way that is easier for you to copy.
+It's true that, I create small classes that should be easy to extend, in a way that looks like good Open-Closed design.
+However, I write these classes with the expectation that you will modify the code yourself. And I wrote the code in a way that is easier for you to copy.
 My code is full of public members named as properties with the expectation that you will refactor that yourself in the future.
 These implementations are explicitly not closed for modification: I want you to modify the code, and make your own design changes. Then it will become your code.
 And crucially, I want you to make mistakes by making changes. Making those mistakes is how you learn. And I hope you are using this tutorial as a learning exercise.
 Personally, I think the Open-Closed principle is better for mostly finished business software.
-	Game programming in particular is not a good place to be strict about it, and certainly not game logic during prototype iteration.
+	Game programming in particular is not a good place to be strict about it, and certainly not during prototype iteration.
 
 My code will break the Liskov Substitution Princicple:
 I want to take advantage of polymorphism, but strict adherence to Liskov Substitution creates inefficient code full of type verification.
-One easy approach to maintain this principle is to avoid inheritance, and create classes that extend functionality with lambda expressions and extra meta-data.
-	Duck Typing, which is what Python and JavaScript use, is the logical extreme of Liskov Substitution.
-		In those scripting languages, most complex objects are the same, with a different dictionary of variables and functions.
-		That is a mess for code efficiency and compile-time error checking.
+One easy approach to maintain this principle is to avoid inheritance entirely, and create classes that extend functionality with lambda expressions and extra meta-data.
+	I will be doing this myself.
+	Duck Typing, which is an object design pattern that Python, JavaScriptm and Lua use, is the logical extreme of Liskov Substitution.
+		In those scripting languages, most complex objects are the same type, with a different dictionary of variables and functions.
+		In practice, this is a mess for code efficiency and compile-time error checking, so I avoid that extreme if I can.
+	Unity, another C# game development environment, uses a Decorator pattern, which enables all GameObjects to substitute for each other.
+		This often requires type verification at runtime when specialized functionality is needed by code.
 
 My code will break the Interface Segregation Principle:
-I'm not going to make fine-grained Interface separations for this program. I won't need them in practice, and writing them will the complexity of this tutorial for little gain.
-For example, it is possible that not all GameObjects will need a position. But I don't want an additional IHasPosition interface. You should feel welcome to make that addition yourself.
+I'm not going to make fine-grained Interface separations. I won't need them in practice, and writing them will the increase complexity of this tutorial for little gain.
+For example, it is possible that not all GameObjects will need a position. But I don't want an additional IHasPosition interface.
+	You should feel welcome to implement that yourself.
 
 My code already uses Singletons, which is a gross violation of the Dependency Inversion Principle.
-	To be clear, I hate the fact that my code relies on singletons. It makes a brittle design, and it limits future functionality.
-	I wrote every singleton class to be able to substitute it's the static instance for another one.
-	Still, the standard use of each singleton is as a euphamism for a global variable, which is bad.
-I write singletons like this because I accept them as well understood utilities, as an extension of the programming environment more than a program feature.
+	To be clear, I hate the fact that my code relies on singletons. Singletons make a brittle design, and it limit future functionality.
+		For example, if I have a Time singleton, and I want to add a localized-time-travel mechanic to my game later, that might require multiple simultaneous Time objects,
+			probaly difficult to do with the Singleton design.
+	I wrote every singleton class to be able to substitute it's the static instance for another one, to help enable prototyping some interesting designs later.
+		If I was serious about those specialized designs, I would not use singletons. A singleton is as a euphamism for a global variable, which is brittle design that breaks expandability.
+		Singletons, like global variables, create hidden dependencies that are difficult to extract and reason about.
+To be clear, I wrote these singletons because I accept them as well understood utilities, as extensions of the programming environment more than program features.
+And I accept the design cost.
+
+If I did want to create code that didn't use a Time singleton, designed with Dependency Inversion in mind, I would:
+	Create an interface for Time objects
+	Give every object that uses Time a reference to a Time object, via the interface
+	Populate that time object reference on initialization, probably using a factory pattern, like ObjectPool.
+	I would add additional properties to each object using a Time to query and change the Time instance at runtime.
 
 `scene`
+src/MrV/GameEngine/IDrawable.cs
 ```
-IGameObject, IDrawable
+using MrV.CommandLine;
+
+namespace MrV.GameEngine {
+	public interface IDrawable {
+		public bool IsVisible { get; set; }
+		public void Draw(GraphicsContext canvas);
+	}
+}
+
+```
+
+`voice`
+the IDrawable interface in code is more complex than what was shown in the UML diagram.
+Again, the UML diagram helps describe architecture, it doesn't need to be detailed enough to run as executable code.
+
+`voice`
+
+src/MrV/GameEngine/IGameObject.cs
+```
+using MrV.Geometry;
+
+namespace MrV.GameEngine {
+	public interface IGameObject : IDrawable {
+		public string Name { get; set; }
+		public Vec2 Position { get; set; }
+		public bool IsActive { get; set; }
+		public void Update();
+	}
+}
 ```
 
 `scene`
-game diagram, naming classes. UML diagram next to it, showing class hierarchy.
-explanain that UML diagramming is useful conceptually, and can very clearly communicate system architecture to a new developer.
-	like the design document, it helps explain the concept and goals of a system.
-	it also becomes less important to make it detailed as a programmer becomes more skilled.
-
+This engine uses an interface for all objects called IGameObject. I expect complex objects to inherit this interface, adding their own specialized complexity.
+Notably, Unity has a concrete class called GameObject, and objects of GameObject are extended using a decorator pattern instead of inheritance.
+	The decorator pattern has runtime overhead that we avoid in this implemenation.
+	That design makes more sense for Unity, which is a very dynamic general-purpose engine. This engine will be much less dynamic.
 
 ```
 MobileObject, MobileCircle, MobilePolygon
