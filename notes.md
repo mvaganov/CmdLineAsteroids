@@ -4,12 +4,14 @@ I want to produce a high quality, factually robust, technically novel, interesti
 
 Please summarize the script before giving feedback.
 
-Read the code. Please be specific if there are any parts of my code that could be considered bad programming.
 Consider each section labeled `scene` as a description of what is visually shown. These sections are followed by a `voice` section, narrating the visuals.
 Code will be in most scenes, between tripple back-tick '```' headings, as is common in markdown. This code will be shown in Microsoft Visual Studio Community 2022. It will be typed and high-lighted during narration.
+code blocks that begin and end with an ellipses '...' are intended modifications of previous code. if it is unclear what code is being modified, make a note of that.
 Read the script marked by the `voice` heading. Identify poor grammer, run-on sentences, unecessary repetition, or ineffective prose. Provide alternative phrasing where appropriate. Keep in mind this text will have to be spoken.
+Read the code carefully. Please be specific if there are any parts of my code that could be considered bad programming.
+If the code is using a design pattern which is not mentioned in the script, please identify the pattern, and where the code is using it. Similarly, if the script identifies a design pattern incorrectly, clearly flag that as well.
 Identify if there any parts of the tutorial that seem like they could be cut, to streamline the script.
-Identify parts of the script that cover content that is not well documented in other YouTube tutorials about game programming, and identify if emphasizing this content makes sense.
+Identify parts of the script that cover content that is not well documented in other YouTube tutorials about game programming. Suggest if emphasizing this content makes sense to promote the tutorial.
 
 Please be critical about your feedback. I do not want a sycophantic response.
 
@@ -36,7 +38,7 @@ list with the following
 	a task scheduler
 	a key input buffer based on a dispatch table
 	basic graphics optimizations
-	memory pooling factory pattern
+	object pooling
 	particle systems
 	collision detection
 	cell space partition tree
@@ -47,8 +49,14 @@ I'll show all the code and give some explaination about everything, starting fro
 I'll also offer in-context advice and best practices from my decades of experience as a game developer and computer science instructor.
 And I'll give some of my own opinions about the Invisible Wizard Problems that define modern computer programming, and game development especially.
 
+`scene`
+montage of programming, with prominent text centered:
+	Invisible Wizard Problems: Tricky programming issues that need special knowledge or experience to spot and solve.
+
+`voice`
 One invisible wizard problem that I can mention now is the tradeoff of robustness vs accessibility of this simulation.
 	many of my example implementations will fall short of being highly robust and maximally efficient. I apologize for that in advance.
+		I want this tutorial to be easy to follow more than I want it to be perfect software.
 	In this tutorial, I intend to very practically introduce many concepts, and accept that the audience will do further research from these starting points.
 
 `scene`
@@ -180,7 +188,7 @@ For example, be sure you have the .NET desktop development workload installed by
 design.md
 * game design document
 	* graphics
-		* draw: circles (asteroids, powerups)
+		* draw: circles (asteroids, ammo pickups)
 		* draw: polygons (player, projectiles)
 		* colors in the command line, with text overlay
 	* logic
@@ -207,11 +215,15 @@ Identify clear goals that you can start implementing, and give yourself the grac
 `scene`
 back to program.cs
 ```
+...
 		int width = 80, height = 23;
 		char letterToPrint = '#';
 		DrawRectangle(0, 0, width, height, letterToPrint);
+...
 ```
+
 ```
+...
 		public static void DrawRectangle(int x, int y, int width, int height, char letterToPrint) {
 			for (int row = 0; row < height; ++row) {
 				for (int col = 0; col < width; ++col) {
@@ -220,6 +232,7 @@ back to program.cs
 				}
 			}
 		}
+...
 ```
 
 `voice`
@@ -244,11 +257,13 @@ It seems pretty specific to the command line console, but gaining familiarity wi
 `scene`
 show the code and running output
 ```
+...
 			int width = 80;
 			char letterToPrint = '#';
 			for (int col = 0; col < width; ++col) {
 				Console.Write(letterToPrint);
 			}
+...
 ```
 
 `voice`
@@ -257,6 +272,7 @@ this code will write 80 hashtag characters in a row.
 `scene`
 show the code and running output
 ```
+...
 			int width = 80, height = 23;
 			char letterToPrint = '#';
 			for(int row = 0; row < height; ++row) {
@@ -264,6 +280,7 @@ show the code and running output
 					Console.Write(letterToPrint);
 				}
 			}
+...
 ```
 
 `voice`
@@ -288,6 +305,7 @@ this code will write a rectangle 80 wide and 25 tall.
 `scene`
 show the code and running output
 ```
+...
 		public static void DrawRectangle(int width, int height, char letterToPrint) {
 			for(int row = 0; row < height; ++row) {
 				for(int col = 0; col < width; ++col) {
@@ -296,12 +314,16 @@ show the code and running output
 				Console.WriteLine();
 			}
 		}
+...
 ```
+
 ```
+...
 		int width = 80, height = 23;
 		char letterToPrint = '#';
 		DrawRectangle(width, height, letterToPrint);
 		DrawRectangle(width/2, height/2, '?');
+...
 ```
 
 `voice`
@@ -311,6 +333,7 @@ Doing this allows us to call the function at any time from any place in our prog
 `scene`
 show the code and running output
 ```
+...
 		public static void DrawRectangle(int width, int height, char letterToPrint) {
 			for(int row = 0; row < height; ++row) {
 				for(int col = 0; col < width; ++col) {
@@ -319,6 +342,7 @@ show the code and running output
 				}
 			}
 		}
+...
 ```
 
 `voice`
@@ -330,6 +354,7 @@ That escape sequence will not work if executed in the basic Windows console. And
 `scene`
 show the code and running output
 ```
+...
 		public static void DrawRectangle(int x, int y, int width, int height, char letterToPrint) {
 			for(int row = 0; row < height; ++row) {
 				for(int col = 0; col < width; ++col) {
@@ -338,12 +363,14 @@ show the code and running output
 				}
 			}
 		}
+...
 ```
 
 `voice`
 and this code allows us to draw the rectangle anywhere in visible space.
 
 ```
+...
 		public static void DrawRectangle(int x, int y, int width, int height, char letterToPrint) {
 			for(int row = 0; row < height; ++row) {
 				for(int col = 0; col < width; ++col) {
@@ -355,6 +382,7 @@ and this code allows us to draw the rectangle anywhere in visible space.
 				}
 			}
 		}
+...
 ```
 
 `voice`
@@ -388,12 +416,17 @@ also, this code base needs to be serious about 2 dimensional structures.
 `scene`
 src/LowFiRockBlaster/Program.cs
 ```
+...
 		public static void DrawRectangle(Vec2 position, Vec2 size, char letterToPrint) {
 			DrawRectangle((int)position.x, (int)position.y, (int)size.x, (int)size.y, letterToPrint);
 		}
+...
 ```
+
 ```
+...
 			DrawRectangle((2, 3), new Vec2(20, 15), '*');
+...
 ```
 
 `voice`
@@ -437,8 +470,8 @@ There are plenty of additional tutorials on the internet about 2D vectors, check
   HoustonMathPrep https://youtu.be/j6RI6IWd5ZU
 
 `scene`
-AABB.cs
-create in the src/MrV/Geometry folder
+create the src/MrV/Geometry folder structure in the solution explorer
+src/MrV/Geometry/AABB.cs
 ```
 namespace MrV.Geometry {
 	public struct AABB {
@@ -456,12 +489,17 @@ namespace MrV.Geometry {
 
 Diagram of AABB as it is discussed
 ```
+...
 		public static void DrawRectangle(AABB aabb, char letterToPrint) {
 			DrawRectangle((int)aabb.Min.x, (int)aabb.Min.y, (int)aabb.Width, (int)aabb.Height, letterToPrint);
 		}
+...
 ```
+
 ```
+...
 			DrawRectangle(new AABB((10, 1), (15, 20)), '|');
+...
 ```
 
 `voice`
@@ -484,6 +522,7 @@ In my coding style, lowercase member variables are primitives, which should actu
 `scene`
 writing and compiling program.cs
 ```
+...
 		static void Main(string[] args) {
 			int width = 80, height = 24;
 			char letterToPrint = '#';
@@ -492,6 +531,7 @@ writing and compiling program.cs
 			DrawRectangle(new AABB((10, 1), (15, 20)), '|');
 			Console.SetCursorPosition(0, (int)height);
 		}
+...
 ```
 
 `voice`
@@ -499,7 +539,7 @@ notice I'm using tuple notation for the first vector describing position, and an
 the form is mostly stylistic. however, in an inner-loop, using the constructor is preferred because it is slightly faster to execute.
 
 `scene`
-Circle.cs
+src/MrV/Geometry/Circle.cs
 ```
 namespace MrV.Geometry {
 	public struct Circle {
@@ -515,7 +555,7 @@ namespace MrV.Geometry {
 A circle can be described as a Vector with one additional value for radius.
 
 `scene`
-Polygon.cs
+src/MrV/Geometry/Polygon.cs
 ```
 namespace MrV.Geometry {
 	public struct PolygonShape {
@@ -550,6 +590,7 @@ However, small structures with very clear conceptual boundaries like these are o
 
 `scene`
 ```
+...
 		public static void DrawCircle(Circle c, char letterToPrint) {
 			DrawCircle(c.center, c.radius);
 		}
@@ -572,8 +613,11 @@ However, small structures with very clear conceptual boundaries like these are o
 			}
 		}
 
+...
 ```
+
 ```
+...
 		static void Main(string[] args) {
 			int width = 80, height = 24;
 			char letterToPrint = '#';
@@ -583,6 +627,7 @@ However, small structures with very clear conceptual boundaries like these are o
 			DrawCircle((21, 12), 10, '.');
 			Console.SetCursorPosition(0, (int)height);
 		}
+...
 ```
 
 `voice`
@@ -596,21 +641,25 @@ the logic to test if a point is inside of a circle is really important to the co
 `scene`
 Circle.cs
 ```
-
+...
 		public static bool IsInsideCircle(Vec2 position, float radius, Vec2 point) {
 			float dx = point.x - position.x, dy = point.y - position.y;
 			return dx * dx + dy * dy <= radius * radius;
 		}
 		public bool Contains(Vec2 point) => IsInsideCircle(center, radius, point);
+...
 ```
+
 Program.cs
 ```
+...
 					if (x < 0 || y < 0) { continue; }
 					bool pointIsInside = Circle.IsInsideCircle(pos, radius, new Vec2(x, y));
 					if (pointIsInside) {
 						Console.SetCursorPosition(x, y);
 						Console.Write(letterToPrint);
 					}
+...
 ```
 
 `voice`
@@ -619,6 +668,7 @@ This is a method extraction refactor, and it helps create a Single Point Of Trut
 If we implement a similar function in Polygon, we can use a similar draw function to draw the polygon
 
 ```
+...
 		public static bool IsInPolygon(IList<Vec2> poly, Vec2 pt) {
 			bool inside = false;
 			for (int index = 0, prevIndex = poly.Count - 1; index < poly.Count; prevIndex = index++) {
@@ -651,6 +701,7 @@ If we implement a similar function in Polygon, we can use a similar draw functio
 			}
 			return true;
 		}
+...
 ```
 
 `voice`
@@ -666,6 +717,7 @@ Finding the bounding area of the polygon is also not straight forward, so we sho
 This method can fail if the polygon is not correctly formed. This TryGet pattern is common in C# when failure is possible.
 
 ```
+...
 		public static void DrawPolygon(Vec2[] poly, char letterToPrint) {
 			PolygonShape.TryGetAABB(poly, out Vec2 start, out Vec2 end);
 			for (int y = (int)start.y; y < end.y; ++y) {
@@ -679,9 +731,11 @@ This method can fail if the polygon is not correctly formed. This TryGet pattern
 				}
 			}
 		}
+...
+```
 
 ```
-```
+...
 		static void Main(string[] args) {
 			int width = 80, height = 24;
 			char letterToPrint = '#';
@@ -693,6 +747,7 @@ This method can fail if the polygon is not correctly formed. This TryGet pattern
 			DrawPolygon(polygonShape, '-');
 			Console.SetCursorPosition(0, (int)height);
 		}
+...
 ```
 
 `voice`
@@ -701,6 +756,7 @@ Graphics are a huge feature and risk of any software. proving this kind of work 
 
 `scene`
 ```
+...
 		static void Main(string[] args) {
 			int width = 80, height = 24;
 			char letterToPrint = '#';
@@ -729,6 +785,7 @@ Graphics are a huge feature and risk of any software. proving this kind of work 
 				}
 			}
 		}
+...
 ```
 
 `voice`
@@ -749,6 +806,7 @@ each single iteration through the loop is a gameloop frame.
 
 `scene`
 ```
+...
 		static void Main(string[] args) {
 			int width = 80, height = 24;
 			char letterToPrint = '#';
@@ -786,7 +844,9 @@ each single iteration through the loop is a gameloop frame.
 				}
 			}
 		}
+...
 ```
+
 C# enables us to create local functions, which help us name and organize our code.
 
 many programmers, myself included, consider it good programming style to use small functions, with descriptive but concise names, and only one or two levels of indentation wherever possible.
@@ -794,6 +854,7 @@ lets run this refactored code to make sure it still works how it used to.
 
 Many programming languages don't support local functions, so we might want to create a Game class that has the data mambers, an Init function, Draw, ProcessInput, and Update function. Like this:
 ```
+...
 public class Game {
 	private int width, height;
 	private char letterToPrint;
@@ -836,8 +897,11 @@ public class Game {
 		}
 	}
 }
+...
 ```
+
 ```
+...
 public static void Main(string[] args) {
 	Game game = new Game();
 	game.Init();
@@ -847,7 +911,9 @@ public static void Main(string[] args) {
 		game.Update();
 	}
 }
+...
 ```
+
 this is a perfectly valid style in C# as well. but for the sake of fewer source files, I'll keep writing in local functions in static main.
 
 `scene`
@@ -861,6 +927,7 @@ and let's put the key input behind a check, so the game iteractes as quickly as 
 
 `scene`
 ```
+...
 		static void Main(string[] args) {
 			// initialization
 			//...
@@ -884,7 +951,9 @@ and let's put the key input behind a check, so the game iteractes as quickly as 
 			}
 			//...
 		}
+...
 ```
+
 compile and test. also, comment out Draw and test again.
 
 I've changed Input so that it doesn't wait for a user key press. this is also called Non-Blocking input.
@@ -969,7 +1038,7 @@ Millisecond values are more accurate over long durations, and most convenient fo
 show floating point number's exponent change as it increases in value
 
 `voice`
-  Specifically, a game that has running for more than 4.5 hours will be more accurate using integer-based millisecond calculations instead of floating points.
+Specifically, a game that has running for more than 4.5 hours will be more accurate using integer-based millisecond calculations instead of floating points.
 
 `scene`
 back to code
@@ -991,7 +1060,7 @@ lets test this out.
 
 `scene`
 ```
-			//...
+...
 			char input = (char)0;
 			float targetFps = 20;
 			int targetMsDelay = (int)(1000 / targetFps);
@@ -1004,7 +1073,7 @@ lets test this out.
 				Update();
 				Time.SleepWithoutConsoleKeyPress(targetMsDelay);
 			}
-			//...
+...
 ```
 
 `voice`
@@ -1026,6 +1095,7 @@ Good performance also improves out ability to test, which is critical to develop
 To improve performance immediately for testing, I want to do two quick things: flush the entire input buffer in the input function, like this:
 
 ```
+...
 			void Input() {
 				if (Console.KeyAvailable) {
 					while (Console.KeyAvailable) {
@@ -1035,10 +1105,12 @@ To improve performance immediately for testing, I want to do two quick things: f
 					input = (char)0;
 				}
 			}
+...
 ```
 
 and reduce the amount of drawing going on, like this:
 ```
+...
 			void Draw() {
 				DrawRectangle(0, 0, width, height, letterToPrint);
 				//DrawRectangle((2, 3), new Vec2(20, 15), '*');
@@ -1047,6 +1119,7 @@ and reduce the amount of drawing going on, like this:
 				//DrawPolygon(polygonShape, '-');
 				Console.SetCursorPosition(0, (int)height);
 			}
+...
 ```
 
 There are three specific classes of problems have major impacts on simulation performance that I'll address with some solutions: Drawing, Memory Allocation, and Collision detection.
@@ -1220,13 +1293,17 @@ let's test this out
 `scene`
 Program.cs
 ```
+...
 			char input = (char)0;
 			float targetFps = 20;
 			int targetMsDelay = (int)(1000 / targetFps);
 			DrawBuffer graphics = new DrawBuffer(height, width); // <-- add the draw buffer
 			while (running) {
+...
 ```
+
 ```
+...
 			void Draw() {
 				graphics.Clear();
 				graphics.DrawRectangle(0, 0, width, height, letterToPrint);
@@ -1237,6 +1314,7 @@ Program.cs
 				graphics.Print();
 				Console.SetCursorPosition(0, (int)height);
 			}
+...
 ```
 
 `voice`
@@ -1259,9 +1337,11 @@ Add a Scale method to Vec2
 `scene`
 MrV/Geometry/Vec2.cs
 ```
+...
 		public void Scale(Vec2 scale) { x *= scale.x; y *= scale.y; }
 		public Vec2 Scaled(Vec2 scale) => new Vec2(x * scale.x, y * scale.y);
 		public void InverseScale(Vec2 scale) { x /= scale.x; y /= scale.y; }
+...
 ```
 
 `voice`
@@ -1271,6 +1351,7 @@ Also, we will want a version of Scale that returns a new scaled structure withou
 `scene` 
 MrV/DrawBuffer_geometry.cs
 ```
+...
 	public partial class DrawBuffer {
 		public Vec2 ShapeScale = new Vec2(0.5f, 1);
 		public delegate bool IsInsideShapeDelegate(Vec2 position);
@@ -1288,6 +1369,7 @@ MrV/DrawBuffer_geometry.cs
 				}
 			}
 		}
+...
 ```
 
 `voice`
@@ -1413,9 +1495,11 @@ this algorithm returns the 2's compliment of where the algorithm stopped searchi
 
 `scene`
 ```
+...
 			Record searchElement = new Record(null, when);
 			Comparer<Record> RecordComparer = Comparer<Record>.Create((a, b) => a.WhenToDoIt.CompareTo(b.WhenToDoIt));
 			int index = actions.BinarySearch(searchElement, RecordComparer);
+...
 ```
 
 `voice`
@@ -1429,11 +1513,15 @@ Also, this is an excellent example of a templated function using lambda expressi
 `scene`
 src/Program.cs
 ```
+...
 			void Update() {
 				Tasks.Update();
 				switch (input) {
+...
 ```
+
 ```
+...
 			DrawBuffer graphics = new DrawBuffer(height, width);
 			int timeMs = 0;
 			int keyDelayMs = 100;
@@ -1450,7 +1538,9 @@ src/Program.cs
 				timeMs += keyDelayMs;
 			}
 			while (running) {
+...
 ```
+
 `voice`
 I need to make sure the Tasks are regularly Updated, so I'll include Tasks.Update in the Update section of my code.
 Before the gameloop, this code creates an automatic test of my application by synthetically setting the program's input variable.
@@ -2505,13 +2595,13 @@ I want the class to generate and re-use particles easily and transparently as we
 That kind of object re-use is done with a data structure called an ObjectPool
 
 `scene`
-src/MrV/GameEngine/ObjectPool.cs
+src/MrV/GameEngine/PolicyDrivenObjectPool.cs
 ```
 using System;
 using System.Collections.Generic;
 
 namespace MrV.GameEngine {
-	public class ObjectPool<T> {
+	public class PolicyDrivenObjectPool<T> {
 		private List<T> _allObjects = new List<T>();
 		private int _freeObjectCount = 0;
 		public Func<T> CreateObject;
@@ -2521,7 +2611,7 @@ namespace MrV.GameEngine {
 		public int Count => _allObjects.Count - _freeObjectCount;
 		public T this[int index] => index < Count
 			? _allObjects[index] : throw new ArgumentOutOfRangeException();
-		public ObjectPool() { }
+		public PolicyDrivenObjectPool() { }
 		public void Setup(Func<T> create, Action<T> commission = null,
 			Action<T> decommission = null, Action<T> destroy = null) {
 			CreateObject = create; CommissionObject = commission;
@@ -2543,6 +2633,10 @@ namespace MrV.GameEngine {
 		public void DecommissionAtIndex(int indexOfObject) {
 			if (indexOfObject >= (_allObjects.Count - _freeObjectCount)) {
 				throw new Exception($"trying to free object twice: {_allObjects[indexOfObject]}");
+			}
+			if (_delayedDecommission.Count > 0) {
+				DecommissionDelayedAtIndex(indexOfObject);
+				return;
 			}
 			T obj = _allObjects[indexOfObject];
 			++_freeObjectCount;
@@ -2584,19 +2678,20 @@ namespace MrV.GameEngine {
 
 `voice`
 we can use this object pool to cache memory for anything that we create and destroy a lot of.
-it could be particles, bullets, enemies, powerups, or really anything.
+it could be particles, bullets, enemies, pickups, or really anything.
 
 the idea of this class is that a list of objects has some unused objects that can be reused later.
 	objects at the end of the list are considred unused, or decommisioned.
-the user must define how to create the objects, how to reuse them, how to mark them as unused, and how to clean them up later.
-this class handles deferred cleanup
+the user must define some policies: how to create objects, how to reuse them, how to mark them as unused, and how to clean them up later.
+importantly this class handles deferred cleanup
 	this objectpool changes the order of objects in the list when they are disposed,
-	so special care needs to be taken if an object is decommissioned while processing the list.
+	so special care needs to be taken if an object is decommissioned while processing the object pool list in a for loop.
 when the user wants to commission an object,
 	if there are no unused objects in the list, a new one is created, added to the list, and given to the user
 	if there is an unused object, the one closest to the edge of free objects is given to the user, and that edge is moved up.
 when the user wants to decommission an object,
 	this code checks to make sure that it isn't decommissioning an already decommissioned object
+	and it also protects against mixing deferred and immediate decomissioning
 	then the object to decommission switches places in the list with the last commissioned object
 	then the boundary of decommissioned objects moves down to absorb that  object
 if an object needs to be decommissioned, but can't be decomissioned right now (because the object pool is being iterated through)
@@ -2604,14 +2699,14 @@ if an object needs to be decommissioned, but can't be decomissioned right now (b
 	then during a later time, outside of the objectpool iteration, those objects to decommission are decommissioned in reverse index order
 		the last objects get pushed to the end before the first objects
 
-This class manages creation of objects in an automated way. The common name for this is a Factory Pattern.
-This particular Factory Pattern implementation uses Lambda expressions instead of requiring inheritance for each new kind of object.
+This class manages creation of objects in an automated way. The function that creates each object is a Factory Method, and the Object Pool is the factory.
+This implementation could also be explained as using a Strategy Pattern, with it's parameterized Commission and Decommission methods.
 
 `scene`
 src/MrV/Program.cs
 ```
 			}
-			ObjectPool<Particle> particlesPool = new ObjectPool<Particle>();
+			PolicyDrivenObjectPool<Particle> particlesPool = new PolicyDrivenObjectPool<Particle>();
 			float particleSpeed = 5, particleRad = 3;
 			particlesPool.Setup(
 				() => new Particle(new Circle(default, 1), default, ConsoleColor.White, 1),
@@ -2632,7 +2727,7 @@ src/MrV/Program.cs
 ```
 
 `voice`
-lets replace the Particle array with the ObjectPool of Particle objects.
+lets replace the Particle array with the PolicyDrivenObjectPool of Particle objects.
 we need to define how to create a basic particle
 how to commission a new particle
 and how to decommission a particle
@@ -2712,7 +2807,7 @@ using System;
 
 namespace MrV.GameEngine {
 	internal class ParticleSystem {
-		public ObjectPool<Particle> ParticlePool = new ObjectPool<Particle>();
+		public PolicyDrivenObjectPool<Particle> ParticlePool = new PolicyDrivenObjectPool<Particle>();
 		public FloatOverTime SizeOverLifetime;
 		public ConsoleColor Color = ConsoleColor.White;
 		public Vec2 Position;
@@ -2781,7 +2876,7 @@ namespace MrV.GameEngine {
 This is a very specific particle system implementation for explosions.
 	i won't be modifying this for the rest of the tutorial, so feel free to make it more generalized if you want.
 notice that I'm using RangeF for the values that could be random between two values.
-the ObjectPool's delegate methods are defined as member functions.
+the PolicyDrivenObjectPool's delegate methods are defined as member functions.
 a Draw method handles drawing of all particles
 and the particle system's Update handles logic related to the Particle.
 	arguably, all Particle logic, including the movement from Velocity could be moved to this function. I'm leaving that design choice to any audience member willing to make it.
@@ -2961,39 +3056,46 @@ src/LowFiRockBlaster
 a game should have a clear way to draw things that are not part of the simulation, like User Interface and visual effects.
 we can refactor existing test code into into  pre and post processing effects as a test.
 
-The simulation elements, like the player, the player's projectiles, asteroids, power ups, etc. will be drawable objects that populate a draw list.
+The simulation elements, like the player, the player's projectiles, asteroids, ammo pick ups, etc. will be drawable objects that populate a draw list.
 
 `scene`
 UML diagram of IGameObject, IDrawable, UIText, MobieObject, MobielCircle, MobilePolygon
 https://lucid.app/lucidchart/ec14ab7a-a936-4356-bb0e-0326d2a5e45e/edit?viewport_loc=-340%2C-125%2C2514%2C1365%2CHWEp-vi-RSFO&invitationId=inv_571bd2ad-b5a4-4065-9b11-780a61085d7b
 
 `voice`
+The draw list is one of the lists that the game engine will service every frame. All drawable objects will implement the IDrawable interface, as seen in this diagram.
+
 UML diagramming is useful to clearly communicate system architecture.
 	like the design document, it helps explain the concept and goals of a system.
-	also, it becomes less important to make it detailed as a programmer reading it becomes more skilled.
-
-My game will need floating circles to destroy, which are the conceptual asteroids. The rocks to blast in my lowfi rockblaster game.
-The game's player will be a shape visually distinct from the circles.
-The player will shoot projectiles. I want to see spinning triangles, because I think that will look cool.
-I'll also need some user interface that stays static on the screen, to tell the user their score, ammo, and health.
-
-The most well known and well respected guideline for Object Oriented Design is probably the SOLID principles.
+	also, it becomes less important to make it detailed as a programmer reading it becomes more skilled, and can make some assumptions from experience.
 
 `scene`
-Single Responsiblity Principle: each class does one thing.
-Open-Closed Principle: Classes should be open to extension, and closed to modification.
-Liskov Substitution Principle: Objects should be substitutable for objects of their superclass.
-Interface Segregation Principle: Multiple interfaces is better than one general-purpose interface. 
-Dependency Inversion Principle: Use abstractions so classes don't rely on specific implementations.
+still screenshot of the game screen, with labels for the asteroids of different size, player, player's projectiles, and ammo pickup.
+
+My game will need moving circles to destroy, which are the conceptual asteroids. The rocks to blast in my lowfi rockblaster game.
+The game's player will be a shape visually distinct from the circles.
+The player will shoot projectiles. I want to see spinning triangles for these projectiles, because I think that will look cool.
+When the player destroys asteroids, they will break into smaller asteroids. the smallest asteroid will turn into an ammo pickup when destroyed.
+I'll also need some user interface that stays static on the screen, to tell the user their score, ammo, and health.
+
+I want to use object oriented programming for this game design. Probably the most well known and well respected guideline for Object Oriented Design is the SOLID principles.
+
+`scene`
+S Single Responsiblity Principle: each class does one thing.
+O Open-Closed Principle: Classes should be open to extension, and closed to modification.
+L Liskov Substitution Principle: Objects should be substitutable for objects of their superclass.
+I Interface Segregation Principle: Multiple interfaces is better than one general-purpose interface. 
+D Dependency Inversion Principle: Use abstractions so classes don't rely on specific implementations.
 
 I agree with SOLID principles for the most part. Following these reduces mental burden of the entire system over time.
 However, I intentionally break the principles as practical and sometimes stylistic choice.
+I think it's worth discussing, since it's another example of Invisible Wizard Problems.
 
 Yes, each class should clearly do one thing. We want few mental burdens, and clear purpose at all times. However, my code breaks the Single Responsiblity Principle:
 This is common for game programming code especially, because of how dynamic the design process is. Games are constantly trying to be more fun, which is actually moving target.
 In addition, some of my classes do things that could be argued as extending into entirely new functionality.
 	For example, DrawBuffer does more than simply manage a buffer. It has a partial class extension where scaled rendering code exists.
-The new game classes I'll write will also do a lot. MobileCircle will be used for asteroids and for ammo powerups, with no additional subclassing. You'll see how.
+The new game classes I'll write will also do a lot. MobileCircle will be used for asteroids and for ammo pickup, with no additional subclassing. You'll see how.
 I break the Single Responsibility Principle on purpose, to keep file count low, so it's easier to copy and easier to think about.
 Personally, I will add additional functionality to a file if I can comfortably hold the addition in my head with the rest of the file.
 	I will also often refactor the code out later, sometimes to a separate file, as I did in the DrawBuffer_geometry source file._
@@ -3035,7 +3137,7 @@ And I accept the design cost.
 If I did want to create code that didn't use a Time singleton, designed with Dependency Inversion in mind, I would:
 	Create an interface for Time objects
 	Give every object that uses Time a reference to a Time object, via the interface
-	Populate that time object reference on initialization, probably using a factory pattern, like ObjectPool.
+	Populate that time object reference on initialization
 	I would add additional properties to each object using a Time to query and change the Time instance at runtime.
 
 `scene`
