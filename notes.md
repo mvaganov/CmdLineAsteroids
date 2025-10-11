@@ -1,19 +1,19 @@
+# Note to entities reading this
 Please critique this is a script. It is for a video tutorial designed primarily to give young programmers programming practice.
 
 I want to produce a high quality, factually robust, technically novel, interesting teaching artifact that other software developers can feel good about learning from.
 
 Please summarize the script before giving feedback.
-
 Consider each section labeled `scene` as a description of what is visually shown. These sections are followed by a `voice` section, narrating the visuals.
-Code will be in most scenes, between tripple back-tick '```' headings, as is common in markdown. This code will be shown in Microsoft Visual Studio Community 2022. It will be typed and high-lighted during narration.
-code blocks that begin and end with an ellipses '...' are intended modifications of previous code. if it is unclear what code is being modified, make a note of that.
+Code will be in most scenes, between tripple back-tick '```' headings, as is common in markdown. I will record myself writing this code in Microsoft Visual Studio Community 2022 during narration.
+code blocks that begin and end with an ellipses '...' are intended modifications of previous code. If it is unclear what code is being modified, make a note of that.
 Read the script marked by the `voice` heading. Identify poor grammer, run-on sentences, unecessary repetition, or ineffective prose. Provide alternative phrasing where appropriate. Keep in mind this text will have to be spoken.
-Read the code carefully. Please be specific if there are any parts of my code that could be considered bad programming.
-If the code is using a design pattern which is not mentioned in the script, please identify the pattern, and where the code is using it. Similarly, if the script identifies a design pattern incorrectly, clearly flag that as well.
+Read the code carefully. Please be specific if there are any parts of my code that could be considered bad C sharp programming.
+If the code is using a design pattern you recognize that is not mentioned in the script, please identify the pattern, and where the code is using it. Similarly, if the script identifies a design pattern incorrectly, clearly flag that as well.
 Identify if there any parts of the tutorial that seem like they could be cut, to streamline the script.
 Identify parts of the script that cover content that is not well documented in other YouTube tutorials about game programming. Suggest if emphasizing this content makes sense to promote the tutorial.
-
-Please be critical about your feedback. I do not want a sycophantic response.
+Identify where the script is repeatetive, and the content could be streamlined. If the repetition appears to be appropriate for emphasis, feel free to let it pass.
+Please be critical about your feedback. I do not want a sycophantic response, I am serious about finding and fixing mistakes.
 
 `scene`
 "If I can't create it, I don't understand it."
@@ -22,7 +22,8 @@ Please be critical about your feedback. I do not want a sycophantic response.
 pause for 2 seconds
 
 `scene`
-demo reel of the LowFiRockBlaster game. player ship flying around and shooting asteroids. game view zooms in and out, showing how vector graphics can be rendered using command line glyphs.
+demo reel of the LowFiRockBlaster game. player ship flying around, shooting and destroying asteroids, and collecting up ammo pickups.
+game view zooms in and out, showing how vector graphics can be rendered using command line glyphs.
 
 `voice`
 This is a tutorial series teaching how to build a real-time simulation in C-sharp.
@@ -47,7 +48,7 @@ list with the following
 I'll show all the code and give some explaination about everything, starting from an empty project, in the TTY Command Line Console.
 	This will include graphics, math, optimization, data structures, collision detection, and more.
 I'll also offer in-context advice and best practices from my decades of experience as a game developer and computer science instructor.
-And I'll give some of my own opinions about the Invisible Wizard Problems that define modern computer programming, and game development especially.
+And I'll give some of my own opinions about the Invisible Wizard Problems that emerge in modern computer programming, and game development especially.
 
 `scene`
 montage of programming, with prominent text centered:
@@ -57,17 +58,19 @@ montage of programming, with prominent text centered:
 One invisible wizard problem that I can mention now is the tradeoff of robustness vs accessibility of this simulation.
 	many of my example implementations will fall short of being highly robust and maximally efficient. I apologize for that in advance.
 		I want this tutorial to be easy to follow more than I want it to be perfect software.
-	In this tutorial, I intend to very practically introduce many concepts, and accept that the audience will do further research from these starting points.
+	I believe the most perfect software for this situation is easy to read and type as you watch the tutorial, and easy to understand if you are seeing it for the first time.
+	I'll introduce many concepts in a way that is easy to practice while still being robust enough to be fast to iterate on.
+	I expect you will do further work to make it more robust to fit your needs.
 
 `scene`
-"These systems don’t understand the world. They just predict the next word." - Jeffery Hinton
-"As an AI I don’t believe or disbelieve anything in the human sense." - ChatGPT 2025/09/14
+"These systems donâ€™t understand the world. They just predict the next word." - Jeffery Hinton
+"As an AI I donâ€™t believe or disbelieve anything in the human sense." - ChatGPT 2025/09/14
 
 `voice`
 Another invisible wizard problem is the rapid replacement of programmers with AI in the software development industry.
-Even if AI systems write most of the world’s code, they still lack something, which Geoffrey Hinton warned about, and the AI's will admit.
+Even if AI systems write most of the worldâ€™s code, they still lack something, which Geoffrey Hinton warned about, and the AI's will admit.
 They lack real understanding of the world.
-They need humans who can translate lived experience into software accessible simulations. These simulations help train AI, and when they augment toolchains, they help reason.
+They need humans who can translate lived experience into software accessible tools, and simulations. These simulations help train AI, and augment toolchains.
 Learning how to build simulations yourself, in a mostly agnostic tech stack like in the command line, is a powerful skill. Having it will make you useful to AI in the future.
 With this skill, you can help shape how AI connects to human reality.
 
@@ -83,12 +86,13 @@ Check the description for the Github project link if you want the code. Continue
 I spent a few weeks creating this game, and a few months writing this script.
 Please do not misunderstand that this program just fell out of my head in one moment. Programming does not work that way.
 Your projects will take a long time to finish too, even if they use a tutorial like this as a starting point.
-Be patient with yourself. Be disciplined with your self. I believe anyone who sits with these ideas can learn them well. Especially you, even if you don't consider yourself skilled with math.
-For context, I was terrible at math in High School, especially at Trigonometry, which I will touch in this tutorial. I learned what I know because of practice doing projects like this.
+Be patient with yourself. Be disciplined with yourself. I believe anyone who sits with these ideas can learn them well. Especially you, even if you don't consider yourself skilled with math.
+For context, I was terrible at math in High School, especially at Trigonometry, which I will be using in this tutorial. I learned what I know because of practice doing projects like this.
 My guidance will follow roughly the same path I went through while making this game a few months ago,
-	but it will be much faster, even with a few detours to experiment with math and game engine optimizations.
+	but it will be much faster, even with a few detours to explain some math, architecture, and game engine optimizations.
 Because I wrote this application once already, I have the extreme benefit of having made lots of mistakes recently.
-Please be patient with your own mistakes, and the frustration that follows. Frustration is the sweat of learning. It is a sign that your mind is growing.
+	This tutorial doesn't capture 90% of the difficulty of this project, just the parts curated for you to understand it quickly.
+As you do this work, please be patient with your own mistakes, and the frustration that follows. Frustration is the sweat of learning. It is a sign that your mind is growing.
 	Take a break if you need it. This video will still be here when you are ready.
 
 `scene`
@@ -97,15 +101,15 @@ montage of code and the game
 `voice`
 I'll be using C sharp as the programming language.
 I assume you already have a C sharp runtime, compiler, and IDE installed.
-I also assume you know the basics of how to program command line applications in C sharp, including object oriented programming basics.
+I also assume you know the basics of how to program command line applications in C sharp, including Object Oriented Programming basics.
 You can still follow along without that knowledge, but I recommend you start with that foundation.
 
 `scene`
 montage of Unity
 
 `voice`
-The Unity Game Engine is a notable reason I chose to do this in the C sharp language.
-This tutorial should also give new game developers some insight into how a game engine like Unity works.
+The very popular Unity Game Engine is a notable reason I chose to do this in the C sharp language.
+This tutorial should also give new game developers some insight into how a game engine work, which will help you understand how Unity works to some degree too.
 
 //I also assume you are using LLMs to help you write code. Importantly:
 //  I assume you're aware of the intellectual hazard of relying on AI while programming. AI helps you **do**, not **learn**.
@@ -137,9 +141,9 @@ understanding is the price for power in the computer.
 
 `voice`
 If you are new to game programming, you should practice by typing all of this yourself. I'm serious.
-This will dramatically increase how long this tutorial takes for you to do, probably 10x longer or more.
-I believe that time will be worth the understanding you gain, especially if you make mistakes while doing it.
-And if you do not consider yourself a computer wizard yet, and you want to be, I recommend you practice more.
+Doing that will dramatically increase how long this tutorial takes --probably 10x longer or more.
+I believe that time will be worth the understanding you gain, especially if you make mistakes and overcome those mistakes while doing it.
+If you do not consider yourself a computer wizard yet, and you want to be, I recommend you practice more.
 
 `scene`
 new project window in VS Community 2022
@@ -147,7 +151,7 @@ new project window in VS Community 2022
 `voice`
 Start your C sharp IDE. I'm using Visual Studio Community 2022.
 As of 2025, Rider is not free for commercial content, but free for personal use.
-I should not use it for a tutorial video, but I recommend it for educational purposes.
+I would not use it for a tutorial video, but I recommend it for educational purposes.
 Rider is similar enough to Visual Studio that this tutorial will still work well for it.
 
 I'm going to call my project "LowFiRockBlaster".
@@ -523,7 +527,7 @@ In my coding style, lowercase member variables are primitives, which should actu
 writing and compiling program.cs
 ```
 ...
-		static void Main(string[] args) {
+		public static void Main(string[] args) {
 			int width = 80, height = 24;
 			char letterToPrint = '#';
 			DrawRectangle(0, 0, width, height, letterToPrint);
@@ -618,7 +622,7 @@ However, small structures with very clear conceptual boundaries like these are o
 
 ```
 ...
-		static void Main(string[] args) {
+		public static void Main(string[] args) {
 			int width = 80, height = 24;
 			char letterToPrint = '#';
 			DrawRectangle(0, 0, width, height, letterToPrint);
@@ -736,7 +740,7 @@ This method can fail if the polygon is not correctly formed. This TryGet pattern
 
 ```
 ...
-		static void Main(string[] args) {
+		public static void Main(string[] args) {
 			int width = 80, height = 24;
 			char letterToPrint = '#';
 			Vec2[] polygonShape = new Vec2[] { (25, 5), (35, 1), (50, 20) };
@@ -757,7 +761,7 @@ Graphics are a huge feature and risk of any software. proving this kind of work 
 `scene`
 ```
 ...
-		static void Main(string[] args) {
+		public static void Main(string[] args) {
 			int width = 80, height = 24;
 			char letterToPrint = '#';
 			Vec2[] polygonShape = new Vec2[] { (25, 5), (35, 1), (50, 20) };
@@ -807,7 +811,7 @@ each single iteration through the loop is a gameloop frame.
 `scene`
 ```
 ...
-		static void Main(string[] args) {
+		public static void Main(string[] args) {
 			int width = 80, height = 24;
 			char letterToPrint = '#';
 			Vec2[] polygonShape = new Vec2[] { (25, 5), (35, 1), (50, 20) };
@@ -897,11 +901,7 @@ public class Game {
 		}
 	}
 }
-...
-```
 
-```
-...
 public static void Main(string[] args) {
 	Game game = new Game();
 	game.Init();
@@ -928,7 +928,7 @@ and let's put the key input behind a check, so the game iteractes as quickly as 
 `scene`
 ```
 ...
-		static void Main(string[] args) {
+		public static void Main(string[] args) {
 			// initialization
 			//...
 			char input = (char)0;
@@ -1545,7 +1545,7 @@ src/Program.cs
 I need to make sure the Tasks are regularly Updated, so I'll include Tasks.Update in the Update section of my code.
 Before the gameloop, this code creates an automatic test of my application by synthetically setting the program's input variable.
 the first for-loop moves the circle to the right with the 'd' key, and expands the radius with the 'e' key
-the second for-loop moves the circle up with the 'w' keu, and reduces the radius with the 'r' key.
+the second for-loop moves the circle up with the 'w' key, and reduces the radius with the 'r' key.
 each of the key input changes should happen about 100 milliseconds apart.
 
 If the timing is reduced to less than the deltaTime of a frame, some of these inputs will become lost, and the circle will not move the same amount.
@@ -1639,6 +1639,7 @@ The ToString method shows how to dynamically query what is bound to each key, wh
 `scene`
 src/Program.cs
 ```
+...
 			DrawBuffer graphics = new DrawBuffer(height, width);
 			KeyInput.Bind('w', () => position.y -= moveIncrement, "move circle up");
 			KeyInput.Bind('a', () => position.x -= moveIncrement, "move circle left");
@@ -1662,6 +1663,7 @@ src/Program.cs
 				timeMs += keyDelayMs;
 			}
 			while (running) {
+... TODO ADD MORE ELLIPSES
 ```
 `voice`
 Now keys are bound to functions during initialization.
@@ -3082,57 +3084,86 @@ I want to use object oriented programming for this game design. Probably the mos
 
 `scene`
 S Single Responsiblity Principle: each class does one thing.
-O Open-Closed Principle: Classes should be open to extension, and closed to modification.
-L Liskov Substitution Principle: Objects should be substitutable for objects of their superclass.
-I Interface Segregation Principle: Multiple interfaces is better than one general-purpose interface. 
+O Open-Closed Principle: Classes are open to extension, closed to modification.
+L Liskov Substitution Principle: Objects are substitutable for objects of their superclass.
+I Interface Segregation Principle: Multiple interfaces are better than one general-purpose interface. 
 D Dependency Inversion Principle: Use abstractions so classes don't rely on specific implementations.
 
-I agree with SOLID principles for the most part. Following these reduces mental burden of the entire system over time.
+`voice`
+Following these restrictions reduces cognitive load as the system grows in complexity, so I agree with SOLID principles in most situations.
 However, I intentionally break the principles as practical and sometimes stylistic choice.
-I think it's worth discussing, since it's another example of Invisible Wizard Problems.
+Choices about architecture design is one of those Invisible Wizard Problems.
 
-Yes, each class should clearly do one thing. We want few mental burdens, and clear purpose at all times. However, my code breaks the Single Responsiblity Principle:
-This is common for game programming code especially, because of how dynamic the design process is. Games are constantly trying to be more fun, which is actually moving target.
-In addition, some of my classes do things that could be argued as extending into entirely new functionality.
-	For example, DrawBuffer does more than simply manage a buffer. It has a partial class extension where scaled rendering code exists.
-The new game classes I'll write will also do a lot. MobileCircle will be used for asteroids and for ammo pickup, with no additional subclassing. You'll see how.
-I break the Single Responsibility Principle on purpose, to keep file count low, so it's easier to copy and easier to think about.
-Personally, I will add additional functionality to a file if I can comfortably hold the addition in my head with the rest of the file.
-	I will also often refactor the code out later, sometimes to a separate file, as I did in the DrawBuffer_geometry source file._
+`scene`
+highlight 'S Single Responsiblity Principle'
 
+`voice`
+Yes, each class should clearly do one thing. We want few mental burdens, and clear purpose at all times. However, my code already breaks the Single Responsiblity Principle:
+Breaking this rule is common for game programming because of how dynamic the game design process is. Games are constantly trying to be more fun, which is actually moving target.
+To rapidly find what is fun, code is inserted and removed often, to rapid-prototype game mechanics.
+	Intense work pressure can push developers to cut corners with good programming habits, and leave such code in place if it is working.
+	The causes of this pressure are nuanced and interesting enough for another video, but I'll summarize my take on it:
+		the games industry is a victim of it's own success, which makes most people expectations too high.
+At least one of my classes is already doing things that could be argued as extending into new functionality that should be in a different class.
+	DrawBuffer does more than simply manage a buffer. It has a partial class extension where scaled rendering code exists, which was my own compromise that I made with myself, feeling pressure to release this tutorial sooner.
+The new game classes I'll write will also do a lot. MobileCircle will be used for asteroids and for ammo pickups, with no additional subclassing.
+	You'll see how I do that with metadata and lambda expressions.
+In general, I break the Single Responsibility Principle on purpose, to keep file count low, so it's easier to read my code, and easier to think about.
+Personally, I will add additional functionality to a file if I can comfortably hold the additional functionality in my head along with the rest of the file.
+	I will often refactor this kind of code later, sometimes to a separate file instead of a separate class, as I did in the DrawBuffer_geometry source file.
+
+`scene`
+highlight 'O Open-Closed Principle'
+
+`voice`
 My code also breaks the Open-Closed Principle:
-It's true that, I create small classes that should be easy to extend, in a way that looks like good Open-Closed design.
-However, I write these classes with the expectation that you will modify the code yourself. And I wrote the code in a way that is easier for you to copy.
+I do create small classes that should be easy to extend, in a way that looks like good Open-Closed design.
+However, I write these classes with the specific expectation that you will modify the code yourself. And I wrote the code in a way that is easier for you to copy, and more effortful to extend.
 My code is full of public members named as properties with the expectation that you will refactor that yourself in the future.
 These implementations are explicitly not closed for modification: I want you to modify the code, and make your own design changes. Then it will become your code.
 And crucially, I want you to make mistakes by making changes. Making those mistakes is how you learn. And I hope you are using this tutorial as a learning exercise.
-Personally, I think the Open-Closed principle is better for mostly finished business software.
-	Game programming in particular is not a good place to be strict about it, and certainly not during prototype iteration.
+If I were more serious about making it easy to extend and closed for editing, I would have turned all public members into properties, added the virtual keyword to many methods and properties.
+Personally, I think the Open-Closed principle is better for mostly finished business software, where libraries can be shared with partner businesses, and performance loss from the language features enforcing this principle are negligible.
+	Game programming in particular is not a good place to make source code difficult to edit and slightly slower by default, and certainly not during prototype iteration.
 
-My code will break the Liskov Substitution Princicple:
-I want to take advantage of polymorphism, but strict adherence to Liskov Substitution creates inefficient code full of type verification.
+`scene`
+highlight 'L Liskov Substitution Princicple'
+
+`voice`
+My code will not strictly adhere to the Liskov Substitution Princicple:
+I want to take advantage of good polymorphism, but strict adherence to Liskov Substitution creates inefficient code full of type verification.
 One easy approach to maintain this principle is to avoid inheritance entirely, and create classes that extend functionality with lambda expressions and extra meta-data.
-	I will be doing this myself.
-	Duck Typing, which is an object design pattern that Python, JavaScriptm and Lua use, is the logical extreme of Liskov Substitution.
-		In those scripting languages, most complex objects are the same type, with a different dictionary of variables and functions.
-		In practice, this is a mess for code efficiency and compile-time error checking, so I avoid that extreme if I can.
+	I will be doing this myself, but to a limited degree.
+	Duck Typing, which is an object design pattern that Python, JavaScript, and Lua use, is the logical extreme of Liskov Substitution.
+		In those scripting languages, most complex objects are the same type, eacn being essentially a dictionary of variables and functions.
+		In practice, this is a mess for code efficiency and compile-time error checking. This is also bad for game programming, especially at the game engine level.
 	Unity, another C# game development environment, uses a Decorator pattern, which enables all GameObjects to substitute for each other.
-		This often requires type verification at runtime when specialized functionality is needed by code.
+		This often requires type verification at runtime when specialized functionality is needed by code, but not always. That's worth discussion in another video.
 
+`scene`
+highlight 'I Interface Segregation Principle'
+
+`voice`
 My code will break the Interface Segregation Principle:
-I'm not going to make fine-grained Interface separations. I won't need them in practice, and writing them will the increase complexity of this tutorial for little gain.
+I will be making interfaces, becase doing so is good practice for Object Oriented Programming.
+However, I'm not going to make fine-grained Interface separations. I won't need them in practice, and writing them will the increase complexity of this tutorial for little gain.
 For example, it is possible that not all GameObjects will need a position. But I don't want an additional IHasPosition interface.
-	You should feel welcome to implement that yourself.
+	If you want to make the code adhere to Interface Segregation, you are welcome to implement the extra interfaces yourself.
 
+`scene`
+highlight 'D Dependency Inversion Principle'
+
+`voice`
 My code already uses Singletons, which is a gross violation of the Dependency Inversion Principle.
 	To be clear, I hate the fact that my code relies on singletons. Singletons make a brittle design, and it limit future functionality.
-		For example, if I have a Time singleton, and I want to add a localized-time-travel mechanic to my game later, that might require multiple simultaneous Time objects,
-			probaly difficult to do with the Singleton design.
-	I wrote every singleton class to be able to substitute it's the static instance for another one, to help enable prototyping some interesting designs later.
-		If I was serious about those specialized designs, I would not use singletons. A singleton is as a euphamism for a global variable, which is brittle design that breaks expandability.
-		Singletons, like global variables, create hidden dependencies that are difficult to extract and reason about.
-To be clear, I wrote these singletons because I accept them as well understood utilities, as extensions of the programming environment more than program features.
-And I accept the design cost.
+		For example, if I have a Time singleton, and I want to add a localized-time-travel mechanic to my game later, that would require multiple Time objects,
+			which is difficult to do with a Singleton.
+	I did write every singleton class to be able to substitute it's the static instance for another one, to help enable prototyping some interesting designs later.
+		If I was serious about those specialized designs, I would not use singletons.
+		A singleton is as a euphamism for a global variable, which is brittle design that hurts expandability, and makes code difficult to share across projects.
+		Singletons, like global variables, create hidden dependencies that are difficult to extract and reason about. When multi-threading gets involved, these kinds of bugs can be unsolvable.
+To be clear, I wrote singletons because I accept them as well understood utilities, as extensions of the programming environment more than program features.
+I explicitly accept the design cost, as many other game engines do (like Unity).
 
 If I did want to create code that didn't use a Time singleton, designed with Dependency Inversion in mind, I would:
 	Create an interface for Time objects
@@ -3151,7 +3182,6 @@ namespace MrV.GameEngine {
 		public void Draw(GraphicsContext canvas);
 	}
 }
-
 ```
 
 `voice`
@@ -3178,7 +3208,7 @@ namespace MrV.GameEngine {
 This engine uses an interface for all objects called IGameObject. I expect complex objects to inherit this interface, adding their own specialized complexity.
 Notably, Unity has a concrete class called GameObject, and objects of GameObject are extended using a decorator pattern instead of inheritance.
 	The decorator pattern has runtime overhead that we avoid in this implemenation.
-	That design makes more sense for Unity, which is a very dynamic general-purpose engine. This engine will be much less dynamic.
+	That design makes more sense for Unity, which is a very dynamic general-purpose engine. This engine will be much less dynamic, but conceivably more performant for it's design.
 
 ```
 MobileObject, MobileCircle, MobilePolygon
