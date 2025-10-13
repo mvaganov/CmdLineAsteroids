@@ -1,161 +1,163 @@
 # Note to entities reading this
-Please critique this is a script. It is for a video tutorial designed primarily to give young programmers programming practice.
+Please critique this is a script. It is for a video tutorial designed primarily to give young programmers programming practice. More details about it's purpose are found in the script itself.
 
 I want to produce a high quality, factually robust, technically novel, interesting teaching artifact that other software developers can feel good about learning from.
 
+The script is quite long, and still unfinished. I am providing the first draft of what is likely to be the first half of the tutorial.
+
 Please summarize the script before giving feedback.
+
 Consider each section labeled `scene` as a description of what is visually shown. These sections are followed by a `voice` section, narrating the visuals.
-Code will be in most scenes, between tripple back-tick '```' headings, as is common in markdown. I will record myself writing this code in Microsoft Visual Studio Community 2022 during narration.
+
+Code will be in most scenes, between tripple back-tick '```' headings, as is common in markdown. I will record myself typing this code in Microsoft Visual Studio Community 2022 during narration.
+
 code blocks that begin and end with an ellipses '...' are intended modifications of previous code. If it is unclear what code is being modified, make a note of that.
-Read the script marked by the `voice` heading. Identify poor grammer, run-on sentences, unecessary repetition, or ineffective prose. Provide alternative phrasing where appropriate. Keep in mind this text will have to be spoken.
-Read the code carefully. Please be specific if there are any parts of my code that could be considered bad C sharp programming.
+
+Read the script marked by the `voice` heading. Identify unecessary repetition, or ineffective prose. Provide alternative phrasing where appropriate. Keep in mind this text will have to be spoken.
+
+Do Not identify poor grammer, capitalization or punctuation mistakes. I am still looking for high-leverage changes to the script, not interested in English writing minutiae.
+
+Read the code carefully. Please be specific if there are any parts of my code that could be considered bad C-sharp programming. I am interseted in C# writing minutiae.
+
 If the code is using a design pattern you recognize that is not mentioned in the script, please identify the pattern, and where the code is using it. Similarly, if the script identifies a design pattern incorrectly, clearly flag that as well.
-Identify if there any parts of the tutorial that seem like they could be cut, to streamline the script.
-Identify parts of the script that cover content that is not well documented in other YouTube tutorials about game programming. Suggest if emphasizing this content makes sense to promote the tutorial.
+
 Identify where the script is repeatetive, and the content could be streamlined. If the repetition appears to be appropriate for emphasis, feel free to let it pass.
+
+Identify if there is a conceptual gap that should be explained with more detail or better analogy.
+
+If there is a strong analogy that could be used to explain an idea, please make a note of that.
+
+Identify parts of the script that cover content that is not well documented in other YouTube tutorials. Suggest if emphasizing this content makes sense to promote the tutorial's value.
+
 Please be critical about your feedback. I do not want a sycophantic response, I am serious about finding and fixing mistakes.
+Minimize encouragement; reserve it for insights with transferable public value.
 
 `scene`
-"If I can't create it, I don't understand it."
--Richard Feynman
-
-pause for 2 seconds
+white text on black background:
+	"If I can't create it, I don't understand it."
+	-Richard Feynman
+pause for 2 seconds, with no voice over
 
 `scene`
-demo reel of the LowFiRockBlaster game. player ship flying around, shooting and destroying asteroids, and collecting up ammo pickups.
-game view zooms in and out, showing how vector graphics can be rendered using command line glyphs.
+Montage of the LowFiRockBlaster game.
+	show command-line window with 2D graphics rendered using colored character glyphs.
+	a player's ship shaped like a V flys around with simple 2D physics, shooting and destroying circle asteroids, and collecting circle ammo pickups.
+	game view pans smoothly following the player, also zooming in and out, showing how floating-point vector graphics are rendered using command line glyphs.
 
 `voice`
 This is a tutorial series teaching how to build a real-time simulation in C-sharp.
-It simulates basic physics and collision detection and implements essential games and simulation systems
+It implements essential games and simulation systems, and simulates basic physics and collision detection.
 
 `scene`
-list with the following
+white text on black background, list the following:
 	2D Vector math
 	basic physics
 	simple rendering (in the command line)
 	rendering primitive shapes
-	time tracking
-	a task scheduler
-	a key input buffer based on a dispatch table
+	realtime simulation
+	task scheduling
+	key input buffer based on a dispatch table
 	basic graphics optimizations
 	object pooling
 	particle systems
 	collision detection
 	cell space partition tree
+	... and more
 
 `voice`
-I'll show all the code and give some explaination about everything, starting from an empty project, in the TTY Command Line Console.
+I'll show all the code and give explainations, starting from an empty project for the Command Line Console.
 	This will include graphics, math, optimization, data structures, collision detection, and more.
 I'll also offer in-context advice and best practices from my decades of experience as a game developer and computer science instructor.
+	I want you to understand the bottom-up implementation of a game engine, which will improve your decision making in software development generally.
 And I'll give some of my own opinions about the Invisible Wizard Problems that emerge in modern computer programming, and game development especially.
 
 `scene`
-montage of programming, with prominent text centered:
+montage of programming in the background, with prominent text centered in the foreground:
 	Invisible Wizard Problems: Tricky programming issues that need special knowledge or experience to spot and solve.
 
 `voice`
 One invisible wizard problem that I can mention now is the tradeoff of robustness vs accessibility of this simulation.
-	many of my example implementations will fall short of being highly robust and maximally efficient. I apologize for that in advance.
+	many of my example implementations will fall short of being highly robust and maximally efficient. I don't apologize for that.
 		I want this tutorial to be easy to follow more than I want it to be perfect software.
 	I believe the most perfect software for this situation is easy to read and type as you watch the tutorial, and easy to understand if you are seeing it for the first time.
 	I'll introduce many concepts in a way that is easy to practice while still being robust enough to be fast to iterate on.
-	I expect you will do further work to make it more robust to fit your needs.
+		I do apologize that I will jump around different files often to make modifications and explain concepts.
+		I recognize that is jarring to experience. Please be ready to pause the video to copy any code.
 
 `scene`
-"These systems don’t understand the world. They just predict the next word." - Jeffery Hinton
-"As an AI I don’t believe or disbelieve anything in the human sense." - ChatGPT 2025/09/14
+white text on black background:
+	"These systems don't understand the world. They just predict the next word."
+	- Jeffery Hinton
+	"As an AI I don't believe or disbelieve anything in the human sense."
+	- ChatGPT 2025/09/14
 
 `voice`
 Another invisible wizard problem is the rapid replacement of programmers with AI in the software development industry.
-Even if AI systems write most of the world’s code, they still lack something, which Geoffrey Hinton warned about, and the AI's will admit.
-They lack real understanding of the world.
-They need humans who can translate lived experience into software accessible tools, and simulations. These simulations help train AI, and augment toolchains.
+Even if AI systems write most of the world's code, they still lack something, which Geoffrey Hinton warned about, and the AI's will admit.
+They lack real understanding.
+Artificial Intelligences need humans who can translate lived experience into software accessible tools, and simulations. These simulations help train AI, and augment toolchains.
 Learning how to build simulations yourself, in a mostly agnostic tech stack like in the command line, is a powerful skill. Having it will make you useful to AI in the future.
 With this skill, you can help shape how AI connects to human reality.
 
 `scene`
-back to the montage
+back to the montage of LowFiRockBlaster
 
 `voice`
-The simulation tutorial is for a space-shooter game inspired by "Spacewar!" from 1962, written for the command line console.
+This simulation tutorial is for a space-shooter game inspired by "Spacewar!" from 1962, written for the command line console.
 The idea is as old as videogames. It was the reason why the C programming language and Unix operating system were invented.
 I've summoned that ancient motivation to capture your attention now, while I teach you foundational concepts for writing a simulation and game engine.
 Check the description for the Github project link if you want the code. Continue watching if you want a thorough lesson to understand the code.
 
 I spent a few weeks creating this game, and a few months writing this script.
-Please do not misunderstand that this program just fell out of my head in one moment. Programming does not work that way.
+Please do not misunderstand that this program just fell out of my head in one moment. It didn't even fall out of a larg language model. Real programming takes time.
 Your projects will take a long time to finish too, even if they use a tutorial like this as a starting point.
 Be patient with yourself. Be disciplined with yourself. I believe anyone who sits with these ideas can learn them well. Especially you, even if you don't consider yourself skilled with math.
 For context, I was terrible at math in High School, especially at Trigonometry, which I will be using in this tutorial. I learned what I know because of practice doing projects like this.
 My guidance will follow roughly the same path I went through while making this game a few months ago,
 	but it will be much faster, even with a few detours to explain some math, architecture, and game engine optimizations.
-Because I wrote this application once already, I have the extreme benefit of having made lots of mistakes recently.
-	This tutorial doesn't capture 90% of the difficulty of this project, just the parts curated for you to understand it quickly.
-As you do this work, please be patient with your own mistakes, and the frustration that follows. Frustration is the sweat of learning. It is a sign that your mind is growing.
-	Take a break if you need it. This video will still be here when you are ready.
+This tutorial doesn't capture the vast majority of the difficulty of writing this project. What you will see is just the parts curated for your understanding.
+As you do this work, please be patient with your own mistakes, and the frustration that follows. Frustration is the sweat of learning. It is a sign that your mind is growing. Engage with it. And take a break if you need it. This video will still be here when you are ready.
 
 `scene`
-montage of code and the game
+montage of code in Visual Studio 2022, and the game running with the code in the background
 
 `voice`
 I'll be using C sharp as the programming language.
-I assume you already have a C sharp runtime, compiler, and IDE installed.
+I assume you already have a C sharp runtime, compiler, and IDE installed. These are non negotiable.
 I also assume you know the basics of how to program command line applications in C sharp, including Object Oriented Programming basics.
 You can still follow along without that knowledge, but I recommend you start with that foundation.
 
 `scene`
-montage of Unity
+montage of Unity programming
 
 `voice`
 The very popular Unity Game Engine is a notable reason I chose to do this in the C sharp language.
-This tutorial should also give new game developers some insight into how a game engine work, which will help you understand how Unity works to some degree too.
-
-//I also assume you are using LLMs to help you write code. Importantly:
-//  I assume you're aware of the intellectual hazard of relying on AI while programming. AI helps you **do**, not **learn**.
-//  If you are not here for a
-//I also assume you have already navigated the intellectual hazard of using AI to write your code.
-//If you get used to using an LLM, you stop being able to learn.
-//LLMs feel like they can do stuff for you. That creates an emotional reluctance to understanding yourself.
-//This is poison for a computer programmer. As a computer programmer, you must understand. understanding is the source of your power.
-//
-//You must want to understand. Even when it is difficult, you must want to understand.
-//Ideally, you want to understand **because** it is difficult. 
-
-//I have a spiritual need to share this tutorial with you. please let me explain:
-//  creating simulations from scratch makes me feel like a God.
-//  when I create a universe, and craft every rule myself, I feel a kind of joy that I imagine God feels when observing our universe.
-//  that joy is enough to motivate me to do it. but there is more.
-//  the kind of joy I feel when creating software simulations makes me feel close to the divine.
-//  It doesn't make me feel like a peer with the God of our Universe. It lets me very concretely recognize the abstraction that separates us from God.
-//  The pattern of understanding a realtime simulation fools me into believing I can feel the edge of existence. Like I'm touching the glass separating us from God.
-//  This feeling is so profound to me that I want to try to share it with you. And it is rooted in understanding.
-
-//Before I start the tutorial content, I want to be clear about something:
-//this tutorial will not be worth your time if you don't write and compile the code with the intention of understanding.
-//If you just want to play this game, save yourself some trouble and download the code from github.
+This tutorial should give new game developers insight into how a game engine works in general, which will help understand how Unity works too.
 
 `scene`
-	 practice is the price for understanding.
-understanding is the price for power in the computer.
+white text on black background:
+	practice is the price for understanding.
+	understanding is the price for power in the computer.
 
 `voice`
-If you are new to game programming, you should practice by typing all of this yourself. I'm serious.
-Doing that will dramatically increase how long this tutorial takes --probably 10x longer or more.
+If you are new to game programming, you should practice by typing all the code and following along yourself. I'm serious.
+Doing that will dramatically increase how long this tutorial takes --probably 10x longer than the runtime, or more.
 I believe that time will be worth the understanding you gain, especially if you make mistakes and overcome those mistakes while doing it.
-If you do not consider yourself a computer wizard yet, and you want to be, I recommend you practice more.
+I want you to be a computer wizard. that is why I made this tutorial. If you do not consider yourself a computer wizard yet, and you want to be, practice.
 
 `scene`
-new project window in VS Community 2022
+show Visual Studio Community 2022 loading.
+create a new project
 
 `voice`
 Start your C sharp IDE. I'm using Visual Studio Community 2022.
-As of 2025, Rider is not free for commercial content, but free for personal use.
+As of 2025, I recommend using Rider. It is not free for commercial content, but free for personal use.
 I would not use it for a tutorial video, but I recommend it for educational purposes.
 Rider is similar enough to Visual Studio that this tutorial will still work well for it.
 
 I'm going to call my project "LowFiRockBlaster".
-And I'll be using .NET Core 5.0, because Unity doesn't support the latest C sharp features, and I want this tutorial to prepare you for Unity Game Development specifically.
+And I'll be using .NET Core 5.0 as my version of C#.
+Unity doesn't support the latest C sharp features, and I want this tutorial to be coherent with Unity Game Development specifically.
 
 `scene`
 src/MrV/LowFiRockBlaster/Program.cs
@@ -174,14 +176,16 @@ namespace MrV.LowFiRockBlaster {
 `voice`
 The default Program.cs will be our entry point. This is a basic "Hello World" program.
 I'm going to move it to a new folder, to organize my files as I code. src/MrV/LowFiRockBlaster
-I'll be writing everything in my own MrV namespace, I recommend you name your own namespace after yourself.
+I'll be writing everything in my own MrV namespace, I recommend you name your own namespace after yourself. You can refactor that later if you want.
 I'll also be using a compact whitespace style, so I can fit as much code on the screen as possible.
 
 Let's run this code to make sure everything works. If your program does not compile and run, stop the video and get it working.
 Unfortuantely, most programming environments require some configuration, even with an automatic installer.
 
 `scene`
-Visual Studio Installer -> Modify -> .NET desktop development
+start the Visual Studio Installer
+	Modify -> .NET desktop development
+	show that I have .NET desktop development checked in the installer
 
 `voice`
 For example, be sure you have the .NET desktop development workload installed by the Visual Studio Installer.
@@ -200,34 +204,39 @@ design.md
 		* objects move using simple physics
 		* objects interact when they collide
 		* player character is an object, controlled by user
+		* projectiles break asteroids: big -> medium -> small -> ammo pickup
 	* player choices
 		* move in cardinal directions (up/down/left/right)
 		* shoot projectile, if sufficient ammo
 		* avoid moving into asteroids, or else be destroyed
+		* pickup additional ammo from destroyed asteroids
 
 `voice`
 Before I start writing the game, I want to have a clear set of goals.
-An imagined vision of the game is a necessary starting point.
+An imagined goal of is a necessary starting point for any project.
 A written list of features and expectations is essential for a project that will take more than a few days to finish.
-This kind of Top-Down design addresses some confusion and scope, which are Invisible Wizard Problems that a software developer should always keep in mind.
+Clear Top-Down design addresses Confusion and Scope Ambiguitiy, which are Invisible Wizard Problems that a software developer should always keep in mind.
 Project managers might call this a Work Breakdown Structure. Game Developers might call this a Game Design Document.
-More experienced developers will need fewer details and less structure to create a product. If this seems too sparse for your own projects, please add more details in your own project.
-Add just enough detail to your list of expectations that you feel you will remember your vision when you read the document again. Avoid adding more detail than that. Expect it to change.
-Spending too much time writing a design or specification is sometimes called Analysis Paralisys, and it is a real cause for projects to fail before they even start.
-Identify clear goals that you can start implementing, and give yourself the grace to updatee the document later.
+More experienced developers will need fewer details and less structure to create a product.
+	If this seems too sparse for your own projects, please add more details in your own project.
+I recommend you add just enough detail to your list of expectations that you feel you will remember your vision when you read the document again.
+	Avoid adding more detail than you need.
+	Expect your goals to change while you are achieving them, especially for game development where fun is a moving target.
+Spending too much time writing a design or specification is sometimes called Analysis Paralisys.
+	it is a real cause for projects to fail before they even start.
+Identify clear goals that you can start implementing, and give yourself the grace to update the document later.
 
 `scene`
 back to program.cs
 ```
 ...
-		int width = 80, height = 23;
-		char letterToPrint = '#';
-		DrawRectangle(0, 0, width, height, letterToPrint);
-...
-```
+		public static void Main(string[] args) {
+			int width = 80, height = 23;
+			char letterToPrint = '#';
+			DrawRectangle(0, 0, width, height, letterToPrint);
+			Console.WriteLine("Hello World!");
+		}
 
-```
-...
 		public static void DrawRectangle(int x, int y, int width, int height, char letterToPrint) {
 			for (int row = 0; row < height; ++row) {
 				for (int col = 0; col < width; ++col) {
@@ -242,17 +251,18 @@ back to program.cs
 `voice`
 Lets start our game by drawing the screen where the game will be displayed.
 I'll make a new function called DrawRectangle, and call it in my Main function. You'll notice that it's public static
-we want it to be public staic for three reasons:
+we want it to be public static for three reasons:
 	- it doesn't have any dependencies on the Program class, so we should be able to run it from anywhere
-	- Main is in a public static context, and needs it to be public static also
+	- the Main function is in a public static context, and needs DrawRectangle to be public static also
 	- public static function calls are technically faster than non-public static calls.
-		- the speed gain is so extremely small that it hardly bears mentioning.
-		- But this is game programming, and performance is always important to keep in mind. Your final product will suffer if you don't.
-		- for the sake of clarity, I will not obfuscate the game with optimizations while I write it,
-			but I will intentionally choose a more performant style, often out of habit.
-			- an example of this habit can be seen in this code, where I use the prefix increment operator.
-				it's one assembly instruction faster in old compilers.
-this is a pretty standard nested for loop iterating over a two-dimensional space.
+		- the speed gain is because an instance doesn't need to be pushed onto the stack with the method call. the gain is so extremely small that it hardly bears mentioning.
+		- However this is game programming, and performance is always important to keep in mind.
+For the sake of clarity, I will try not obfuscate the game with optimizations while I write it,
+	but I will intentionally choose a more performant style, often out of habit.
+	- an example of this habit can be seen in this code, where I use the prefix increment operator.
+		it's one assembly instruction faster than postfix, for old compilers only.
+		It's an old habit from my days as a flip-phone game developer, and you will just need to suffer through it in this tutorial.
+DrawRectangle has a pretty standard nested for loop iterating over a two-dimensional space.
 the logic here places the command line cursor exactly at each position in the rectangle before printing a character.
 
 Before moving on, let's take a moment to understand this logic.
@@ -288,7 +298,7 @@ show the code and running output
 ```
 
 `voice`
-this code will write 80 times 25 hashtag characters, still all in one row.
+this code will write 80 times 23 hashtag characters, still all in one row.
 
 `scene`
 show the code and running output
@@ -304,10 +314,19 @@ show the code and running output
 ```
 
 `voice`
-this code will write a rectangle 80 wide and 25 tall.
+this code will write a rectangle 80 wide and 23 tall.
 
 `scene`
 show the code and running output
+```
+...
+		int width = 80, height = 23;
+		char letterToPrint = '#';
+		DrawRectangle(width, height, letterToPrint);
+		DrawRectangle(width/2, height/2, '?');
+...
+```
+
 ```
 ...
 		public static void DrawRectangle(int width, int height, char letterToPrint) {
@@ -318,15 +337,6 @@ show the code and running output
 				Console.WriteLine();
 			}
 		}
-...
-```
-
-```
-...
-		int width = 80, height = 23;
-		char letterToPrint = '#';
-		DrawRectangle(width, height, letterToPrint);
-		DrawRectangle(width/2, height/2, '?');
 ...
 ```
 
@@ -352,7 +362,7 @@ show the code and running output
 `voice`
 we can use SetCursorPosition to move the commandline cursor exactly where we want it before printing any character with Console.Write
 This functionality is not easily available in all programming language console APIs, so it's nice that C sharp gives it to us so cleanly.
-For example, if you want to do the same thing in Python, you need to replace SetCursorPosition with printing an escape sequence.
+For example, if you want to do the same thing in Python, you may need to replace SetCursorPosition with printing an escape sequence.
 That escape sequence will not work if executed in the basic Windows console. And it will cause strange errors when printing some special characters, or printing in a separate thread.
 
 `scene`
@@ -371,7 +381,7 @@ show the code and running output
 ```
 
 `voice`
-and this code allows us to draw the rectangle anywhere in visible space.
+and this code allows us to draw the rectangle anywhere in visible space, not just the upper-left corner of the console.
 
 ```
 ...
@@ -390,10 +400,10 @@ and this code allows us to draw the rectangle anywhere in visible space.
 ```
 
 `voice`
-The code will crash if x and y are negative, which can be solved with a simple if statement.
+The code will crash if x+col or y+row are negative, which can be solved with a simple if statement.
 
-if this code is confusing, I highly recommend practicing loops before continuing.
-the programming in this tutorial will get much more conceptually complex beyond this point.
+if this code is confusing, I highly recommend you stop the tutorial here, and practice writing loops before continuing.
+the programming in this tutorial will get much more conceptually complex beyond this point, and I will not make suggestions for more practice.
 
 ---
 
@@ -415,10 +425,24 @@ namespace MrV.Geometry {
 
 `voice`
 this program will need many source files, and I want to organize them with folders.
-also, this code base needs to be serious about 2 dimensional structures.
+also, this project needs to be serious about 2 dimensional math.
+
+Two dimensional vectors are extremely common in game programming frameworks.
+this is a very basic 2D vector structure, which we'll add to during the tutorial.
+
+this code is very densly written, using inlined curlybrackets for simple lines of code, and the expression-bodied fat-arrow for single line methods.
+
+this code also shows operator overloading, an implicit constructor that converts tuples into 2D vectors, and an interpolated string.
+	these features are not available in all other languages, but I am taking advantage of their inclusion in C-sharp.
 
 `scene`
-src/LowFiRockBlaster/Program.cs
+src/LowFiRockBlaster/Program.cs, add to Main
+```
+...
+			DrawRectangle((2, 3), new Vec2(20, 15), '*');
+...
+```
+
 ```
 ...
 		public static void DrawRectangle(Vec2 position, Vec2 size, char letterToPrint) {
@@ -427,51 +451,67 @@ src/LowFiRockBlaster/Program.cs
 ...
 ```
 
-```
-...
-			DrawRectangle((2, 3), new Vec2(20, 15), '*');
-...
-```
-
 `voice`
 We should start using the 2D vector concept now, in this rectangle drawing code.
 
 I'll be doing more of this kind of code refactoring during my tutorial, but not nearly as much as I did while writing the game for myself.
-Real programmers constantly rewrite code, often renaming variables, and adding or removing new code structures for many different reasons.
-Know that this tutorial is the result of lots of such rewrites.
+Real programmers constantly rewrite their own code, often renaming variables, and adding or removing new code structures for many different reasons.
+Know that this tutorial is the result of lots of such rewrites, and I have minimized the rerwites to be easier on you.
 If you are new to programming, you need to know that this is how big projects are written: one step at a time, with lots of rewrites, and tests between changes.
-If you are new, programming will probably be slower for you, and that's fine.
 I sincerely apologize for speeding it up my development process. Please learn what you can from my compressed examples, and do pause and rewind the video for yourself as needed.
 
-Notice that I'm using the old DrawRectangle class in this new function.
+Notice that I made a new DrawRectangle function, and I'm using the old DrawRectangle function in this new one.
+
+`scene`
+black background with dark-gray grid, 10x10 squares
+bold white cartesian plane (x/y axis)
+label integer locations of the x and y axis, -5 to +5 on both axis
 
 `voice`
 Vec2 is a 2 dimensional vector, which is a physics and math concept. The basic premise is:
 
 `scene`
-Vec2.cs, with diagram for each line when it is discussed
+Vec2.cs, with cartesian plane + gid diagram in small window
+shift the cartesian plane to have the origin at the upper-left
+swap the negative y axis to have positive integer values
 
+`voice`
+in the command line, 0,0 is at the upper left corner, and y increases as it goes down.
+
+`scene`
+show Point A at location 1, 1
+
+`voice`
 Point A can be at a known location x/y.
-	in the command line, 0,0 is at the upper left corner, and y increases as it goes down.
-	I'll show you how to change this conceptually later.
+
+`scene`
+show Point A at location 3, 5
+
+`voice`
 Point B can be at another location x/y.
-locations in space can be fully described by a vector, which is a position along each dimension.
-  distances can also be described this way.
-  directions can also be described this way.
-//The difference between A and B can also be described as a Vector, by subtracting the components of Point A from point B. This is typically called the Delta.
-//The distance between A and B can be calculated by doing the pythagorean theorum on the Delta. This is the Distance between A and B, also called the Magnitude of Delta.
-//The direction of point B from point A can be calculated by dividing the Delta's components by the Magnitude. This converts Delta to a point on a Unit Circle. This value is also called a Normal.
-//This Normal vector of an angle can be used for rotation calculations. Notably, the math for rotating vectors this way is identical to the math used to convert imaginary numbers into real numbers.
-//The Normal's X and Y components correspond to the Cosine and Sine of the angle between the line AB and another line going positive along the X axis.
-//  Luckily, we don't need to think about trig identities or the differences between radians and degrees if we keep angles as normals. But for the sake of completeness, I've included that math here.
-//A perpendicular direction can be determined by swapping the X and negative Y components into another vector.
-//The alignment of one vector with another can be calculated by a math operation called a Dot Product.
-//Alignment with a perpendicular vector is required information when calculating how one Vector will reflect on another surface normal in a physica collision.
-//The mathematical bundled up in the Vector concept helps us fully define many things in a software simulation, including the physics interactions this tutorial will show later.
-There are plenty of additional tutorials on the internet about 2D vectors, check the description for examples:
-`add to description` Two Dimensional Vector Concept:
+
+locations in space can be fully described by a 2D vector, which is a position along each dimension.
+
+`scene`
+draw a line between points A and B
+
+`voice`
+distances can also be described this way.
+
+`scene`
+remove the line between points A and B
+draw an arrow from the origin to point B
+
+`voice`
+directions can also be described this way.
+
+`scene`
+show link to 
   3blue1brown https://youtu.be/fNk_zzaMoSs
   HoustonMathPrep https://youtu.be/j6RI6IWd5ZU
+
+`voice`
+There are plenty of additional tutorials on the internet about 2D vectors, check the description for examples:
 
 `scene`
 create the src/MrV/Geometry folder structure in the solution explorer
@@ -490,8 +530,13 @@ namespace MrV.Geometry {
 	}
 }
 ```
+AABB.cs, with cartesian plane + gid diagram in small window
 
-Diagram of AABB as it is discussed
+`voice`
+A box can be described with two Vec2 structures, bounded by edges aligned on the x and y axis. We call this an Axis Aligned Bounding Box or AABB.
+This is a simple description of space in a simulation, and it is used for many kinds of clalculations. 
+
+`scene`
 ```
 ...
 		public static void DrawRectangle(AABB aabb, char letterToPrint) {
@@ -500,27 +545,32 @@ Diagram of AABB as it is discussed
 ...
 ```
 
+src/LowFiRockBlaster/Program.cs, add to Main
 ```
 ...
 			DrawRectangle(new AABB((10, 1), (15, 20)), '|');
 ...
 ```
 
-`voice`
-A box can be described with two Vec2 structures, bounded by edges aligned on the x and y axis. We call this an Axis Aligned Bounding Box or AABB.
-This is a simple description of space in a simulation, and it is used for many kinds of clalculations. 
 notice I'm again using public static functions, and calling a common function that has the logic written once
-	computer programmers need to have a Single Point Of Truth wherever possible, even at the cost of performance.
-	Being undisciplined about a Single Point of Truth will lead to technical debt, which is one of the Invisible Wizard Problems that I'm trying to avoid in this tutorial.
+	In most cases, computer programmers focus on having a Single Point Of Truth wherever possible, even at the cost of performance.
+	Being undisciplined about a Single Point of Truth leads to technical debt, which is an Invisible Wizard Problems that I'm trying to avoid in this tutorial.
+	If we can keep complicated logic in one place, then we only need to fix one place when there is a bug.
+		This creates less confusion, and less cognitive load.
+	It is true that inlining, or writing the function again, will improve runtime speed.
+		But the runtime speed improvement is tiny compared to the lost programmer time when reading, writing, and fixing the code.
 	Single Point Of Truth is an optimization for the Programmer, not for the computer.
-	If we can keep complicated logic in one place, then we only need to fix one place when there is a bug in it. It limits how many places we can be confused.
-	If you are concerned about runtime efficiency, stop. We can always inline our functions as a final optimization step, after our code works exactly how we want.
+		This is right to do because most of the time, the programmer's costs is much higher than runtime costs for the computer.
+
+Width and Height are public properties, which are methods that look like functions. these only use get methods.
+	You'll see set properties later in the tutorial.
 
 Also, notice how I am naming my variables. I make my public variables capitalized, which is the standard for C# properties.
 	I do this intentionally, with the understanding that these variables should actually be private members with public property accessors.
-	To be clear, if I were doing this tutorial myself, I would convert public members into a private member with public property get and set methods.
-	I am leaving the variables public because it is easier for you to copy, will make no difference to the syntax, and I assume you can change the code if you want.
-In my coding style, lowercase member variables are primitives, which should actually not be accessed publicly,
+	If I were doing this tutorial myself, I would convert public members into a private members with public property get and set methods.
+	I am leaving the variables public because it is easier for you to copy, and will make no functional difference to the syntax.
+
+In my coding style, lowercase member variables are explicitly primitives, which should actually not be accessed publicly,
 	unless the class is a datastructure that exists solely to wrap around those members, like the Vec2 struct.
 
 `scene`
@@ -540,7 +590,7 @@ writing and compiling program.cs
 
 `voice`
 notice I'm using tuple notation for the first vector describing position, and an explicit constructor for the size.
-the form is mostly stylistic. however, in an inner-loop, using the constructor is preferred because it is slightly faster to execute.
+the form is mostly stylistic. however, in an inner-loop, using the more verbose constructor is preferred because it is slightly faster to execute.
 
 `scene`
 src/MrV/Geometry/Circle.cs
@@ -1297,7 +1347,7 @@ Program.cs
 			char input = (char)0;
 			float targetFps = 20;
 			int targetMsDelay = (int)(1000 / targetFps);
-			DrawBuffer graphics = new DrawBuffer(height, width); // <-- add the draw buffer
+			DrawBuffer graphics = new DrawBuffer(height, width);
 			while (running) {
 ...
 ```
@@ -1663,7 +1713,7 @@ src/Program.cs
 				timeMs += keyDelayMs;
 			}
 			while (running) {
-... TODO ADD MORE ELLIPSES
+...
 ```
 `voice`
 Now keys are bound to functions during initialization.
@@ -1676,6 +1726,7 @@ Notice that setting the input variable has been replaced with additions to the K
 `scene`
 src/Program.cs
 ```
+...
 			void Input() {
 				KeyInput.Read();
 			}
@@ -1683,6 +1734,7 @@ src/Program.cs
 				KeyInput.TriggerEvents();
 				Tasks.Update();
 			}
+...
 ```
 
 `voice`
@@ -1740,6 +1792,7 @@ after every print, which is commonly called a Render, the current active buffer 
 PrintModifiedOnly could be further optimized to reduce calls to SetCursorPosition, which is an expensive call in the Console API.
 
 ```
+...
 		public virtual void PrintModifiedOnly() {
 			for (int row = 0; row < Height; ++row) {
 				bool mustMoveCursorToNewLocation = true;
@@ -1758,6 +1811,7 @@ PrintModifiedOnly could be further optimized to reduce calls to SetCursorPositio
 				}
 			}
 		}
+...
 ```
 
 `voice`
@@ -1766,9 +1820,11 @@ The cursor position only needs to be set if there is a new row, or if the last g
 
 src/Program.cs
 ```
+...
 			int targetMsDelay = (int)(1000 / targetFps);
 			GraphicsContext graphics = new GraphicsContext(height, width);
 			KeyInput.Bind('w', () => position.y -= moveIncrement, "move circle up");
+...
 ```
 
 `voice`
@@ -1776,10 +1832,12 @@ The GraphicsContext has almost the same API surface as DrawBuffer, so it can be 
 
 `scene`
 ```
+...
 				graphics.DrawPolygon(polygonShape, '-');
 				graphics.PrintModifiedOnly();
 				graphics.SwapBuffers();
 				Console.SetCursorPosition(0, (int)height);
+...
 ```
 
 `voice`
@@ -1795,8 +1853,6 @@ I want to make a special note about it because I want to remind the audience tha
 
 Running this program is *much* faster than it used to be. Most of the time draw happens, there is actually no change at all.
 And sometimes, only small amounts of the screen need to change. Dirty Rectangle (or Scissoring) is the name of another similar technique for pixel graphics.
-
-<--------- TODO
 
 The graphics context needs to use colors, as part of the original game design.
 
@@ -1903,6 +1959,7 @@ Some convenience methods will help convert text to and from ConsoleGlyphs.
 `scene`
 src/MrV/CommandLine/DrawBuffer.cs
 ```
+...
 	public partial class DrawBuffer {
 		protected ConsoleGlyph[,] _buffer;
 		public int Height => GetHeight(_buffer);
@@ -1914,27 +1971,42 @@ src/MrV/CommandLine/DrawBuffer.cs
 			get => _buffer[y, x];
 			set => _buffer[y, x] = value;
 		}
+...
 ```
+
 ```
+...
 		protected static void ResizeBuffer(ref ConsoleGlyph[,] buffer, int height, int width) {
 			ConsoleGlyph[,] oldBuffer = buffer;
 			buffer = new ConsoleGlyph[height, width];
+...
 ```
+
 ```
+...
 		public Vec2 WriteAt(string text, int row, int col) => WriteAt(ConsoleGlyph.Convert(text), row, col);
 		public Vec2 WriteAt(ConsoleGlyph[] text, int row, int col) {
 			for (int i = 0; i < text.Length; i++) {
 				ConsoleGlyph glyph = text[i];
 				switch (glyph.Letter) {
+...
 ```
+
 ```
+...
 		public void WriteAt(ConsoleGlyph glyph, int row, int col) {
+...
 ```
+
 ```
+...
 		public void Clear() => Clear(_buffer, ConsoleGlyph.Default);
 		public static void Clear(ConsoleGlyph[,] buffer, ConsoleGlyph background) {
+...
 ```
+
 ```
+...
 		public static void PrintBuffer(ConsoleGlyph[,] buffer) {
 			int height = GetHeight(buffer), width = GetWidth(buffer);
 			for (int row = 0; row < height; ++row) {
@@ -1947,7 +2019,9 @@ src/MrV/CommandLine/DrawBuffer.cs
 			}
 			ConsoleGlyph.Default.ApplyColor();
 		}
+...
 ```
+
 `voice`
 The DrawBuffer should use an array of ConsoleGlyph instead an array of characters.
 To make this change, I made changes in DrawBuffer:
@@ -1963,34 +2037,54 @@ To make this change, I made changes in DrawBuffer:
 `scene`
 src/MrV/CommandLine/DrawBuffer_geometry
 ```
+...
 		public void DrawShape(IsInsideShapeDelegate isInsideShape, Vec2 start, Vec2 end, ConsoleGlyph letterToPrint) {
+...
 ```
+
 ```
+...
 		public void DrawRectangle(Vec2 position, Vec2 size, ConsoleGlyph letterToPrint) {
+...
 ```
+
 ```
+...
 		public void DrawRectangle(int x, int y, int width, int height, ConsoleGlyph letterToPrint) {
+...
 ```
+
 ```
+...
 		public void DrawRectangle(AABB aabb, ConsoleGlyph letterToPrint) {
+...
 ```
+
 ```
+...
 		public void DrawCircle(Circle c, ConsoleGlyph letterToPrint) {
+...
 ```
+
 ```
+...
 		public void DrawCircle(Vec2 pos, float radius, ConsoleGlyph letterToPrint) {
+...
 ```
+
 ```
+...
 		public void DrawPolygon(Vec2[] poly, ConsoleGlyph letterToPrint) {
+...
 ```
 
 `voice`
-In DrawBuffer_geometry:
-	did a search/replace of char with ConsoleGlyph
+In DrawBuffer_geometry, I did a search/replace of 'char' with 'ConsoleGlyph'
 
 `scene`
 src/MrV/CommandLine/GraphicsContext
 ```
+...
 		public virtual void PrintModifiedOnly() {
 			for (int row = 0; row < Height; ++row) {
 				bool mustMoveCursorToNewLocation = true;
@@ -2016,20 +2110,23 @@ src/MrV/CommandLine/GraphicsContext
 			_buffer = _lastBuffer;
 			_lastBuffer = swap;
 		}
+...
 ```
+
 in GraphicsContext
 	did a search/replace of char with ConsoleGlyph
 	in PrintModifiedOnly(), replaced the isSame variable initialization using a double-equal operator with
-		bool isSame = this[row, col].Equals(_lastBuffer[row, col]);
+		`bool isSame = this[row, col].Equals(_lastBuffer[row, col]);`
 	in PrintModiefiedOnly,
-		just before Console.Write(glyph);, add
-			glyph.ApplyColor();
+		just before `Console.Write(glyph);`, add
+			`glyph.ApplyColor();`
 		at the very end of the method
-			ConsoleGlyph.Default.ApplyColor();
+			`ConsoleGlyph.Default.ApplyColor();`
 
 `scene`
 src/Program
 ```
+...
 			void Draw() {
 				Vec2 scale = (0.5f, 1);
 				graphics.Clear();
@@ -2043,6 +2140,7 @@ src/Program
 				Console.SetCursorPosition(0, (int)height);
 			}
 
+...
 ```
 test the code
 
@@ -2065,6 +2163,7 @@ once we have a super-sample for each pixel that we are drawing, we can decide ho
 `scene`
 src/MrV/DrawBuffer_geometry
 ```
+...
 	public partial class DrawBuffer {
 		public static ConsoleColorPair[,] AntiAliasColorMap;
 		static DrawBuffer() {
@@ -2121,6 +2220,7 @@ src/MrV/DrawBuffer_geometry
 				}
 			}
 		}
+...
 ```
 
 `voice`
@@ -2139,6 +2239,7 @@ then, before the glyph is printed, a copy is made with the correct background co
 `scene`
 src/MrV/DrawBuffer_geometry
 ```
+...
 		public void DrawLine(Vec2 start, Vec2 end, float thickness, ConsoleGlyph letterToPrint) {
 			Vec2 delta = end - start;
 			Vec2 direction = delta.Normalized;
@@ -2146,6 +2247,7 @@ src/MrV/DrawBuffer_geometry
 			Vec2[] line = new Vec2[] { start - perp, start + perp, end + perp, end - perp };
 			DrawPolygon(line, letterToPrint); 
 		}
+...
 ```
 
 `voice`
@@ -2154,6 +2256,7 @@ while we are in the drawing code, we should add a method to draw lines.
 this creates a thin rectangle, with the center of two of it's opposite edges at the given start and end coordinate.
 
 ```
+...
 		public float MagnitudeSqr => x * x + y * y;
 		public float Magnitude => MathF.Sqrt(MagnitudeSqr);
 		public static Vec2 operator *(Vec2 vector, float scalar) => new Vec2(vector.x * scalar, vector.y * scalar);
@@ -2161,6 +2264,7 @@ this creates a thin rectangle, with the center of two of it's opposite edges at 
 		public Vec2 Normalized => this / Magnitude;
 		public Vec2 Perpendicular => new Vec2(y, -x);
 		public bool Equals(Vec2 v) => x == v.x && y == v.y;
+...
 ```
 
 `voice`
@@ -2230,19 +2334,27 @@ the Update method will change the position of the particle's cirle based on the 
 `scene`
 src/Program
 ```
+...
 			}
 			Particle particle = new Particle(new Circle((10,10), 3), (3,4), ConsoleColor.White);
 			while (running) {
+...
 ```
+
 ```
+...
 				graphics.DrawPolygon(polygonShape, ConsoleColor.Yellow);
 				particle.Draw(graphics);
 				graphics.PrintModifiedOnly();
+...
 ```
+
 ```
+...
 				Tasks.Update();
 				particle.Update();
 			}
+...
 ```
 
 `voice`
@@ -2256,6 +2368,7 @@ this looks pretty satisfying. I wonder if more particles will be even more satis
 
 `scene`
 ```
+...
 			}
 			Particle[] particles = new Particle[10];
 			for (int i = 0; i < particles.Length; ++i) {
@@ -2264,20 +2377,27 @@ this looks pretty satisfying. I wonder if more particles will be even more satis
 				particles[i] = new Particle(new Circle((10, 10), 3), direction * speed, ConsoleColor.White);
 			}
 			while (running) {
+...
 ```
+
 ```
+...
 				graphics.DrawPolygon(polygonShape, ConsoleColor.Yellow);
 				for (int i = 0; i < particles.Length; ++i) {
 					particles[i].Draw(graphics);
 				}
 				graphics.PrintModifiedOnly();
+...
 ```
+
 ```
+...
 				Tasks.Update();
 				for (int i = 0; i < particles.Length; ++i) {
 					particles[i].Update();
 				}
 			}
+...
 ```
 
 `voice`
@@ -2288,6 +2408,7 @@ these need to be initailized, drawn, and updated, just like the old singular par
 `scene`
 src/MrV/Geometry/Vec2
 ```
+...
 		public static float DegreesToRadians(float degrees) => degrees * MathF.PI / 180;
 		public static float RadiansToDegrees(float radians) => radians * 180 / MathF.PI;
 		public static Vec2 ConvertRadians(float radians) => new Vec2(MathF.Cos(radians), MathF.Sin(radians));
@@ -2299,6 +2420,7 @@ src/MrV/Geometry/Vec2
 			while (radian <= -MathF.PI) { radian += 2 * MathF.PI; }
 			return radian;
 		}
+...
 ```
 
 `voice`
@@ -2350,7 +2472,9 @@ Like the other singleton classes, this one has a separate static API for conveni
 `scene`
 src/MrV/Time.cs
 ```
+...
 		public static long CurrentTimeMs => DateTimeOffset.Now.ToUnixTimeMilliseconds();
+...
 ```
 
 to seed our random number generator, we should add an extra static method to Time, so we can have every program use a unique starting point for the random numbers.
@@ -2359,6 +2483,7 @@ to seed our random number generator, we should add an extra static method to Tim
 test, the particles 
 src/Program.cs
 ```
+...
 			Particle[] particles = new Particle[10];
 			Rand.Instance.Seed = (uint)Time.CurrentTimeMs;
 			for (int i = 0; i < particles.Length; ++i) {
@@ -2366,6 +2491,7 @@ src/Program.cs
 				float speed = 5, rad = 3;
 				particles[i] = new Particle(new Circle((10, 10), Rand.Number * rad), direction * (Rand.Number * speed), ConsoleColor.White);
 			}
+...
 ```
 
 `voice`
@@ -2374,6 +2500,7 @@ the particles explode out differently with each runtime. but they don't look lik
 `scene`
 src/MrV/GameEngine/Particle.cs
 ```
+...
 	public class Particle {
 		public Circle Circle;
 		public ConsoleColor Color;
@@ -2411,6 +2538,7 @@ src/MrV/GameEngine/Particle.cs
 			Circle.center += moveThisFrame;
 		}
 	}
+...
 ```
 
 `voice`
@@ -2422,7 +2550,9 @@ also, I want to stop drawing the direction lines. those were nice for debugging 
 `scene`
 src/Program.cs
 ```
+...
 				particles[i] = new Particle(new Circle((10, 10), Rand.Number * rad), direction * (Rand.Number * speed), ConsoleColor.White, Rand.Range(.25f, 1));
+...
 ```
 
 `voice`
@@ -2430,6 +2560,7 @@ this looks more like an explosion, but it's hard to tell from just one run. we s
 
 `scene`
 ```
+...
 			KeyInput.Bind(' ', () => {
 				for (int i = 0; i < particles.Length; ++i) {
 					Vec2 direction = Vec2.ConvertDegrees(Rand.Number * 360);
@@ -2437,6 +2568,7 @@ this looks more like an explosion, but it's hard to tell from just one run. we s
 					particles[i] = new Particle(new Circle((10, 10), Rand.Number * rad), direction * (Rand.Number * speed), ConsoleColor.White, Rand.Range(.25f, 1));
 				}
 			}, "explosion");
+...
 ```
 
 `voice`
@@ -2448,6 +2580,7 @@ But if we want to scale this explosion up to hundreds or thousands of circles, u
 `scene`
 src/MrV/GameEngine/Particle.cs
 ```
+...
 		public Particle(Circle circle, Vec2 velocity, ConsoleColor color, float lifetime) {
 			Init(circle, velocity, color, lifetime);
 		}
@@ -2460,6 +2593,7 @@ src/MrV/GameEngine/Particle.cs
 			LifetimeMax = lifetime;
 			LifetimeCurrent = 0;
 		}
+...
 ```
 
 `voice`
@@ -2469,6 +2603,7 @@ the need for this sort of re-initialization would be clearer in a language like 
 `scene`
 src/Program.cs
 ```
+...
 			KeyInput.Bind(' ', () => {
 				for (int i = 0; i < particles.Length; ++i) {
 					Vec2 direction = Vec2.ConvertDegrees(Rand.Number * 360);
@@ -2476,6 +2611,7 @@ src/Program.cs
 					particles[i].Init(new Circle((10, 10), Rand.Number * rad), direction * Rand.Number * speed, ConsoleColor.White, Rand.Range(.25f, 1));
 				}
 			}, "explosion");
+...
 ```
 
 `voice`
@@ -2569,11 +2705,15 @@ for now, this is sufficient for our simulation.
 `scene`
 src/Program.cs
 ```
+...
 			}, "explosion");
 			FloatOverTime growAndShrink = FloatOverTime.GrowAndShrink;
 			while (running) {
+...
 ```
+
 ```
+...
 				for (int i = 0; i < particles.Length; ++i) {
 					particles[i].Update();
 					float timeProgress = particles[i].LifetimeCurrent / particles[i].LifetimeMax;
@@ -2581,6 +2721,7 @@ src/Program.cs
 						particles[i].Circle.radius = nextRadiusPercentage * particles[i].OriginalSize;
 					}
 				}
+...
 ```
 
 `voice`
@@ -2707,6 +2848,7 @@ This implementation could also be explained as using a Strategy Pattern, with it
 `scene`
 src/MrV/Program.cs
 ```
+...
 			}
 			PolicyDrivenObjectPool<Particle> particlesPool = new PolicyDrivenObjectPool<Particle>();
 			float particleSpeed = 5, particleRad = 3;
@@ -2726,6 +2868,7 @@ src/MrV/Program.cs
 			}, "explosion");
 			FloatOverTime growAndShrink = FloatOverTime.GrowAndShrink;
 			while (running) {
+...
 ```
 
 `voice`
@@ -2741,11 +2884,13 @@ a nice side effect of using this new system is that we can create more than just
 `scene`
 src/MrV/Program.cs
 ```
+...
 				graphics.DrawPolygon(polygonShape, ConsoleColor.Yellow);
 				for (int i = 0; i < particlesPool.Count; ++i) {
 					particlesPool[i].Draw(graphics);
 				}
 				graphics.PrintModifiedOnly();
+...
 ```
 
 `voice`
@@ -2754,6 +2899,7 @@ the draw code needs to change, to use the particle object pool instead of the ol
 `scene`
 src/MrV/Program.cs
 ```
+...
 			void Update() {
 				KeyInput.TriggerEvents();
 				Tasks.Update();
@@ -2769,6 +2915,7 @@ src/MrV/Program.cs
 				}
 				particlesPool.ServiceDelayedDecommission();
 			}
+...
 ```
 
 `voice`
@@ -2886,6 +3033,7 @@ and the particle system's Update handles logic related to the Particle.
 `scene`
 src/Program.cs
 ```
+...
 			}
 			float particleSpeed = 5, particleRad = 2;
 			ParticleSystem particles = new ParticleSystem((.25f, 1), (1, particleRad),
@@ -2893,18 +3041,25 @@ src/Program.cs
 			particles.Position = (10, 10);
 			KeyInput.Bind(' ', () => particles.Emit(10), "explosion");
 			while (running) {
+...
 ```
+
 ```
+...
 				graphics.DrawPolygon(polygonShape, ConsoleColor.Yellow);
 				particles.Draw(graphics);
 				graphics.PrintModifiedOnly();
+...
 ```
+
 ```
+...
 			void Update() {
 				KeyInput.TriggerEvents();
 				Tasks.Update();
 				particles.Update();
 			}
+...
 ```
 
 `voice`
@@ -2927,8 +3082,10 @@ test
 `scene`
 src/Program.cs
 ```
+...
 			KeyInput.Bind('-', () => graphics.ShapeScale *= 1.5f, "zoom out");
 			KeyInput.Bind('=', () => graphics.ShapeScale /= 1.5f, "zoom in");
+...
 ```
 also run.
 
@@ -2941,6 +3098,7 @@ but doing this doesn't zoom into the center of the screen, it zooms into the ori
 `scene`
 src/MrV/CommandLine/DrawBuffer_geometry_.cs
 ```
+...
 	public partial class DrawBuffer {
 		public static ConsoleColorPair[,] AntiAliasColorMap;
 		private Vec2 _originOffsetULCorner;
@@ -2968,18 +3126,25 @@ src/MrV/CommandLine/DrawBuffer_geometry_.cs
 			Offset = screenAnchor;
 		}
 		static DrawBuffer() {
+...
 ```
+
 ```
+...
 		public void DrawShape(IsInsideShapeDelegate isInsideShape, Vec2 start, Vec2 end, ConsoleGlyph glyphToPrint) {
 			Vec2 renderStart = start - _originOffsetULCorner;
 			Vec2 renderEnd = end - _originOffsetULCorner;
 			renderStart.InverseScale(ShapeScale);
+...
 ```
+
 ```
+...
 							for (float sampleX = 0; sampleX < 1; sampleX += SuperSampleIncrement) {
 								bool pointIsInside = isInsideShape(new Vec2((x + sampleX) * ShapeScale.x, (y + sampleY) * ShapeScale.y)
 									+ _originOffsetULCorner);
 								if (pointIsInside) {
+...
 ```
 
 `voice`
@@ -2995,6 +3160,7 @@ the DrawShape function doesn't need to change that much. we need to offset the r
 `scene`
 src/LowFiRockBlaster/Program.cs
 ```
+...
 			particles.Position = (10, 10);
 			KeyInput.Bind(' ', () => particles.Emit(10), "explosion");
 			float ScaleFactor = 1.25f;
@@ -3002,6 +3168,7 @@ src/LowFiRockBlaster/Program.cs
 			KeyInput.Bind('=', () => graphics.Scale /= ScaleFactor, "zoom in");
 			graphics.SetCameraCenter(particles.Position);
 			while (running) {
+...
 ```
 
 `voice`
@@ -3024,6 +3191,7 @@ we should remove specific draw calls and replace them with objects to draw.
 `scene`
 src/LowFiRockBlaster
 ```
+...
 			graphics.SetCameraCenter(particles.Position);
 
 			List<Action<GraphicsContext>> drawPreProcessing = new List<Action<GraphicsContext>>();
@@ -3039,8 +3207,11 @@ src/LowFiRockBlaster
 			drawPostProcessing.Add(particles.Draw);
 
 			while (running) {
+...
 ```
+
 ```
+...
 			void Draw() {
 				Vec2 scale = (0.5f, 1);
 				graphics.Clear();
@@ -3051,6 +3222,7 @@ src/LowFiRockBlaster
 				graphics.SwapBuffers();
 				Console.SetCursorPosition(0, height);
 			}
+...
 ```
 
 
@@ -3093,6 +3265,9 @@ D Dependency Inversion Principle: Use abstractions so classes don't rely on spec
 Following these restrictions reduces cognitive load as the system grows in complexity, so I agree with SOLID principles in most situations.
 However, I intentionally break the principles as practical and sometimes stylistic choice.
 Choices about architecture design is one of those Invisible Wizard Problems.
+---
+logical break for the tutorial
+---
 
 `scene`
 highlight 'S Single Responsiblity Principle'
