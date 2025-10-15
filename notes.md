@@ -7,17 +7,21 @@ The script is quite long, and still unfinished. I am providing the first draft o
 
 Please summarize the script before giving feedback.
 
+as you are reading:
+
 Consider each section labeled `scene` as a description of what is visually shown. These sections are followed by a `voice` section, narrating the visuals.
 
 Code will be in most scenes, between tripple back-tick '```' headings, as is common in markdown. I will record myself typing this code in Microsoft Visual Studio Community 2022 during narration.
 
 code blocks that begin and end with an ellipses '...' are intended modifications of previous code. If it is unclear what code is being modified, make a note of that.
 
-Read the script marked by the `voice` heading. Identify unecessary repetition, or ineffective prose. Provide alternative phrasing where appropriate. Keep in mind this text will have to be spoken.
+Read the script marked by the `voice` heading as spoken dialog. Identify unecessary repetition, or ineffective prose. Provide alternative phrasing where appropriate.
 
 Do Not identify poor grammer, capitalization or punctuation mistakes. I am still looking for high-leverage changes to the script, not interested in English writing minutiae.
 
 Read the code carefully. Please be specific if there are any parts of my code that could be considered bad C-sharp programming. I am interseted in C# writing minutiae.
+
+I wrote some notes that start with double slashes, or C-style line comments. These notes will not be read out loud.
 
 If the code is using a design pattern you recognize that is not mentioned in the script, please identify the pattern, and where the code is using it. Similarly, if the script identifies a design pattern incorrectly, clearly flag that as well.
 
@@ -29,8 +33,7 @@ If there is a strong analogy that could be used to explain an idea, please make 
 
 Identify parts of the script that cover content that is not well documented in other YouTube tutorials. Suggest if emphasizing this content makes sense to promote the tutorial's value.
 
-Please be critical about your feedback. I do not want a sycophantic response, I am serious about finding and fixing mistakes.
-Minimize encouragement; reserve it for insights with transferable public value.
+Please be critical about your feedback. I do not want a sycophantic response, I am serious about finding and fixing mistakes. Minimize encouragement; reserve it for insights with transferable public value.
 
 `scene`
 white text on black background:
@@ -250,11 +253,11 @@ back to program.cs
 
 `voice`
 Lets start our game by drawing the screen where the game will be displayed.
-I'll make a new function called DrawRectangle, and call it in my Main function. You'll notice that it's public static
-we want it to be public static for three reasons:
+I'll make a new function called `DrawRectangle`, and call it in my `Main` function. You'll notice that it's `public static`
+we want it to be `public static` for three reasons:
 	- it doesn't have any dependencies on the Program class, so we should be able to run it from anywhere
-	- the Main function is in a public static context, and needs DrawRectangle to be public static also
-	- public static function calls are technically faster than non-public static calls.
+	- the `Main` function is in a `public static` context, and needs `DrawRectangle` to be `public static` also
+	- `public static` function calls are technically faster than non-`public static` calls.
 		- the speed gain is because an instance doesn't need to be pushed onto the stack with the method call. the gain is so extremely small that it hardly bears mentioning.
 		- However this is game programming, and performance is always important to keep in mind.
 For the sake of clarity, I will try not obfuscate the game with optimizations while I write it,
@@ -360,9 +363,9 @@ show the code and running output
 ```
 
 `voice`
-we can use SetCursorPosition to move the commandline cursor exactly where we want it before printing any character with Console.Write
+we can use `SetCursorPosition` to move the commandline cursor exactly where we want it before printing any character with `Console.Write`
 This functionality is not easily available in all programming language console APIs, so it's nice that C sharp gives it to us so cleanly.
-For example, if you want to do the same thing in Python, you may need to replace SetCursorPosition with printing an escape sequence.
+For example, if you want to do the same thing in Python, you may need to replace `SetCursorPosition` with printing an escape sequence.
 That escape sequence will not work if executed in the basic Windows console. And it will cause strange errors when printing some special characters, or printing in a separate thread.
 
 `scene`
@@ -383,6 +386,7 @@ show the code and running output
 `voice`
 and this code allows us to draw the rectangle anywhere in visible space, not just the upper-left corner of the console.
 
+`scene`
 ```
 ...
 		public static void DrawRectangle(int x, int y, int width, int height, char letterToPrint) {
@@ -460,7 +464,7 @@ Know that this tutorial is the result of lots of such rewrites, and I have minim
 If you are new to programming, you need to know that this is how big projects are written: one step at a time, with lots of rewrites, and tests between changes.
 I sincerely apologize for speeding it up my development process. Please learn what you can from my compressed examples, and do pause and rewind the video for yourself as needed.
 
-Notice that I made a new DrawRectangle function, and I'm using the old DrawRectangle function in this new one.
+Notice that I made a new `DrawRectangle` function, and I'm using the old `DrawRectangle` function in this new one.
 
 `scene`
 black background with dark-gray grid, 10x10 squares
@@ -468,7 +472,7 @@ bold white cartesian plane (x/y axis)
 label integer locations of the x and y axis, -5 to +5 on both axis
 
 `voice`
-Vec2 is a 2 dimensional vector, which is a physics and math concept. The basic premise is:
+`Vec2` is a 2 dimensional vector, which is a physics and math concept. The basic premise is:
 
 `scene`
 Vec2.cs, with cartesian plane + grid diagram in small window
@@ -533,7 +537,7 @@ namespace MrV.Geometry {
 AABB.cs, with cartesian plane + grid diagram in small window
 
 `voice`
-A box can be described with two Vec2 structures, bounded by edges aligned on the x and y axis. We call this an Axis Aligned Bounding Box or AABB.
+A box can be described with two `Vec2` structures, bounded by edges aligned on the x and y axis. We call this an Axis Aligned Bounding Box or `AABB`.
 This is a simple description of space in a simulation, and it is used for many kinds of clalculations. 
 
 `scene`
@@ -552,7 +556,7 @@ src/LowFiRockBlaster/Program.cs, add to Main
 ...
 ```
 
-notice I'm again using public static functions, and calling a common function that has the logic written once
+notice I'm again using `public static` functions, and calling a common function that has the logic written once
 	In most cases, computer programmers focus on having a Single Point Of Truth wherever possible, even at the cost of performance.
 	Being undisciplined about a Single Point of Truth leads to technical debt, which is an Invisible Wizard Problems that I'm trying to avoid in this tutorial.
 	If we can keep complicated logic in one place, then we only need to fix one place when there is a bug.
@@ -571,7 +575,7 @@ Also, notice how I am naming my variables. I make my public variables capitalize
 	I am leaving the variables public because it is easier for you to copy, and will make no functional difference to the syntax.
 
 In my coding style, lowercase member variables are explicitly primitives, which should actually not be accessed publicly,
-	unless the class is a datastructure that exists solely to wrap around those members, like the Vec2 struct.
+	unless the class is a datastructure that exists solely to wrap around those members, like the `Vec2` struct.
 
 `scene`
 writing and compiling program.cs
@@ -611,7 +615,7 @@ draw a circle at position 3,4 with a radius or 2. label radius with a line at 0 
 A circle can be described as a Vector with one additional value for radius.
 
 `scene`
-src/MrV/Geometry/Polygon.cs
+src/MrV/Geometry/PolygonShape.cs
 ```
 namespace MrV.Geometry {
 	public struct PolygonShape {
@@ -623,7 +627,7 @@ namespace MrV.Geometry {
 	}
 }
 ```
-Polygon.cs, with cartesian plane + grid diagram in small window
+PolygonShape.cs, with cartesian plane + grid diagram in small window
 draw point A at 1,1, point B at 3,4, point C at 1,7, and point D at 8,4
 draw lines AB, BC, CD, and DA
 
@@ -632,15 +636,15 @@ A polygon's shape can be described as a list of 2 dimensional vectors, with the 
 
 `scene`
 black background, 3 rows of labeled white boxes (each white box has 4 smaller gray boxes inside), followed by a text label.
-	2 boxes labeled [x, y], followed by label: "Vec2"
-	4 boxes labeled [Min.x, Min.y, Max.x, Max.y], followed by label: "AABB"
-	3 boxes labeled [x, y, radius], followed by label: "Circle"
+	2 boxes labeled [x, y], followed by label: `Vec2`
+	4 boxes labeled [Min.x, Min.y, Max.x, Max.y], followed by label: `AABB`
+	3 boxes labeled [x, y, radius], followed by label: `Circle`
 	below these 3 rows is another 1 row, with a white box (with 8 smaller gray boxes inside)
-	1 box labeled [points], followed by the label "PolygonShape"
+	1 box labeled [points], followed by the label `PolygonShape`
 
 `voice`
 These data structures are small and simple in memory.
-Each float taking up only 4 bytes. Vec2 is a total of 8 bytes. AABB is 16. Circle is 12. The points array of Polygon is a reference, which is also small, probably 8 bytes.
+Each float taking up only 4 bytes. `Vec2` is a total of 8 bytes. `AABB` is 16. `Circle` is 12. The points array of `PolygonShape` is a reference, which is also small, probably 8 bytes.
 Because they are simple in memory, these are written as struct Value types instead of class Reference types. A Value type has certain memory advantages.
 A program passes all struct data by value instead of by reference. That means all data is copied each time it is used.
 	References are almost always the same size, which is 8 bytes on a 64 bit CPU. the For small structures, especially less than or equal to 8 bytes, passing by value saves a CPU time.
@@ -730,14 +734,14 @@ split screen, showing Program.cs
 ```
 
 `voice`
-There is some Circle specific logic written in Program.cs right here. It should really be in the Circle class instead.
+There is some `Circle` specific logic written in Program.cs right here. It should really be in the `Circle` class instead.
 
 This is a method extraction refactor, and it helps create a Single Point Of Truth for our circle logic.
 
-If we implement a similar function in Polygon, we can use a similar draw function, like DrawCircle, to draw the polygon
+If we implement a similar function in `PolygonShape`, we can use a similar draw function, like `DrawCircle`, to draw the polygon
 
 `scene`
-Polygon.cs
+PolygonShape.cs
 ```
 ...
 		public static bool IsInPolygon(IList<Vec2> poly, Vec2 pt) {
@@ -779,7 +783,7 @@ Polygon.cs
 The math for checking a point inside of a polygon is a bit complex. the basic idea is this:
 
 `scene`
-Polygon.cs, with cartesian plane + grid diagram in small window
+PolygonShape.cs, with cartesian plane + grid diagram in small window
 draw point A at 1,1, point B at 3,4, point C at 1,7, and point D at 8,4
 draw lines AB, BC, CD, and DA
 
@@ -1162,7 +1166,7 @@ black screen with white rows of text:
 	decimal									0											0
 	value as time: 0 hrs, 0 minutes, 0 seconds, 0 milliseconds
 	rate increase: millisecond
-there are 5 representations of the same number, one as a binary integer, another as a binary representation of a float, then a decimal integer and decimal float, and lastly, a time representation.
+there are 5 representations of the same number, one as a binary integer, another as a binary representation of a `float`, then a decimal integer and decimal float, and lastly, a time representation.
 all 5 numbers increase at the same rate, with the rate of increase identified by the row labeled 'rate increase'.
 after a few seconds, the rate increase changes from millisecond to second, then second to minute, then minute to hour.
 show floating point number's exponent change as it increases in value.
@@ -1179,7 +1183,7 @@ back to code
 This class is a singleton, which allows details about the passage of time to be accessed anywhere in the program, which is very convenient for game physics.
 I'm not making the entire class static because pure static classes create design hazards similar to global variables. we'll talk more about this design choice later.
 You might also notice that DeltaTime gives the same value until UpdateSelf is called.
-	This is intentional, and will keep timing math consistent when DeltaTime is checked at multiple different times of the same update frame.
+	This is intentional, and will keep timing math consistent when `DeltaTime` is checked at multiple different times of the same update frame.
 You may also realize that this code is actually giving a measurement of how long the last frame took, not how long this frame is taking.
 	This works in practice because consecutive frames tend to require similar amounts of compute.
 In the worst case for this design:
@@ -1187,8 +1191,8 @@ In the worst case for this design:
 	the next fast frame will use the long frame time of the previous laggy frame, but do so very quickly
 	to a very keen-eyed observer, this will look like a strange stutter, where the game slows down a lot, and then speeds up a lot, over the course of only a few milliseconds.
 	the proper solution to this problem would not be a change to the timing system, but a change to the code causing the lag spike.
-The ThrottleUpdate function is used to smooth out frames, and reduce CPU burden.
-The ThrottleWithoutConsoleKeyPress interrrupts the throttling when a keypress is detected, so that the game always updates quickly to user input, even if the framerate is set to be low.
+The `ThrottleUpdate` function is used to smooth out frames, and reduce CPU burden.
+The `ThrottleWithoutConsoleKeyPress` interrrupts the throttling when a keypress is detected, so that the game always updates quickly to user input, even if the framerate is set to be low.
 lets test this out.
 
 `scene`
@@ -1211,12 +1215,12 @@ Program.cs
 ```
 
 `voice`
-It's possible to design the Time class without a necessary Update method, but doing so would result in different values for delta time within the same gameloop frame.
+It's possible to design the `Time` class without a necessary `Update` method, but doing so would result in different values for delta time within the same gameloop frame.
 This implementation tries to artificially set the gameloop speed to 20 frames per second. Feel free to experiment with this value.
 A lower framerate, which is a higher frame delay, reduces the burden that this program puts on the CPU.
 	A lower CPU burden improves performance of the rest of your computer while this game is running.
 
-Notice that Time.Update(); is called in the game loop, to track the passage of time and guage the cost of the entire process for SleepWithoutConsoleKeyPress.
+Notice that `Time.Update();` is called in the game loop, to track the passage of time and guage the cost of the entire process for `SleepWithoutConsoleKeyPress`.
 
 ---
 
@@ -1398,7 +1402,7 @@ write in big bold letters on the side of the screen
   I  it
 
 `voice`
-This ResizeBuffer method is more robust than we need it to be, because it will copy old data into the new buffer to maintain consistency.
+This `ResizeBuffer` method is more robust than we need it to be, because it will copy old data into the new buffer to maintain consistency.
 This feature will probably not be needed, so it could be argued the extra code is a waste of time and mental energy, according to the YAGNI or You Aint Gunna Need It principle.
 
 `scene`
@@ -1406,8 +1410,8 @@ gray-out the YAGNI text, and write white text with red outline over it
   I Don't Wanna Worry About It
 
 `voice`
-However, this feature fulfills my intuition of how the ResizeBuffer function should work. That allows me to comfortably forget about how it actually works later.
-For me, the cognitive load of writing the functionality now is less than the cognitive load of having to remember that the feature doesn't exist in the future.
+However, this feature fulfills my intuition of how the `ResizeBuffer` function should work. That allows me to comfortably forget about how it actually works later.
+For me, the cognitive load of writing the extra functionality now is less than the cognitive load of having to remember that the feature doesn't exist in the future.
 
 `scene`
 scroll down to WriteAt overloads, Clear, and Print + PrintBuffer
@@ -1505,7 +1509,7 @@ Program.cs
 `voice`
 we can and should remove the previous draw functions now, since we shouldn't print directly to the command line anymore, and equivalent logic is in DrawBuffer_geometry.cs.
 
-Our code is now using the DrawBuffer as a GraphicsContext, which is a computer graphics concept.
+Our code is now using the `DrawBuffer` as a Graphics Context, which is a computer graphics concept.
 A graphics context is where we can include anything related to graphics state. We'll expand this idea soon.
 
 We can also add back the test drawing that was causing flickering before, since the buffer technique has eliminated the flickering.
@@ -1559,8 +1563,8 @@ MrV/DrawBuffer_geometry.cs
 ```
 
 `voice`
-we need to keep track of the desired scale. for that, we'll add a scale variable to DrawBuffer.
-	arguably, the ShapeScale variable added to the DrawBuffer class is bad design.
+we need to keep track of the desired scale. for that, we'll add a scale variable to `DrawBuffer`.
+	arguably, the `ShapeScale` variable added to the `DrawBuffer` class is bad design.
 	this partial class implementation could instead be a subclass, to keep a clearer boundary between buffer management and drawing with a scale.
 	I am making the intentional choice to combine these ideas into the same class, to reduce my cognitive load for this system.
 		Because this code is in a separate file, I can fix this more easily later if the design weighs on me.
@@ -1569,7 +1573,7 @@ we need to keep track of the desired scale. for that, we'll add a scale variable
 to draw the shape in a scaled way, we need to inverse-scale the bounding rectangle being drawn in, to put it in the correct position in the buffer
 then we need to test against the scaled point, which is being printed to the unscaled position in the buffer.
 
-If you want to change the direction of the Y axis in the simulation, you can experiment with changing the sign of the y-value of ShapeScale.
+If you want to change the direction of the Y axis in the simulation, you can experiment with changing the sign of the y-value of `ShapeScale`.
 	I recommend doing that later, after we implement a moving camera.
 
 Because we added the scale member to this class, we don't need to pass it in as a variable. that means we don't change any of the other method signitures. Nice.
@@ -1636,12 +1640,12 @@ namespace MrV.Task {
 
 `voice`
 This is a very simple task scheduler, which executes functions at a given delay. This is functionally similar to Javascript's SetTimeout.
-In this implementation, the Tasks.Task type is basically a container for a function to invoke, and a time to invoke it.
-The System.Action type is a variable that stores a function to invoke later. This can also be accomplished with a delegate, as we saw in DrawBuffer.IsInsideShapeDelegate.
-Each task also keeps track of what line of code called Tasks.Add, which is very valuable information when debugging asynchronous functionality like this.
+In this implementation, the `Tasks.Task` type is basically a container for a function to invoke, and a time to invoke it.
+The `System.Action` type is a variable that stores a function to invoke later. This can also be accomplished with a delegate, as we saw in `DrawBuffer.IsInsideShapeDelegate`.
+Each task also keeps track of what line of code called `Tasks.Add`, which is very valuable information when debugging asynchronous functionality like this.
 Execution of tasks happen in the Update method, where the next Task to execute is at the front of a the Tasks list.
 A seperate list in RunUpdate gathers tasks to execute before the execution.
-	If an executing Task ends up calling Enqueue in a nested call, this separation prevents an infinite loop.
+	If an executing Task ends up calling `Tasks.Add` in a nested call, this separation prevents an infinite loop.
 Ordering is done by a Binary Search algorithm, generalized to work on generic records. The implementation of this binary search looks like this:
 
 `scene`
@@ -1674,9 +1678,9 @@ namespace MrV {
 ```
 
 `voice`
-BinarySearch is a classic algorithm that works on a list of ordered values. The method assumes the list is ordered, and it will not work if the list isn't sorted.
-BinarySearch tests IComparable values, which extend a CompareTo method. All primitive types, like floats and ints, are IComparable.
-	In the CompareTo function,
+`BinarySearch` is a classic algorithm that works on a list of ordered values. The method assumes the list is ordered, and it will not work if the list isn't sorted.
+`BinarySearch` tests `IComparable` values, which extend a `CompareTo` method. All primitive types, like `float`s and `int`s, are `IComparable`.
+	In the `CompareTo` function,
 		A negative value means the left-value is smaller than the right-value.
 		A zero value means the left-value and right-value are equal.
 In the inner loop, BinarySearch checks if the value being searched for is directly in the middle of the search space.
@@ -1699,8 +1703,8 @@ Task.cs
 ```
 
 `voice`
-I could have also just used the BinarySearch method already in C-sharp's List class.
-As long as the RecordComparer is created as a static member, there isn't any significant performance gain in using my custom algorithm.
+I could have also just used the `BinarySearch` method already in C-sharp's List class.
+As long as the `RecordComparer` is created as a static member, there isn't any significant performance gain in using my custom algorithm.
 However, my search algorithm doesn't need to create a mostly empty search element.
 	That means my algorithm becomes better if the Task class becomes more complex, since we don't need to allocate the entire thing.
 	I expect that the Task class could become quite complex, and I don't want to worry about the cost of enqueueing a task later.
@@ -1739,7 +1743,7 @@ src/Program.cs
 ```
 
 `voice`
-I need to make sure the Tasks are regularly Updated, so I'll include Tasks.Update in the Update section of my code.
+I need to make sure the `Tasks` are regularly Updated, so I'll include `Tasks.Update` in the `Update` section of my code.
 Before the gameloop, this code creates an automatic test of my application by synthetically setting the program's input variable.
 the first for-loop moves the circle to the right with the 'd' key, and expands the radius with the 'e' key
 the second for-loop moves the circle up with the 'w' key, and reduces the radius with the 'r' key.
@@ -1750,10 +1754,10 @@ test the code
 
 `voice`
 Nice.
-If the keyDelayMs timing is reduced to less than the deltaTime of a frame, some of these inputs will be lost, and the circle will not move the same amount.
+If the `keyDelayMs` timing is reduced to less than the deltaTime of a frame, some of these inputs will be lost, and the circle will not move the same amount.
 
 `scene`
-set the KeyDelayMs value to 5 and test again
+set the `KeyDelayMs` value to 5 and test again
 
 `voice`
 Lets make a better Key Input system to solve this and other bugs.
@@ -1827,23 +1831,23 @@ namespace MrV.CommandLine {
 ```
 
 `voice`
-A KeyResponse is just some function, which happens in response to a keypress.
-I could have used System.Action instead, but using a named delegate type means we can change this more easily later.
-A structure keeps the relationship of each Key press and KeyResponse, along with a note about the purpose of the key binding.
-	The KeyType is templated because this implementation will just use characters, but any type of input should work as well.
-A Dispatcher manages a queue of events, and those events are mapped in a DispatchTable to responses.
+A `KeyResponse` is just some function, which happens in response to a keypress.
+I could have used `System.Action` instead, but using a named delegate type means we can change this more easily later.
+A structure keeps the relationship of each Key press and `KeyResponse`, along with a note about the purpose of the key binding.
+	The `KeyType` is templated because this implementation will just use characters, but any type of input should work as well.
+A `Dispatcher` manages a queue of events, and those events are mapped in a `dispatchTable` to responses.
 	This is a general concept that is useful in many domains beyond key input handling.
 	If we were making a scripting engine or multiplayer system, we could use this dispatcher for a critical part of the system there.
-BindKeyResponse will bind a KeyResponse delegate to a key.
+`BindKeyResponse` will bind a `KeyResponse` delegate to a key.
 	If the key has never been bound before, a new list of KeyResponses will be created for that key.
-Events added to the dispatcher will be Consumed all at once.
+Events added to the `Dispatcher` will be consumed all at once.
 Just like the task scheduler, execution will happen from a list that can't be added to while actions are processed.
 
-This KeyInput implementation creates a singleton for easy access, with a public Set method for the Instance.
-This design will allow the KeyInput system to swap out at runtime, in case different different user-interface states use different keybindings.
+This `KeyInput` implementation creates a singleton for easy access, with a public `Set` method for the `Instance`.
+This design will allow the `KeyInput` system to swap out at runtime, in case different different user-interface states use different keybindings.
 Otherwise, this class can be accessed statically like any singleton, for convenience.
-The KeyInput class reads specifically from the C-sharp Console, so it has a conveniently labeled place for that logic.
-The ToString method shows how to dynamically query what is bound to each key, which could be useful for exposing dynamic key binding at runtime.
+The `KeyInput` class reads specifically from the C-sharp Console, so it has a conveniently labeled place for that logic.
+The `ToString` method shows how to dynamically query what is bound to each key, which could be useful for exposing dynamic key binding at runtime.
 
 `scene`
 src/Program.cs
@@ -1898,13 +1902,14 @@ src/Program.cs
 ```
 
 `voice`
-Because KeyInput takes care of input logic, the Input function can be dramatically simplified, and so can Update.
+Because `KeyInput` takes care of console input logic, the Input function can be dramatically simplified, and so can `Update`.
 
-TODO keep reviewing <---------
+now when we run the program to test it, key events are not lost, even when the keyDelay is lowered to much less than the `Update`'s `DeltaTime`.
 
-now when we run the program to test it, key events are not lost, even when the keyDelay is lowered to much less than the Update's DeltaTime.
+the input bug is fixed!
 
-but we still want to reduce that deltaTime, and we have a technique to do it still.
+let's keep working on the graphics optimization
+
 The image doesn't actually need to be fully refresh every frame, only a few characters change each frame.
 This is similar to a graphics optimization technique called Pixel Caching, done here with character glyphs.
 
@@ -1944,15 +1949,18 @@ namespace MrV.CommandLine {
 ```
 
 `voice`
-The GraphicsContext class is a DrawBuffer, and it also keeps track of previous buffer data which was already drawn.
-The decision to inherit DrawBuffer instead could be argued here.
-Conceptually, GraphicsContext has two DrawBuffers instead of being a buffer with spare data.
-I decided to use inheritance because GraphicsContext an API surface similar to DrawBuffer, and _lastBuffer can be an internal array.
-PrintModifiedOnly checks every character to determine if it is the same as the last character printed.
-only different characters are printed.
-after every print, which is commonly called a Render, the current active buffer and last buffer can switch places
-PrintModifiedOnly could be further optimized to reduce calls to SetCursorPosition, which is an expensive call in the Console API.
+The `GraphicsContext` class is a `DrawBuffer`, and it also keeps track of previous buffer data which was already drawn.
+The decision to inherit `DrawBuffer` could be argued here.
+Conceptually, `GraphicsContext` has two `DrawBuffer`s instead of being a buffer with spare data.
+I decided to use inheritance because `GraphicsContext` would want an API surface similar to `DrawBuffer`, and `_lastBuffer` ccould be the second buffer internally.
 
+The new `PrintModifiedOnly` method checks every character to determine if it is the same as the last character printed.
+only different characters are printed.
+after every complete print, which is commonly called a Render, the current active buffer and last buffer can switch places.
+
+`PrintModifiedOnly` could be further optimized to reduce calls to `SetCursorPosition`.
+
+`scene`
 ```
 ...
 		public virtual void PrintModifiedOnly() {
@@ -1977,9 +1985,12 @@ PrintModifiedOnly could be further optimized to reduce calls to SetCursorPositio
 ```
 
 `voice`
-Console.Write implicitly moves the cursor position.
-The cursor position only needs to be set if there is a new row, or if the last glyph was skipped.
+`Console.Write` implicitly moves the cursor position over one space.
+The cursor position only needs to be set if there is a new row, or if the last glyph was not printed.
 
+In practice, `SetCursorPosition` is an expensive call in the Console API.
+
+`scene`
 src/Program.cs
 ```
 ...
@@ -1990,9 +2001,10 @@ src/Program.cs
 ```
 
 `voice`
-The GraphicsContext has almost the same API surface as DrawBuffer, so it can be substituted without incident
+The `GraphicsContext` has basically the same API surface as `DrawBuffer`, so it can be substituted without incident.
 
 `scene`
+src/Program.cs
 ```
 ...
 				graphics.DrawPolygon(polygonShape, '-');
@@ -2003,20 +2015,20 @@ The GraphicsContext has almost the same API surface as DrawBuffer, so it can be 
 ```
 
 `voice`
-Using the optimized draw happens in the same way as the previous print, except that FinishedRender is called to swap the draw buffer data.
-A call to SwapBuffers might seem like an overly verbose requirement. However, it's very common in graphics APIs, so it's worth getting used to the idea.
+Using the optimized draw happens in the same way as the previous print, except that `SwapBuffers` is called to swap the draw buffer data at the end.
+A call to `SwapBuffers` might seem like an overly verbose requirement. However, it's very common in graphics APIs, so it's worth getting used to the idea.
 
-The first time I wrote this program, I didn't separate DrawBuffer with GraphicsContext, I just wrote them all in the same class.
-I want to make a special note about it because I want to remind the audience that software design is difficult.
+The first time I wrote this program, I didn't separate `DrawBuffer` with `GraphicsContext`, I just wrote them all in the same class.
+I want to make a special note about it because I want to remind the audience that software design is difficult, and refactoring is common.
 	and I want to emphasize that doing something for the first time means you should be comfortable with imperfect design.
-	In every major computer programming problem I have ever solved started with a relatively messy intuitive solution.
+	every major computer programming problem I have ever solved started with a relatively messy intuitive solution.
 	My messy code didn't evolve into something that made sense until I sat with it for a while and re-wrote it.
 	Be patient with yourself as a developer. Give yourself the grace to rewrite messy code later.
 
 Running this program is *much* faster than it used to be. Most of the time draw happens, there is actually no change at all.
-And sometimes, only small amounts of the screen need to change. Dirty Rectangle (or Scissoring) is the name of another similar technique for pixel graphics.
+And sometimes, only small amounts of the screen needs to change.
 
-The graphics context needs to use colors, as part of the original game design.
+The graphics look fast enough to test quickly. we still need to keep working with the graphics system to use colors, which is part of the original game design.
 
 `scene`
 src/MrV/CommandLine/ConsoleColorPair.cs
@@ -2047,11 +2059,13 @@ namespace MrV.CommandLine {
 
 `voice`
 C-sharp's console API gives us access to 16 colors, in both the foreground and background.
-This structure doesn't have a character because it will be useful to have color data without text in our graphics system.
+This structure will be useful to have color data without text in our graphics system.
 
-These values are stored as 1-byte values instead of the default enumeration type, which is probably a 4 byte value.
+These values are stored as 1-byte values instead of the default enumeration type, which is possibly a 4 byte value.
 
-A static constructor remembers what the default console colors are as soon as any ConsoleColorPair code is called.
+We could do some bitwise tricks to put both 4-bit values into one 8-bit byte, but that memory optimization doesn't actually help because of struct memory alignment in C-sharp.
+
+A static constructor remembers what the default console colors are as soon as any ConsoleColorPair code is called. This could help solve some color bugs later.
 
 `scene`
 src/MrV/CommandLine/ConsoleGlyph.cs
@@ -2072,22 +2086,15 @@ namespace MrV.CommandLine {
 				}
 			}
 		}
-		public ConsoleColor fore { get { return colorPair.fore; } set { colorPair.fore = value; } }
-		public ConsoleColor back { get { return colorPair.back; } set { colorPair.back = value; } }
+		public ConsoleColor Fore { get { return colorPair.fore; } set { colorPair.fore = value; } }
+		public ConsoleColor Back { get { return colorPair.back; } set { colorPair.back = value; } }
 		public ConsoleGlyph(char letter, ConsoleColorPair colorPair) { this.letter = letter; this.colorPair = colorPair; }
-		public static implicit operator ConsoleGlyph(ConsoleColor color) => new ConsoleGlyph(' ', Default.fore, color);
+		public static implicit operator ConsoleGlyph(ConsoleColor color) => new ConsoleGlyph(' ', Default.Fore, color);
 		public ConsoleGlyph(char letter, ConsoleColor fore, ConsoleColor back) :
 			this(' ', new ConsoleColorPair(fore, back)) { }
 		public static readonly ConsoleGlyph Default = new ConsoleGlyph(' ', ConsoleColorPair.Default);
 		public static readonly ConsoleGlyph Empty = new ConsoleGlyph('\0', ConsoleColor.Black, ConsoleColor.Black);
-		public static bool operator ==(ConsoleGlyph a, ConsoleGlyph b) {
-			return a.letter == b.letter && a.fore == b.fore && a.back == b.back;
-		}
-		public static bool operator !=(ConsoleGlyph a, ConsoleGlyph b) {
-			return a.letter != b.letter || a.fore != b.fore || a.back != b.back;
-		}
-		public override bool Equals(object obj) => obj is ConsoleGlyph g && this == g;
-		public override int GetHashCode() => (int)letter | ((int)fore << 8) | ((int)back << 16);
+		public bool Equals(ConsoleGlyph other) => other.letter == letter && other.Fore == Fore && other.Back == Back;
 		public override string ToString() => letter.ToString();
 		public void ApplyColor() => colorPair.Apply();
 		public static ConsoleGlyph[] Convert(string text,
@@ -2110,13 +2117,16 @@ namespace MrV.CommandLine {
 }
 ```
 
-Each glyph on the screen should have the ConsoleColorPair qualities, so we can change the color.
+`voice`
+Each glyph on the screen should have the `ConsoleColorPair` qualities, so we can change the color.
 Because each structure is a struct, there can't be inheritance, the glyph must be composed.
 If we want to conveniently access a glyph's colors, we should do it with a properties.
 There are two constructors, and an implicit constructor, all eventually calling the same base constructor, so we keep a Single Point of Truth.
 A few readonly constant-like values will help conveniently define things like a default clear canvas, which is different from an explicitly empty canvas.
 
-Some convenience methods will help convert text to and from ConsoleGlyphs.
+Some convenience methods will help convert text to and from `ConsoleGlyphs`.
+
+Now we need to use the console glyph in the `DrawBuffer`, instead of the character primitive.
 
 `scene`
 src/MrV/CommandLine/DrawBuffer.cs
@@ -2185,19 +2195,21 @@ src/MrV/CommandLine/DrawBuffer.cs
 ```
 
 `voice`
-The DrawBuffer should use an array of ConsoleGlyph instead an array of characters.
-To make this change, I made changes in DrawBuffer:
-	did a search/replace of char with ConsoleGlyph
-	replaced text.ToCharArray() with ConsoleGlyph.Convert(text)
-	set the switch statement in WriteAt to use glyph.Letter
-	changed the Clear() method to call Clear(_buffer, ConsoleGlyph.Default)
-	in PrintBuffer, 
-		just before Console.Write(glyph);, add
-			glyph.ApplyColor();
+I can make the right changes by:
+	search/replace of `char` with `ConsoleGlyph`
+	replace `text.ToCharArray()` with `ConsoleGlyph.Convert(text)`
+	set the switch statement in `WriteAt` to use `glyph.Letter`
+	changed the `Clear()` method to call `Clear(_buffer, ConsoleGlyph.Default)`
+	in `PrintBuffer`,
+		just before `Console.Write(glyph);`, add
+			`glyph.ApplyColor();`
 		at the very end of the method
-			ConsoleGlyph.Default.ApplyColor();
+			`ConsoleGlyph.Default.ApplyColor();`
+
+Similar changes need to happen in the DrawBuffer_geometry file
+
 `scene`
-src/MrV/CommandLine/DrawBuffer_geometry
+src/MrV/CommandLine/DrawBuffer_geometry.cs
 ```
 ...
 		public void DrawShape(IsInsideShapeDelegate isInsideShape, Vec2 start, Vec2 end, ConsoleGlyph letterToPrint) {
@@ -2241,7 +2253,9 @@ src/MrV/CommandLine/DrawBuffer_geometry
 ```
 
 `voice`
-In DrawBuffer_geometry, I did a search/replace of 'char' with 'ConsoleGlyph'
+In DrawBuffer_geometry, search/replace of `char` with `ConsoleGlyph`
+
+And because we changed `DrawBuffer`, we need to change it's inheriting class `GraphicsContext`
 
 `scene`
 src/MrV/CommandLine/GraphicsContext
@@ -2275,18 +2289,18 @@ src/MrV/CommandLine/GraphicsContext
 ...
 ```
 
-in GraphicsContext
-	did a search/replace of char with ConsoleGlyph
-	in PrintModifiedOnly(), replaced the isSame variable initialization using a double-equal operator with
+in `GraphicsContext`
+	search/replace of `char` with `ConsoleGlyph`
+	in `PrintModifiedOnly()`, replace the `isSame` variable initialization using a double-equal operator with
 		`bool isSame = this[row, col].Equals(_lastBuffer[row, col]);`
-	in PrintModiefiedOnly,
+	in `PrintModiefiedOnly`,
 		just before `Console.Write(glyph);`, add
 			`glyph.ApplyColor();`
 		at the very end of the method
 			`ConsoleGlyph.Default.ApplyColor();`
 
 `scene`
-src/Program
+src/Program.cs
 ```
 ...
 			void Draw() {
@@ -2311,19 +2325,19 @@ now we can test these changes and see that our graphics are colored squares inst
 
 the graphics are very low resolution.
 
-there is a programming trick called AntiAliasing that allows graphics to look like they have higher resolution than they really do.
+there is a programming trick called Anti-Aliasing that allows graphics to look like they have higher resolution than they really do.
 
 `scene`
 video showing anti-aliasing
 
 `voice`
-this technique requires a large color space to work best. still, even with only 16 colors, we can implement a basic anti-aliasing.
+this technique requires a large color space to work best. still, even with only 16 colors, we can implement a basic anti-aliasing, and it will help.
 
 The technique requires that we calculate a higher-resolution than we can actually draw, which we call a super-sample.
-once we have a super-sample for each pixel that we are drawing, we can decide how to draw that pixel with more information.
+once we have a super-sample for each pixel that we are drawing, we can decide how to draw that pixel with more color information.
 
 `scene`
-src/MrV/DrawBuffer_geometry
+src/MrV/DrawBuffer_geometry.cs
 ```
 ...
 	public partial class DrawBuffer {
@@ -2387,15 +2401,15 @@ src/MrV/DrawBuffer_geometry
 
 `voice`
 I must admit that this implementation of antialiasing is very naive, and doesn't take color mixing from overlapping geometry into account.
-	This is an intentional choice made in the robustness vs accessability tradeoff.
+	This is an intentional choice made in the robustness vs accessability tradeoff I mentioned at the beginning of the tutorial.
 
-because all of the draw methods use DrawShape, we can accomplish all of our AntiAliasing by only modifying that one method.
+because all of the draw methods use `DrawShape`, we can accomplish all of our Anti-Aliasing by only modifying that one method.
 
 at the beginning of the implementation of this partial class, I'll define the anti-alias gradients for each color.
 	this will only be meaningful for the bright colors in out 16 color range
 
-the DrawShape method needs to do more checks per glyph, to count samples.
-the additional nested for-loop counts how many times the isInsideShape function would trigger in each glyph's space.
+the `DrawShape` method needs to do more checks per glyph, to count samples.
+the additional nested for-loop counts how many times the `isInsideShape` function would trigger in each glyph's space.
 then, before the glyph is printed, a copy is made with the correct background color based on it's starting background color and sample count.
 
 `scene`
@@ -2417,6 +2431,9 @@ drawing lines is an essential part of testing and debugging vector math, which w
 while we are in the drawing code, we should add a method to draw lines.
 this creates a thin rectangle, with the center of two of it's opposite edges at the given start and end coordinate.
 
+Vec2 needs some additional math to support this math.
+
+`scene`
 ```
 ...
 		public float MagnitudeSqr => x * x + y * y;
@@ -2428,24 +2445,23 @@ this creates a thin rectangle, with the center of two of it's opposite edges at 
 		public bool Equals(Vec2 v) => x == v.x && y == v.y;
 ...
 ```
+PolygonShape.cs, with cartesian plane + grid diagram in small window
+draw point A at 1,1, point B at 3,4
+draw lines AB
 
 `voice`
-Vec2 needs some additional math to support this math.
-
-`scene`
-code with overlay of image of point A and point B. animation happens over the extra image as details are explained.
-
-`voice`
-if you have 2 points in space, you can calculate their difference, or Delta with simple subtraction.
-the distance, also called the Magnitude of the Delta, can be determined with the pythagorean theorum, 'a' squared plus 'b' squared equals 'c' squared.
+if you have 2 points in space, you can calculate their difference, or `Delta` with simple subtraction.
+the distance, also called the `Magnitude` of the `Delta`, can be determined with the pythagorean theorum, 'a' squared plus 'b' squared equals 'c' squared.
 the square root operation is fairly expensive for a computer to do accurately, so for performance reasons, it's best to do math that doesn't need square root as much as possible.
-	for this reason, game engine APIs will often include a MagnitudeSqr, to eliminate a call to the square-root function.
-if we divide the entire vector by it's Magnitude, we get it's Normalized value, which we can think of as a direction.
-	the x and y components of a normal value are identical to the cosine and sine values of this Normalized vector.
+	for this reason, game engine APIs will often include a `MagnitudeSqr`, to eliminate a call to the square-root function. this is fine as long as we compare other squared values
+if we divide the entire vector by it's `Magnitude`, we get it's `Normalized` value, which we can think of as a direction.
+	the x and y components of a normal value are identical to the cosine and sine values of this `Normalized` vector.
 	I felt I was terrible at math in high-school, when I studied trigonometry.
 	As a game developer, I have never needed to know my trig-identities, but using a unit vector to describe direction has been necessary.
 Swapping the x and y components of a vector and making one of them negative will give a perpendicular vector.
 we need this perpendicular vector to create the thin rectangle for our line drawing code.
+
+TODO continue reviewing <------
 
 `scene`
 src/MrV/GameEngine/Particle.cs
