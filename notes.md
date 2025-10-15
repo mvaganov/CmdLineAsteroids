@@ -471,7 +471,7 @@ label integer locations of the x and y axis, -5 to +5 on both axis
 Vec2 is a 2 dimensional vector, which is a physics and math concept. The basic premise is:
 
 `scene`
-Vec2.cs, with cartesian plane + gid diagram in small window
+Vec2.cs, with cartesian plane + grid diagram in small window
 shift the cartesian plane to have the origin at the upper-left
 swap the negative y axis to have positive integer values
 
@@ -530,7 +530,7 @@ namespace MrV.Geometry {
 	}
 }
 ```
-AABB.cs, with cartesian plane + gid diagram in small window
+AABB.cs, with cartesian plane + grid diagram in small window
 
 `voice`
 A box can be described with two Vec2 structures, bounded by edges aligned on the x and y axis. We call this an Axis Aligned Bounding Box or AABB.
@@ -604,6 +604,8 @@ namespace MrV.Geometry {
 	}
 }
 ```
+AABB.cs, with cartesian plane + grid diagram in small window
+draw a circle at position 3,4 with a radius or 2. label radius with a line at 0 degrees
 
 `voice`
 A circle can be described as a Vector with one additional value for radius.
@@ -621,23 +623,35 @@ namespace MrV.Geometry {
 	}
 }
 ```
+Polygon.cs, with cartesian plane + grid diagram in small window
+draw point A at 1,1, point B at 3,4, point C at 1,7, and point D at 8,4
+draw lines AB, BC, CD, and DA
 
 `voice`
 A polygon's shape can be described as a list of 2 dimensional vectors, with the assumption that there is a line between each point in the sequence.
-//A more useful polygon would be that shape, which can be offset to a new position, and also rotated. We'll cover that math in more detail later.
 
-These data structures are small and simple in memory. Each float taking up only 4 bytes. The Vec2 is a total of 8 bytes. Circle is 12. AABB is 16. The points array of Polygon is a reference, which is also small, probably 8 bytes.
+`scene`
+black background, 3 rows of labeled white boxes (each white box has 4 smaller gray boxes inside), followed by a text label.
+	2 boxes labeled [x, y], followed by label: "Vec2"
+	4 boxes labeled [Min.x, Min.y, Max.x, Max.y], followed by label: "AABB"
+	3 boxes labeled [x, y, radius], followed by label: "Circle"
+	below these 3 rows is another 1 row, with a white box (with 8 smaller gray boxes inside)
+	1 box labeled [points], followed by the label "PolygonShape"
+
+`voice`
+These data structures are small and simple in memory.
+Each float taking up only 4 bytes. Vec2 is a total of 8 bytes. AABB is 16. Circle is 12. The points array of Polygon is a reference, which is also small, probably 8 bytes.
 Because they are simple in memory, these are written as struct Value types instead of class Reference types. A Value type has certain memory advantages.
-A program passes it's data by default instead of a reference to it's data. As a result, the CPU is more certain about the value of a value-type, because it doesn't need to check a reference. This design eliminates cache misses for this data.
+A program passes all struct data by value instead of by reference. That means all data is copied each time it is used.
+	References are almost always the same size, which is 8 bytes on a 64 bit CPU. the For small structures, especially less than or equal to 8 bytes, passing by value saves a CPU time.
+	For larger structs, there are still advantages.
+		the CPU is more certain about the value of a value-type, because it doesn't need to check a reference. This design eliminates cache misses for this data.
 Check the description for additional explanation about the difference between value type and refernce type:
-`add to description` Value Type vs. Reference Type:
-  CodeMonkey: https://youtu.be/KGFAnwkO0Pk
-  MarkInman: https://youtu.be/95SkyJe3Fe0
-//A big reason for using value types is that the memory is forced to be local to the calculation space, which eliminates the possibility of cache misses
-//`add to description` Cache Misses:
-//  MLGuy: https://youtu.be/RkRUuNdb7io
-//  HandsOnEngineering: https://youtu.be/31avbKDwyuA
-You should also notice that I am using public variables. Academically, it is considered best practice to use private variables wherever possible.
+//`add to description` Value Type vs. Reference Type:
+//  CodeMonkey: https://youtu.be/KGFAnwkO0Pk
+//  MarkInman: https://youtu.be/95SkyJe3Fe0
+
+You should also notice that I am using public variables. Again, it is considered best practice to use private variables wherever possible.
 However, small structures with very clear conceptual boundaries like these are often left exposed, even after rapid prototyping.
 
 ---
@@ -703,8 +717,7 @@ Circle.cs
 		public bool Contains(Vec2 point) => IsInsideCircle(center, radius, point);
 ...
 ```
-
-Program.cs
+split screen, showing Program.cs
 ```
 ...
 					if (x < 0 || y < 0) { continue; }
@@ -717,10 +730,14 @@ Program.cs
 ```
 
 `voice`
+There is some Circle specific logic written in Program.cs right here. It should really be in the Circle class instead.
+
 This is a method extraction refactor, and it helps create a Single Point Of Truth for our circle logic.
 
-If we implement a similar function in Polygon, we can use a similar draw function to draw the polygon
+If we implement a similar function in Polygon, we can use a similar draw function, like DrawCircle, to draw the polygon
 
+`scene`
+Polygon.cs
 ```
 ...
 		public static bool IsInPolygon(IList<Vec2> poly, Vec2 pt) {
@@ -760,16 +777,34 @@ If we implement a similar function in Polygon, we can use a similar draw functio
 
 `voice`
 The math for checking a point inside of a polygon is a bit complex. the basic idea is this:
+
+`scene`
+Polygon.cs, with cartesian plane + grid diagram in small window
+draw point A at 1,1, point B at 3,4, point C at 1,7, and point D at 8,4
+draw lines AB, BC, CD, and DA
+
+`voice`
 	imagine a ray from the given point, going to the right.
+
+`scene`
+draw a point T at 4,3
+draw a horizontal arrow extending to the right
+
+`voice`
 	if that ray crosses the polygon's edges an odd number of times, then the point is inside of the polygon
 	the inner loop checks if the ray from pt crosses an edge
 		first check to see if the point is in range of the edge at all
 		then do the math to test if the ray's x intersection is on the edge
-Finding the bounding area of the polygon is also not straight forward, so we should have a function
+
+Finding the bounding rectangle of the polygon is also not straight forward, so we should have a function
 	it check every point, looking for the minimum and maximum values
 	the minimum and maximum values are output that as a bounding box
 This method can fail if the polygon is not correctly formed. This TryGet pattern is common in C# when failure is possible.
 
+With this we can create a draw method for polygons
+
+`scene`
+Program.cs
 ```
 ...
 		public static void DrawPolygon(Vec2[] poly, char letterToPrint) {
@@ -806,7 +841,11 @@ This method can fail if the polygon is not correctly formed. This TryGet pattern
 
 `voice`
 this code proves that I can draw important parts of my game.
-Graphics are a huge feature and risk of any software. proving this kind of work can be accomplished at all is critical for development.
+Graphics are a huge feature and risk of any software, especially games.
+proving this kind of work can be accomplished at all is critical for development, which is why I did this first.
+
+graphics also have a way of motivating a game developer to keep working on their game.
+I want to be able to see progress with my eyes, and test my understanding with visible results.
 
 `scene`
 ```
@@ -843,20 +882,33 @@ Graphics are a huge feature and risk of any software. proving this kind of work 
 ```
 
 `voice`
-A real-time game engine is another major risk that should be addressed.
-The core of any simulation or game engine is a game loop.
+I want to see my simulation start to move, with a frame-advancing game engine.
+
+The core of any simulation or game engine is a game loop, like this.
 We can use this interactive loop to test parts of our game as we write it.
 First, let's test circle drawing.
 
+I'll add this basic swtich statement to trigger changes to my simulation with key presses.
+This is a lot of logic to insert into the game loop, which does feel bad to me as a game engine developer.
+
 `scene`
 run the app to test
+show the circle move and change size
 
 `voice`
 we can play with some circle values now
-with some modifications, we could use this code to test the rectangle and polygon drawing code as well. I recommend doing that as practice for novice developers.
+with some modifications, we could use this code to test the rectangle and polygon drawing code as well.
+I recommend doing that as practice for novice developers.
 
-a game engine has 4 main regions: initializationm, draw, input, and update.
-each single iteration through the loop is a gameloop frame.
+If you feel like this code is a bit confusing, I recommend you change the switch statement to modify one of the rectangles being drawn, or the polygon. You can pause the video, I can wait.
+
+(wait 2 seconds)
+
+Moving on --a game engine has 4 main regions: initialization, draw, input, and update.
+initialization happens before the game loop, and the game loop repeats draw, input, and update in series.
+each single iteration through the loop is a frame.
+
+we should formalize this a bit more clearly in the code.
 
 `scene`
 ```
@@ -901,12 +953,21 @@ each single iteration through the loop is a gameloop frame.
 ...
 ```
 
-C# enables us to create local functions, which help us name and organize our code.
+`voice`
+C-sharp enables us to create local functions, which help us name and organize our code, and name the regions with function names.
 
 many programmers, myself included, consider it good programming style to use small functions, with descriptive but concise names, and only one or two levels of indentation wherever possible.
 lets run this refactored code to make sure it still works how it used to.
 
-Many programming languages don't support local functions, so we might want to create a Game class that has the data mambers, an Init function, Draw, ProcessInput, and Update function. Like this:
+`scene`
+run the code to show that it still works the same way
+
+`voice`
+Many programming languages don't support local functions.
+For those, we might want to create a Game class that has the data members, an Init function, Draw, ProcessInput, and Update function. Like this:
+
+`scene`
+Program.cs
 ```
 ...
 public class Game {
@@ -964,18 +1025,21 @@ public static void Main(string[] args) {
 ...
 ```
 
-this is a perfectly valid style in C# as well. but for the sake of fewer source files, I'll keep writing in local functions in static main.
+`voice`
+this is a perfectly valid implemenatation in C-sharp as well. but for the sake of one fewer class, I'll keep writing in local functions in static main.
+I'll just delete this Game class, and put the Main method back.
 
 `scene`
 run again
 
 `voice`
-notice the flickering. we can see how each shape is drawn right after the other, and the last drawn shapes are the most difficult to see when the game is active.
-this flickering wouldn't be so bad if the game was faster.
+notice the flickering. we can see how each shape is drawn right after the other, and the last drawn shapes flicker the most when the game is active.
+this flickering might not be so bad if the game rendered more quickly.
 lets implement a timer to see how long it takes to render the graphics.
 and let's put the key input behind a check, so the game iteractes as quickly as possible, without blocking the game loop.
 
 `scene`
+Program.cs
 ```
 ...
 		public static void Main(string[] args) {
@@ -1003,17 +1067,21 @@ and let's put the key input behind a check, so the game iteractes as quickly as 
 		}
 ...
 ```
+compile and test.
 
-compile and test. also, comment out Draw and test again.
-
+`voice`
 I've changed Input so that it doesn't wait for a user key press. this is also called Non-Blocking input.
 My computer is pretty fast, but this game engine is really slow. it looks like it's running at around 100 milliseconds of delay between updates, or about 10 frames per second.
 As with most games, the biggest reason for this performance is probably because of Draw.
 
-The code that claculates timing feels pretty bad, so before we continue, I want to implement a better time-keeping class
+`scene`
+comment out Draw and test again.
+
+`voice`
+The code that claculates timing is going to be important later, and it feels pretty bad. So before we continue, I want to implement a better time-keeping class.
+
 `scene`
 src/MrV/Time.cs
-
 ```
 using System;
 using System.Diagnostics;
@@ -1074,18 +1142,32 @@ namespace MrV {
 ```
 
 `voice`
-Timing is a really important part of a real-time game engine.
-It is required for physics simulation calculations. Tracking duration is critical to performance metrics. And it can be used to throttle the game loop, to intentionally reduce CPU usage.
+Awareness of timing is an essential part of a real-time game engine.
+It is required for accurate physics simulation calculations.
+Testing duration is also critical to performance metrics.
+And time can be used to throttle the game loop, to intentionally reduce CPU usage, and improve stability of the rest of the software on your computer.
 Making a separate time-keeping system like this leaves design space for time-related features in the future, like pausing our simulation, or slowing down time.
 
-This implementation is a wrapper around the C# Stopwatch object, which is a high-resolution timer standard to the C# API.
+This implementation is a wrapper around the C-sharp Stopwatch object, which is a high-resolution timer standard in the C-sharp API.
 It is keeping track of the passage of time as seconds and milliseconds separately.
 Floating point values for time are most convenient for physics calculations.
-Millisecond values are more accurate over long durations, and most convenient for system-level calculations.
-  As floating point values increase, they reduce in precision. This is because the exponent value increases, the scale of values being tracked changes.
+Millisecond values are more accurate over long durations, and most convenient for lower-level calculations.
+Also, as floating point values increase, they reduce in precision.
+	This is because as the exponent part of the float value increases, the scale of values being tracked changes. Eventually, the exponent will ignore millisecond changes to time.
 
 `scene`
-show floating point number's exponent change as it increases in value
+black screen with white rows of text:
+									integer					floating point
+	binary	00000000000000000000000000000000			00000000000000000000000000000000
+	decimal									0											0
+	value as time: 0 hrs, 0 minutes, 0 seconds, 0 milliseconds
+	rate increase: millisecond
+there are 5 representations of the same number, one as a binary integer, another as a binary representation of a float, then a decimal integer and decimal float, and lastly, a time representation.
+all 5 numbers increase at the same rate, with the rate of increase identified by the row labeled 'rate increase'.
+after a few seconds, the rate increase changes from millisecond to second, then second to minute, then minute to hour.
+show floating point number's exponent change as it increases in value.
+after the 'value as time' row exceeds 5 hours, bring the rate increase value back to millisecond.
+mark the floating point values in gray, unmoving, while the integer values are in green, continuing to increase 1 millisecond at a time.
 
 `voice`
 Specifically, a game that has running for more than 4.5 hours will be more accurate using integer-based millisecond calculations instead of floating points.
@@ -1094,21 +1176,23 @@ Specifically, a game that has running for more than 4.5 hours will be more accur
 back to code
 
 `voice`
-This class is a singleton, which allows details about the passage of time to be accessed anywhere in the program, very important for physics math.
-I'm not making the entire class static because pure static classes create design hazards similar to global variables.
-  These would be most apparent if we were designing a game with variable passage of time, like time dialation in different regions of space.
-You might also notice that DeltaTime gives the same value until UpdateSelf is called. This will keep timing math consistent when DeltaTime is checked at multiple different times of the same update frame.
-You may also realize that this code is actually giving a measurement of how long the last frame took. This works in practice because consecutive frames tend to require similar amounts of compute.
-In the worst case:
-  a one frame lag-spike will cause a very laggy frame to use the faster timing value of the previous frame
-  the next fast frame will use the long frame time of the previous laggy frame, but do so very quickly
-  to a very keen-eyed observer, this will look like a strange stutter, where the game slows down a lot, and then speeds up a lot, over the course of only a few milliseconds.
-  the proper solution to this problem would not be a change to the timing system, but a change to the code causing the lag spike, which is outside the scope of this tutorial.
+This class is a singleton, which allows details about the passage of time to be accessed anywhere in the program, which is very convenient for game physics.
+I'm not making the entire class static because pure static classes create design hazards similar to global variables. we'll talk more about this design choice later.
+You might also notice that DeltaTime gives the same value until UpdateSelf is called.
+	This is intentional, and will keep timing math consistent when DeltaTime is checked at multiple different times of the same update frame.
+You may also realize that this code is actually giving a measurement of how long the last frame took, not how long this frame is taking.
+	This works in practice because consecutive frames tend to require similar amounts of compute.
+In the worst case for this design:
+	a one frame lag-spike will cause a very laggy frame to use the faster timing value of the previous frame
+	the next fast frame will use the long frame time of the previous laggy frame, but do so very quickly
+	to a very keen-eyed observer, this will look like a strange stutter, where the game slows down a lot, and then speeds up a lot, over the course of only a few milliseconds.
+	the proper solution to this problem would not be a change to the timing system, but a change to the code causing the lag spike.
 The ThrottleUpdate function is used to smooth out frames, and reduce CPU burden.
-The ThrottleWithoutConsoleKeyPress interrrupts the throttling when a keypress is detected, so that the game always updates quickly to user input.
+The ThrottleWithoutConsoleKeyPress interrrupts the throttling when a keypress is detected, so that the game always updates quickly to user input, even if the framerate is set to be low.
 lets test this out.
 
 `scene`
+Program.cs
 ```
 ...
 			char input = (char)0;
@@ -1129,21 +1213,26 @@ lets test this out.
 `voice`
 It's possible to design the Time class without a necessary Update method, but doing so would result in different values for delta time within the same gameloop frame.
 This implementation tries to artificially set the gameloop speed to 20 frames per second. Feel free to experiment with this value.
-A lower framerate reduces the burden that this program puts on the CPU. A lower CPU burden improves performance of the rest of your computer while this game is running.
+A lower framerate, which is a higher frame delay, reduces the burden that this program puts on the CPU.
+	A lower CPU burden improves performance of the rest of your computer while this game is running.
 
 Notice that Time.Update(); is called in the game loop, to track the passage of time and guage the cost of the entire process for SleepWithoutConsoleKeyPress.
 
 ---
 
 `scene`
-the game is running, with the DeltaTimeMs value fluctuating
+show the game is running, with the printed DeltaTimeMs value fluctuating
 
 `voice`
 Performance is incredibly important to a realtime simulation, and a game especially. User experience is tightly bound to game loop performance.
-Good performance also improves out ability to test, which is critical to development.
+Good performance also improves our ability to test, which is also critical to software development.
 
-To improve performance immediately for testing, I want to do two quick things: flush the entire input buffer in the input function, like this:
+Right now, only one key is being processed per frame. This makes the game feel slow.
 
+To improve performance immediately for testing, I want to do two quick things: flush the entire input buffer in the input function:
+
+`scene`
+Program.cs
 ```
 ...
 			void Input() {
@@ -1158,7 +1247,11 @@ To improve performance immediately for testing, I want to do two quick things: f
 ...
 ```
 
-and reduce the amount of drawing going on, like this:
+`voice`
+like this. and reduce the amount of drawing going on:
+
+`scene`
+Program.cs
 ```
 ...
 			void Draw() {
@@ -1172,17 +1265,31 @@ and reduce the amount of drawing going on, like this:
 ...
 ```
 
-There are three specific classes of problems have major impacts on simulation performance that I'll address with some solutions: Drawing, Memory Allocation, and Collision detection.
+`voice`
+like this.
 
-For now, let's improve drawing.
+There are three specific classes of problems have major impacts on simulation performance that I want to keep adressing in this tutorial:
+	Drawing, Memory Allocation, and Collision detection.
+
+Let's continue improve drawing.
+
 We can significantly reduce the cost of drawing and the appearance of flickering by only drawing each character once.
-//And after that, we can improve things more by redrawing only what has change between frames.
-//In a traditional graphics setting, this technique is called 'Dirty Rectangle' or 'Dirty Pixel'.
-//To do it, we need to keep track of what was drawn last frame so it can be compared to the new frame. 
 We'll do that by writing our graphics into a separate buffer, and draw that once.
+this technique is called double buffering.
 
 `scene`
-artist painting a picture, then painting a different picture behind it, and swapping between them
+cartoon of an artist artist painting a picture
+then the artist flips the picture, presenting it to an audience
+then the artist pulls up another blank canvas
+then the artist paints a slightly different picture
+then the artist flips the picture, presenting it to an audience
+then the artist pulls up another blank canvas
+then the artist paints a slightly different picture
+then the artist flips the picture, presenting it to an audience
+then the artist pulls up another blank canvas
+then the artist paints a slightly different picture
+then the artist flips the picture, presenting it to an audience
+then the artist pulls up another blank canvas
 
 `voice`
 This technique dramatically reduces flickering by replacing the entire image at once instead of redrawing all different parts one at a time
@@ -1269,20 +1376,44 @@ namespace MrV.CommandLine {
 }
 ```
 
-This buffer for drawing console characters, which I'll refer to as glyphs. The buffer is a 2D array of these glyphs, with some additional convenience methods.
+`voice`
+This is a buffer class for drawing console characters. I'll refer to these characters as glyphs.
+The buffer is a 2D array of these glyphs, with some additional convenience methods.
 The class is a partial class so that we can split it's impementation across multiple files. We'll put specialized drawing methods in a separate place.
 This code uses C-sharp's contiguous block 2D array allocation instead of an array-of-arrays, which some progammers might be more familiar with.
-Notice that Height is the first dimension and Width is the second. These dimensions can be in either order, but it should be consistent.
+Notice that Height is the first dimension and Width is the second. These dimensions can be in either order, but it should be consistent once it is selected.
 	I choose Height first because it intuitively follows the existing rectangle code, and also improves CPU cache locality when scanning horizontally, which is historically how graphics work.
 The square-bracket operator is overloaded so the class can be accessed like a 2D array in our code.
 	If you want to change the order of x/y you can do it here. Doing so is a great exercise in resolving confusion, and internalizing the value of consistent dimension ordering.
 	Generations of graphics programmers before you have internalized the ambiguity of dimension order, and unlocked mental resiliency in the process.
-	(IWP) this is one of the invisible wizard problems that creates undocumented skills shared by many game programmers.
+	this is one of the invisible wizard problems that creates undocumented skills shared by many game programmers.
+
+`scene`
+scroll down and highlight the last half of the ResizeBuffer method
+write in big bold letters on the side of the screen
+  Y  you
+  A  ain't
+  G  gunna
+  N  need
+  I  it
+
+`voice`
 This ResizeBuffer method is more robust than we need it to be, because it will copy old data into the new buffer to maintain consistency.
-	This feature will probably not be needed, so it could be argued the extra code is a waste of time and mental energy, according to the YAGNI or You Aint Gunna Need It principle.
-	However, this feature fulfills my intuition of how the ResizeBuffer function should work. That allows me to comfortably forget about how it actually works later.
-	For me, the cognitive load of writing the functionality now is less than the cognitive load of having to remember that the feature doesn't exist in the future.
-The buffer needs methods to write glyphs into it. We need a moethod to clear the buffer before every draw.
+This feature will probably not be needed, so it could be argued the extra code is a waste of time and mental energy, according to the YAGNI or You Aint Gunna Need It principle.
+
+`scene`
+gray-out the YAGNI text, and write white text with red outline over it
+  I Don't Wanna Worry About It
+
+`voice`
+However, this feature fulfills my intuition of how the ResizeBuffer function should work. That allows me to comfortably forget about how it actually works later.
+For me, the cognitive load of writing the functionality now is less than the cognitive load of having to remember that the feature doesn't exist in the future.
+
+`scene`
+scroll down to WriteAt overloads, Clear, and Print + PrintBuffer
+
+`voice`
+The buffer needs methods to write glyphs into it. We need a method to clear the buffer before every draw.
 And a a convenience method for printing to the command line console, with a static implementation that could be useful for debugging.
 
 `scene`
@@ -1336,7 +1467,11 @@ namespace MrV.CommandLine {
 }
 ```
 
-drawing shapes can be generalized to the DrawShape method here. A delegate defines if the coordinage is in the given shape, and checks each point in a given region.
+because our shape-drawing methods are so similar, drawing shapes can be generalized to the DrawShape method here.
+A delegate defines if the coordinate is in the given shape, and checks each point in a given region.
+
+I have chosen to write this in a separate file because it feels like the DrawBuffer class is doing too much already.
+This functionality still belongs with the DrawBuffer. Maybe we can decide a better place for it when the game engine is more complete.
 
 let's test this out
 
@@ -1368,13 +1503,14 @@ Program.cs
 ```
 
 `voice`
-we can and should remove the previous draw methods now, since we shouldn't print directly to the command line anymore, and equivalent logic is in DrawBuffer_geometry.cs.
+we can and should remove the previous draw functions now, since we shouldn't print directly to the command line anymore, and equivalent logic is in DrawBuffer_geometry.cs.
 
-Our code is now using the DrawBuffer as a GraphicsContext, which is a complex computer graphics concept where we can include anything related to graphics. We'll expand this idea soon.
+Our code is now using the DrawBuffer as a GraphicsContext, which is a computer graphics concept.
+A graphics context is where we can include anything related to graphics state. We'll expand this idea soon.
 
-We can also add back all of the test drawing, since the buffer has created such a significant optimization.
+We can also add back the test drawing that was causing flickering before, since the buffer technique has eliminated the flickering.
 
-the circle more quickly now. but the shape is not actually correct,
+the circle draws more quickly now. but the shape is not actually correct,
 
 `scene`
 diagram of console, showing width/height ratio of glyphs
@@ -1382,7 +1518,7 @@ diagram of console, showing width/height ratio of glyphs
 `voice`
 because the command line console's characters are not perfect squares
 we can take that into account with our shape drawing code if we can scale our 2D vectors
-Add a Scale method to Vec2
+Lets add scale methods to Vec2
 
 `scene`
 MrV/Geometry/Vec2.cs
@@ -1426,19 +1562,26 @@ MrV/DrawBuffer_geometry.cs
 we need to keep track of the desired scale. for that, we'll add a scale variable to DrawBuffer.
 	arguably, the ShapeScale variable added to the DrawBuffer class is bad design.
 	this partial class implementation could instead be a subclass, to keep a clearer boundary between buffer management and drawing with a scale.
-	I am making the intentional choice to combine these ideas into the same class, to reduce my cognitive load for this system. Managing cognitive load is one of those Invisible Wizard Problems.
+	I am making the intentional choice to combine these ideas into the same class, to reduce my cognitive load for this system.
+		Because this code is in a separate file, I can fix this more easily later if the design weighs on me.
+	Managing cognitive load is one of those Invisible Wizard Problems. Some developers also call it Managing Complexity.
 	If you are a stickler for Object Oriented Design, feel free to subclass this as 'ShapeDrawingBuffer' or something. Though I recommend you do that after you finish the tutorial.
 to draw the shape in a scaled way, we need to inverse-scale the bounding rectangle being drawn in, to put it in the correct position in the buffer
 then we need to test against the scaled point, which is being printed to the unscaled position in the buffer.
 
-Because we added the scale member to the class, we don't need to change any of the other method signitures. that's nice.
+If you want to change the direction of the Y axis in the simulation, you can experiment with changing the sign of the y-value of ShapeScale.
+	I recommend doing that later, after we implement a moving camera.
+
+Because we added the scale member to this class, we don't need to pass it in as a variable. that means we don't change any of the other method signitures. Nice.
 
 `scene`
 (run test)
 
-
 `voice`
-I want to be able to test my app without having to press keys to do it. For that, I will impliment a task scheduler, which we can use for many other purposes later as well.
+Testing with key presses every time is a bit tedious.
+
+I want to be able to test my app more automatically, without having to press keys to do it.
+For that, I will impliment a task scheduler, which we can use for many other purposes later as well.
 
 `scene`
 MrV/Task/Tasks.cs
@@ -1491,13 +1634,14 @@ namespace MrV.Task {
 }
 ```
 
-This is a very simple task scheduler, which executes functions at a given delay. This is similar to Javascript's SetTimeout.
-In this implementation, a Tasks.Task is a container for a function to invoke, and a time to invoke it.
-The System.Action type is a variable that stores a function to invoke later. This can also be accomplished with a delegate, as we'll see in other code soon.
+`voice`
+This is a very simple task scheduler, which executes functions at a given delay. This is functionally similar to Javascript's SetTimeout.
+In this implementation, the Tasks.Task type is basically a container for a function to invoke, and a time to invoke it.
+The System.Action type is a variable that stores a function to invoke later. This can also be accomplished with a delegate, as we saw in DrawBuffer.IsInsideShapeDelegate.
 Each task also keeps track of what line of code called Tasks.Add, which is very valuable information when debugging asynchronous functionality like this.
 Execution of tasks happen in the Update method, where the next Task to execute is at the front of a the Tasks list.
-A seperate list gathers tasks to execute before the execution.
-	If the tasks executing add more tasks to the task list, this separation prevents an infinite loop.
+A seperate list in RunUpdate gathers tasks to execute before the execution.
+	If an executing Task ends up calling Enqueue in a nested call, this separation prevents an infinite loop.
 Ordering is done by a Binary Search algorithm, generalized to work on generic records. The implementation of this binary search looks like this:
 
 `scene`
@@ -1530,20 +1674,22 @@ namespace MrV {
 ```
 
 `voice`
-Binary search works on a list of ordered values. The method assumes the list is ordered, and will not work if it isn't sorted.
-It also works by testing IComparable values, which extend CompareTo. All primitive types are IComparable.
-	A negative value means the left-value is smaller than the right-value.
-	A zero value means the left-value and right-value are equal.
+BinarySearch is a classic algorithm that works on a list of ordered values. The method assumes the list is ordered, and it will not work if the list isn't sorted.
+BinarySearch tests IComparable values, which extend a CompareTo method. All primitive types, like floats and ints, are IComparable.
+	In the CompareTo function,
+		A negative value means the left-value is smaller than the right-value.
+		A zero value means the left-value and right-value are equal.
 In the inner loop, BinarySearch checks if the value being searched for is directly in the middle of the search space.
 	if the exact value is found in the middle, BinarySearch provides it's index in the list
-	if the value is higher than what was found, the next search space will be in the top half of the current search space
-	if the value is lower than what was found, the next search space will be in the bottom half of the current search space
-if the search space is reduced to zero, the value was not found.
+	if the found value is too low, the next search space will be in the top half of the current search space
+	if the found value is too high, the next search space will be in the bottom half of the current search space
+if the search space is reduced to zero or less, the value was not found.
 this algorithm returns the 2's compliment of where the algorithm stopped searching, which is where the value should have been.
 	2's compliment flips all of the binary bits in an integer value. the operation will undo itself.
 	2's compliment of a positive index will always be a negative value, so we can detect if the value already exists or needs to be inserted by checking the sign of the return.
 
 `scene`
+Task.cs
 ```
 ...
 			Record searchElement = new Record(null, when);
@@ -1553,12 +1699,13 @@ this algorithm returns the 2's compliment of where the algorithm stopped searchi
 ```
 
 `voice`
-I could have also just used the BinarySearch method already in C#'s List class.
+I could have also just used the BinarySearch method already in C-sharp's List class.
 As long as the RecordComparer is created as a static member, there isn't any significant performance gain in using my custom algorithm.
 However, my search algorithm doesn't need to create a mostly empty search element.
-	That means my algorithm becomes better if the Task class becomes more complex
+	That means my algorithm becomes better if the Task class becomes more complex, since we don't need to allocate the entire thing.
+	I expect that the Task class could become quite complex, and I don't want to worry about the cost of enqueueing a task later.
 Also, this is an excellent example of a templated function using lambda expressions, which my target audience might appreciate.
-	I will continue using more functional programming like this, so please to any additional research to understand this as needed before watching more.
+	I will continue using more functional programming like this, so please do any additional experimentation and research you need to understand this before watching more.
 
 `scene`
 src/Program.cs
@@ -1598,8 +1745,18 @@ the first for-loop moves the circle to the right with the 'd' key, and expands t
 the second for-loop moves the circle up with the 'w' key, and reduces the radius with the 'r' key.
 each of the key input changes should happen about 100 milliseconds apart.
 
-If the timing is reduced to less than the deltaTime of a frame, some of these inputs will become lost, and the circle will not move the same amount.
-Lets make a Key Input system to solve this and other bugs.
+`scene`
+test the code
+
+`voice`
+Nice.
+If the keyDelayMs timing is reduced to less than the deltaTime of a frame, some of these inputs will be lost, and the circle will not move the same amount.
+
+`scene`
+set the KeyDelayMs value to 5 and test again
+
+`voice`
+Lets make a better Key Input system to solve this and other bugs.
 
 `scene`
 src/MrV/CommandLine/KeyInput.cs
@@ -1671,20 +1828,22 @@ namespace MrV.CommandLine {
 
 `voice`
 A KeyResponse is just some function, which happens in response to a keypress.
-I could have used System.Action instead, but using a named delegate type means we can change this easily later.
-A structure keeps the relationship of each Key and KeyResponse, along with a note about the purpose of the key binding.
+I could have used System.Action instead, but using a named delegate type means we can change this more easily later.
+A structure keeps the relationship of each Key press and KeyResponse, along with a note about the purpose of the key binding.
 	The KeyType is templated because this implementation will just use characters, but any type of input should work as well.
 A Dispatcher manages a queue of events, and those events are mapped in a DispatchTable to responses.
 	This is a general concept that is useful in many domains beyond key input handling.
-BindKeyResponse will bind a KeyResponse to a key. If the key has never been bound before, a list of KeyResponses will be created for the key.
+	If we were making a scripting engine or multiplayer system, we could use this dispatcher for a critical part of the system there.
+BindKeyResponse will bind a KeyResponse delegate to a key.
+	If the key has never been bound before, a new list of KeyResponses will be created for that key.
 Events added to the dispatcher will be Consumed all at once.
 Just like the task scheduler, execution will happen from a list that can't be added to while actions are processed.
 
-This KeyInput implementation creates a singleton for easy access.
+This KeyInput implementation creates a singleton for easy access, with a public Set method for the Instance.
 This design will allow the KeyInput system to swap out at runtime, in case different different user-interface states use different keybindings.
-Otherwise, this class can be accessed statically, for convenience.
-The KeyInput class reads specifically from the C# Console, so it has a conveniently labeled place for that logic.
-The ToString method shows how to dynamically query what is bound to each key, which could be useful for dynamic key binding at runtime.
+Otherwise, this class can be accessed statically like any singleton, for convenience.
+The KeyInput class reads specifically from the C-sharp Console, so it has a conveniently labeled place for that logic.
+The ToString method shows how to dynamically query what is bound to each key, which could be useful for exposing dynamic key binding at runtime.
 
 `scene`
 src/Program.cs
@@ -1715,13 +1874,14 @@ src/Program.cs
 			while (running) {
 ...
 ```
+
 `voice`
 Now keys are bound to functions during initialization.
 This example inlines the very simple functions, and takes advantage of the Note field to create more clarity in the code.
 I personally like this style of keybinding a lot. It feels like how rules of a boardgame are explained before the game starts.
-	It could also allow definitions of controls to happen closer other important context.
+	It allows definitions of controls to happen closer other important context for those controls.
 
-Notice that setting the input variable has been replaced with additions to the KeyInput queue.
+Notice that the old code setting the input variable has been replaced with additions to the KeyInput queue. That old input variable is obsolete now, and removed.
 
 `scene`
 src/Program.cs
@@ -1739,6 +1899,8 @@ src/Program.cs
 
 `voice`
 Because KeyInput takes care of input logic, the Input function can be dramatically simplified, and so can Update.
+
+TODO keep reviewing <---------
 
 now when we run the program to test it, key events are not lost, even when the keyDelay is lowered to much less than the Update's DeltaTime.
 
