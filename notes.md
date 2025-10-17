@@ -9,13 +9,13 @@ Please summarize the script before giving feedback.
 
 as you are reading:
 
-Consider each section labeled `scene` as a description of what is visually shown. These sections are followed by a `voice` section, narrating the visuals.
+Consider each section labeled '### scene' as a description of what is visually shown. These sections are followed by a '### voice' section, narrating the visuals.
 
 Code will be in most scenes, between tripple back-tick '```' headings, as is common in markdown. I will record myself typing this code in Microsoft Visual Studio Community 2022 during narration.
 
 code blocks that begin and end with an ellipses '...' are intended modifications of previous code. If it is unclear what code is being modified, make a note of that.
 
-Read the script marked by the `voice` heading as spoken dialog. Identify unecessary repetition, or ineffective prose. Provide alternative phrasing where appropriate.
+Read the script marked by the '### voice' heading as spoken dialog. Identify unecessary repetition, or ineffective prose. Provide alternative phrasing where appropriate.
 
 Do Not identify poor grammer, capitalization or punctuation mistakes. I am still looking for high-leverage changes to the script, not interested in English writing minutiae.
 
@@ -35,23 +35,25 @@ Identify parts of the script that cover content that is not well documented in o
 
 Please be critical about your feedback. I do not want a sycophantic response, I am serious about finding and fixing mistakes. Minimize encouragement; reserve it for insights with transferable public value.
 
-`scene`
+## Intro
+
+### scene
 white text on black background:
 	"If I can't create it, I don't understand it."
 	-Richard Feynman
 pause for 2 seconds, with no voice over
 
-`scene`
+### scene
 Montage of the LowFiRockBlaster game.
 	show command-line window with 2D graphics rendered using colored character glyphs.
 	a player's ship shaped like a V flys around with simple 2D physics, shooting and destroying circle asteroids, and collecting circle ammo pickups.
 	game view pans smoothly following the player, also zooming in and out, showing how floating-point vector graphics are rendered using command line glyphs.
 
-`voice`
+### voice
 This is a tutorial series teaching how to build a real-time simulation in C-sharp.
 It implements essential games and simulation systems, and simulates basic physics and collision detection.
 
-`scene`
+### scene
 white text on black background, list the following:
 	2D Vector math
 	basic physics
@@ -67,18 +69,18 @@ white text on black background, list the following:
 	cell space partition tree
 	... and more
 
-`voice`
+### voice
 I'll show all the code and give explainations, starting from an empty project for the Command Line Console.
 	This will include graphics, math, optimization, data structures, collision detection, and more.
 I'll also offer in-context advice and best practices from my decades of experience as a game developer and computer science instructor.
 	I want you to understand the bottom-up implementation of a game engine, which will improve your decision making in software development generally.
 And I'll give some of my own opinions about the Invisible Wizard Problems that emerge in modern computer programming, and game development especially.
 
-`scene`
+### scene
 montage of programming in the background, with prominent text centered in the foreground:
 	Invisible Wizard Problems: Tricky programming issues that need special knowledge or experience to spot and solve.
 
-`voice`
+### voice
 One invisible wizard problem that I can mention now is the tradeoff of robustness vs accessibility of this simulation.
 	many of my example implementations will fall short of being highly robust and maximally efficient. I don't apologize for that.
 		I want this tutorial to be easy to follow more than I want it to be perfect software.
@@ -87,14 +89,14 @@ One invisible wizard problem that I can mention now is the tradeoff of robustnes
 		I do apologize that I will jump around different files often to make modifications and explain concepts.
 		I recognize that is jarring to experience. Please be ready to pause the video to copy any code.
 
-`scene`
+### scene
 white text on black background:
 	"These systems don't understand the world. They just predict the next word."
 	- Jeffery Hinton
 	"As an AI I don't believe or disbelieve anything in the human sense."
 	- ChatGPT 2025/09/14
 
-`voice`
+### voice
 Another invisible wizard problem is the rapid replacement of programmers with AI in the software development industry.
 Even if AI systems write most of the world's code, they still lack something, which Geoffrey Hinton warned about, and the AI's will admit.
 They lack real understanding.
@@ -102,10 +104,10 @@ Artificial Intelligences need humans who can translate lived experience into sof
 Learning how to build simulations yourself, in a mostly agnostic tech stack like in the command line, is a powerful skill. Having it will make you useful to AI in the future.
 With this skill, you can help shape how AI connects to human reality.
 
-`scene`
+### scene
 back to the montage of LowFiRockBlaster
 
-`voice`
+### voice
 This simulation tutorial is for a space-shooter game inspired by "Spacewar!" from 1962, written for the command line console.
 The idea is as old as videogames. It was the reason why the C programming language and Unix operating system were invented.
 I've summoned that ancient motivation to capture your attention now, while I teach you foundational concepts for writing a simulation and game engine.
@@ -121,38 +123,40 @@ My guidance will follow roughly the same path I went through while making this g
 This tutorial doesn't capture the vast majority of the difficulty of writing this project. What you will see is just the parts curated for your understanding.
 As you do this work, please be patient with your own mistakes, and the frustration that follows. Frustration is the sweat of learning. It is a sign that your mind is growing. Engage with it. And take a break if you need it. This video will still be here when you are ready.
 
-`scene`
+### scene
 montage of code in Visual Studio 2022, and the game running with the code in the background
 
-`voice`
+### voice
 I'll be using C sharp as the programming language.
 I assume you already have a C sharp runtime, compiler, and IDE installed. These are non negotiable.
 I also assume you know the basics of how to program command line applications in C sharp, including Object Oriented Programming basics.
 You can still follow along without that knowledge, but I recommend you start with that foundation.
 
-`scene`
+### scene
 montage of Unity programming
 
-`voice`
+### voice
 The very popular Unity Game Engine is a notable reason I chose to do this in the C sharp language.
 This tutorial should give new game developers insight into how a game engine works in general, which will help understand how Unity works too.
 
-`scene`
+### scene
 white text on black background:
 	practice is the price for understanding.
 	understanding is the price for power in the computer.
 
-`voice`
+### voice
 If you are new to game programming, you should practice by typing all the code and following along yourself. I'm serious.
 Doing that will dramatically increase how long this tutorial takes --probably 10x longer than the runtime, or more.
 I believe that time will be worth the understanding you gain, especially if you make mistakes and overcome those mistakes while doing it.
 I want you to be a computer wizard. that is why I made this tutorial. If you do not consider yourself a computer wizard yet, and you want to be, practice.
 
-`scene`
+## Practical Project Initialization
+
+### scene
 show Visual Studio Community 2022 loading.
 create a new project
 
-`voice`
+### voice
 Start your C sharp IDE. I'm using Visual Studio Community 2022.
 As of 2025, I recommend using Rider. It is not free for commercial content, but free for personal use.
 I would not use it for a tutorial video, but I recommend it for educational purposes.
@@ -162,7 +166,7 @@ I'm going to call my project "LowFiRockBlaster".
 And I'll be using .NET Core 5.0 as my version of C#.
 Unity doesn't support the latest C sharp features, and I want this tutorial to be coherent with Unity Game Development specifically.
 
-`scene`
+### scene
 src/MrV/LowFiRockBlaster/Program.cs
 ```
 using System;
@@ -176,7 +180,7 @@ namespace MrV.LowFiRockBlaster {
 }
 ```
 
-`voice`
+### voice
 The default Program.cs will be our entry point. This is a basic "Hello World" program.
 I'm going to move it to a new folder, to organize my files as I code. src/MrV/LowFiRockBlaster
 I'll be writing everything in my own MrV namespace, I recommend you name your own namespace after yourself. You can refactor that later if you want.
@@ -185,17 +189,19 @@ I'll also be using a compact whitespace style, so I can fit as much code on the 
 Let's run this code to make sure everything works. If your program does not compile and run, stop the video and get it working.
 Unfortuantely, most programming environments require some configuration, even with an automatic installer.
 
-`scene`
+### scene
 start the Visual Studio Installer
 	Modify -> .NET desktop development
 	show that I have .NET desktop development checked in the installer
 
-`voice`
+### voice
 For example, be sure you have the .NET desktop development workload installed by the Visual Studio Installer.
 
 ---
 
-`scene`
+## Explicit Goals
+
+### scene
 design.md
 * game design document
 	* graphics
@@ -214,9 +220,9 @@ design.md
 		* avoid moving into asteroids, or else be destroyed
 		* pickup additional ammo from destroyed asteroids
 
-`voice`
+### voice
 Before I start writing the game, I want to have a clear set of goals.
-An imagined goal of is a necessary starting point for any project.
+An imagined goal is a necessary starting point for any project.
 A written list of features and expectations is essential for a project that will take more than a few days to finish.
 Clear Top-Down design addresses Confusion and Scope Ambiguitiy, which are Invisible Wizard Problems that a software developer should always keep in mind.
 Project managers might call this a Work Breakdown Structure. Game Developers might call this a Game Design Document.
@@ -229,7 +235,9 @@ Spending too much time writing a design or specification is sometimes called Ana
 	it is a real cause for projects to fail before they even start.
 Identify clear goals that you can start implementing, and give yourself the grace to update the document later.
 
-`scene`
+## Draw Rectangle
+
+### scene
 back to program.cs
 ```
 ...
@@ -251,7 +259,7 @@ back to program.cs
 ...
 ```
 
-`voice`
+### voice
 Lets start our game by drawing the screen where the game will be displayed.
 I'll make a new function called `DrawRectangle`, and call it in my `Main` function. You'll notice that it's `public static`
 we want it to be `public static` for three reasons:
@@ -271,7 +279,7 @@ the logic here places the command line cursor exactly at each position in the re
 Before moving on, let's take a moment to understand this logic.
 It seems pretty specific to the command line console, but gaining familiarity with this two dimenstional iteration will help with may other kinds of problem solving in the future.
 
-`scene`
+### scene
 show the code and running output
 ```
 ...
@@ -283,10 +291,10 @@ show the code and running output
 ...
 ```
 
-`voice`
+### voice
 this code will write 80 hashtag characters in a row.
 
-`scene`
+### scene
 show the code and running output
 ```
 ...
@@ -300,10 +308,10 @@ show the code and running output
 ...
 ```
 
-`voice`
+### voice
 this code will write 80 times 23 hashtag characters, still all in one row.
 
-`scene`
+### scene
 show the code and running output
 ```
 			int width = 80, height = 23;
@@ -316,10 +324,10 @@ show the code and running output
 			}
 ```
 
-`voice`
+### voice
 this code will write a rectangle 80 wide and 23 tall.
 
-`scene`
+### scene
 show the code and running output
 ```
 ...
@@ -343,11 +351,11 @@ show the code and running output
 ...
 ```
 
-`voice`
+### voice
 If we turn this into a function, we can print a new distinct rectangle right after this one.
 Doing this allows us to call the function at any time from any place in our program.
 
-`scene`
+### scene
 show the code and running output
 ```
 ...
@@ -362,13 +370,13 @@ show the code and running output
 ...
 ```
 
-`voice`
+### voice
 we can use `SetCursorPosition` to move the commandline cursor exactly where we want it before printing any character with `Console.Write`
 This functionality is not easily available in all programming language console APIs, so it's nice that C sharp gives it to us so cleanly.
 For example, if you want to do the same thing in Python, you may need to replace `SetCursorPosition` with printing an escape sequence.
 That escape sequence will not work if executed in the basic Windows console. And it will cause strange errors when printing some special characters, or printing in a separate thread.
 
-`scene`
+### scene
 show the code and running output
 ```
 ...
@@ -383,10 +391,10 @@ show the code and running output
 ...
 ```
 
-`voice`
+### voice
 and this code allows us to draw the rectangle anywhere in visible space, not just the upper-left corner of the console.
 
-`scene`
+### scene
 ```
 ...
 		public static void DrawRectangle(int x, int y, int width, int height, char letterToPrint) {
@@ -403,7 +411,7 @@ and this code allows us to draw the rectangle anywhere in visible space, not jus
 ...
 ```
 
-`voice`
+### voice
 The code will crash if x+col or y+row are negative, which can be solved with a simple if statement.
 
 if this code is confusing, I highly recommend you stop the tutorial here, and practice writing loops before continuing.
@@ -411,7 +419,9 @@ the programming in this tutorial will get much more conceptually complex beyond 
 
 ---
 
-`scene`
+## 2D Math Structures
+
+### scene
 Create a src folder, MrV folder, Math folder. create Vec2.cs inside of src/MrV/Geometry
 src/Geometry/Vec2.cs
 ```
@@ -427,7 +437,7 @@ namespace MrV.Geometry {
 }
 ```
 
-`voice`
+### voice
 this program will need many source files, and I want to organize them with folders.
 also, this project needs to be serious about 2 dimensional math.
 
@@ -439,7 +449,7 @@ this code is very densly written, using inlined curlybrackets for simple lines o
 this code also shows operator overloading, an implicit constructor that converts tuples into 2D vectors, and an interpolated string.
 	these features are not available in all other languages, but I am taking advantage of their inclusion in C-sharp.
 
-`scene`
+### scene
 src/LowFiRockBlaster/Program.cs, add to Main
 ```
 ...
@@ -455,7 +465,7 @@ src/LowFiRockBlaster/Program.cs, add to Main
 ...
 ```
 
-`voice`
+### voice
 We should start using the 2D vector concept now, in this rectangle drawing code.
 
 I'll be doing more of this kind of code refactoring during my tutorial, but not nearly as much as I did while writing the game for myself.
@@ -466,58 +476,58 @@ I sincerely apologize for speeding it up my development process. Please learn wh
 
 Notice that I made a new `DrawRectangle` function, and I'm using the old `DrawRectangle` function in this new one.
 
-`scene`
+### scene
 black background with dark-gray grid, 10x10 squares
 bold white cartesian plane (x/y axis)
 label integer locations of the x and y axis, -5 to +5 on both axis
 
-`voice`
+### voice
 `Vec2` is a 2 dimensional vector, which is a physics and math concept. The basic premise is:
 
-`scene`
+### scene
 Vec2.cs, with cartesian plane + grid diagram in small window
 shift the cartesian plane to have the origin at the upper-left
 swap the negative y axis to have positive integer values
 
-`voice`
+### voice
 in the command line, 0,0 is at the upper left corner, and y increases as it goes down.
 
-`scene`
+### scene
 show Point A at location 1, 1
 
-`voice`
+### voice
 Point A can be at a known location x/y.
 
-`scene`
+### scene
 show Point A at location 3, 5
 
-`voice`
+### voice
 Point B can be at another location x/y.
 
 locations in space can be fully described by a 2D vector, which is a position along each dimension.
 
-`scene`
+### scene
 draw a line between points A and B
 
-`voice`
+### voice
 distances can also be described this way.
 
-`scene`
+### scene
 remove the line between points A and B
 draw an arrow from the origin to point B
 
-`voice`
+### voice
 directions can also be described this way.
 
-`scene`
+### scene
 show link to 
   3blue1brown https://youtu.be/fNk_zzaMoSs
   HoustonMathPrep https://youtu.be/j6RI6IWd5ZU
 
-`voice`
+### voice
 There are plenty of additional tutorials on the internet about 2D vectors, check the description for examples:
 
-`scene`
+### scene
 create the src/MrV/Geometry folder structure in the solution explorer
 src/MrV/Geometry/AABB.cs
 ```
@@ -536,11 +546,11 @@ namespace MrV.Geometry {
 ```
 AABB.cs, with cartesian plane + grid diagram in small window
 
-`voice`
+### voice
 A box can be described with two `Vec2` structures, bounded by edges aligned on the x and y axis. We call this an Axis Aligned Bounding Box or `AABB`.
 This is a simple description of space in a simulation, and it is used for many kinds of clalculations. 
 
-`scene`
+### scene
 ```
 ...
 		public static void DrawRectangle(AABB aabb, char letterToPrint) {
@@ -577,7 +587,7 @@ Also, notice how I am naming my variables. I make my public variables capitalize
 In my coding style, lowercase member variables are explicitly primitives, which should actually not be accessed publicly,
 	unless the class is a datastructure that exists solely to wrap around those members, like the `Vec2` struct.
 
-`scene`
+### scene
 writing and compiling program.cs
 ```
 ...
@@ -592,11 +602,11 @@ writing and compiling program.cs
 ...
 ```
 
-`voice`
+### voice
 notice I'm using tuple notation for the first vector describing position, and an explicit constructor for the size.
 the form is mostly stylistic. however, in an inner-loop, using the more verbose constructor is preferred because it is slightly faster to execute.
 
-`scene`
+### scene
 src/MrV/Geometry/Circle.cs
 ```
 namespace MrV.Geometry {
@@ -611,10 +621,10 @@ namespace MrV.Geometry {
 AABB.cs, with cartesian plane + grid diagram in small window
 draw a circle at position 3,4 with a radius or 2. label radius with a line at 0 degrees
 
-`voice`
+### voice
 A circle can be described as a Vector with one additional value for radius.
 
-`scene`
+### scene
 src/MrV/Geometry/PolygonShape.cs
 ```
 namespace MrV.Geometry {
@@ -631,10 +641,10 @@ PolygonShape.cs, with cartesian plane + grid diagram in small window
 draw point A at 1,1, point B at 3,4, point C at 1,7, and point D at 8,4
 draw lines AB, BC, CD, and DA
 
-`voice`
+### voice
 A polygon's shape can be described as a list of 2 dimensional vectors, with the assumption that there is a line between each point in the sequence.
 
-`scene`
+### scene
 black background, 3 rows of labeled white boxes (each white box has 4 smaller gray boxes inside), followed by a text label.
 	2 boxes labeled [x, y], followed by label: `Vec2`
 	4 boxes labeled [Min.x, Min.y, Max.x, Max.y], followed by label: `AABB`
@@ -642,7 +652,7 @@ black background, 3 rows of labeled white boxes (each white box has 4 smaller gr
 	below these 3 rows is another 1 row, with a white box (with 8 smaller gray boxes inside)
 	1 box labeled [points], followed by the label `PolygonShape`
 
-`voice`
+### voice
 These data structures are small and simple in memory.
 Each float taking up only 4 bytes. `Vec2` is a total of 8 bytes. `AABB` is 16. `Circle` is 12. The points array of `PolygonShape` is a reference, which is also small, probably 8 bytes.
 Because they are simple in memory, these are written as struct Value types instead of class Reference types. A Value type has certain memory advantages.
@@ -660,7 +670,9 @@ However, small structures with very clear conceptual boundaries like these are o
 
 ---
 
-`scene`
+## Drawing Math in the Command Line
+
+### scene
 ```
 ...
 		public static void DrawCircle(Circle c, char letterToPrint) {
@@ -702,7 +714,7 @@ However, small structures with very clear conceptual boundaries like these are o
 ...
 ```
 
-`voice`
+### voice
 the circle drawing code is more complex than the rectangle drawing code, but starts with the same principles.
 we iterate across a 2 dimensional area with a nested for-loop, just like with a rectangle.
 instead of printing the character at every location, we check to see if the character is inside of the circle, and only print if it is.
@@ -710,7 +722,7 @@ one important additional optimization here is limiting the size of the rectangle
 
 the logic to test if a point is inside of a circle is really important to the concept of a circle, so it should probably live in the circle class
 
-`scene`
+### scene
 Circle.cs
 ```
 ...
@@ -733,14 +745,14 @@ split screen, showing Program.cs
 ...
 ```
 
-`voice`
+### voice
 There is some `Circle` specific logic written in Program.cs right here. It should really be in the `Circle` class instead.
 
 This is a method extraction refactor, and it helps create a Single Point Of Truth for our circle logic.
 
 If we implement a similar function in `PolygonShape`, we can use a similar draw function, like `DrawCircle`, to draw the polygon
 
-`scene`
+### scene
 PolygonShape.cs
 ```
 ...
@@ -779,22 +791,22 @@ PolygonShape.cs
 ...
 ```
 
-`voice`
+### voice
 The math for checking a point inside of a polygon is a bit complex. the basic idea is this:
 
-`scene`
+### scene
 PolygonShape.cs, with cartesian plane + grid diagram in small window
 draw point A at 1,1, point B at 3,4, point C at 1,7, and point D at 8,4
 draw lines AB, BC, CD, and DA
 
-`voice`
+### voice
 	imagine a ray from the given point, going to the right.
 
-`scene`
+### scene
 draw a point T at 4,3
 draw a horizontal arrow extending to the right
 
-`voice`
+### voice
 	if that ray crosses the polygon's edges an odd number of times, then the point is inside of the polygon
 	the inner loop checks if the ray from pt crosses an edge
 		first check to see if the point is in range of the edge at all
@@ -807,7 +819,7 @@ This method can fail if the polygon is not correctly formed. This TryGet pattern
 
 With this we can create a draw method for polygons
 
-`scene`
+### scene
 Program.cs
 ```
 ...
@@ -843,7 +855,9 @@ Program.cs
 ...
 ```
 
-`voice`
+## Interactive Test
+
+### voice
 this code proves that I can draw important parts of my game.
 Graphics are a huge feature and risk of any software, especially games.
 proving this kind of work can be accomplished at all is critical for development, which is why I did this first.
@@ -851,7 +865,7 @@ proving this kind of work can be accomplished at all is critical for development
 graphics also have a way of motivating a game developer to keep working on their game.
 I want to be able to see progress with my eyes, and test my understanding with visible results.
 
-`scene`
+### scene
 ```
 ...
 		public static void Main(string[] args) {
@@ -885,7 +899,7 @@ I want to be able to see progress with my eyes, and test my understanding with v
 ...
 ```
 
-`voice`
+### voice
 I want to see my simulation start to move, with a frame-advancing game engine.
 
 The core of any simulation or game engine is a game loop, like this.
@@ -895,26 +909,34 @@ First, let's test circle drawing.
 I'll add this basic swtich statement to trigger changes to my simulation with key presses.
 This is a lot of logic to insert into the game loop, which does feel bad to me as a game engine developer.
 
-`scene`
+### scene
 run the app to test
 show the circle move and change size
 
-`voice`
+### voice
 we can play with some circle values now
 with some modifications, we could use this code to test the rectangle and polygon drawing code as well.
 I recommend doing that as practice for novice developers.
 
 If you feel like this code is a bit confusing, I recommend you change the switch statement to modify one of the rectangles being drawn, or the polygon. You can pause the video, I can wait.
 
+---
+
+## What Is A Game Loop
+
+### scene
+Program.cs
 (wait 2 seconds)
 
-Moving on --a game engine has 4 main regions: initialization, draw, input, and update.
+### voice
+
+A game engine has 4 main regions: initialization, draw, input, and update.
 initialization happens before the game loop, and the game loop repeats draw, input, and update in series.
 each single iteration through the loop is a frame.
 
 we should formalize this a bit more clearly in the code.
 
-`scene`
+### scene
 ```
 ...
 		public static void Main(string[] args) {
@@ -957,20 +979,20 @@ we should formalize this a bit more clearly in the code.
 ...
 ```
 
-`voice`
+### voice
 C-sharp enables us to create local functions, which help us name and organize our code, and name the regions with function names.
 
 many programmers, myself included, consider it good programming style to use small functions, with descriptive but concise names, and only one or two levels of indentation wherever possible.
 lets run this refactored code to make sure it still works how it used to.
 
-`scene`
+### scene
 run the code to show that it still works the same way
 
-`voice`
+### voice
 Many programming languages don't support local functions.
 For those, we might want to create a Game class that has the data members, an Init function, Draw, ProcessInput, and Update function. Like this:
 
-`scene`
+### scene
 Program.cs
 ```
 ...
@@ -1029,20 +1051,22 @@ public static void Main(string[] args) {
 ...
 ```
 
-`voice`
+### voice
 this is a perfectly valid implemenatation in C-sharp as well. but for the sake of one fewer class, I'll keep writing in local functions in static main.
 I'll just delete this Game class, and put the Main method back.
 
-`scene`
+### scene
 run again
 
-`voice`
+### voice
 notice the flickering. we can see how each shape is drawn right after the other, and the last drawn shapes flicker the most when the game is active.
 this flickering might not be so bad if the game rendered more quickly.
 lets implement a timer to see how long it takes to render the graphics.
-and let's put the key input behind a check, so the game iteractes as quickly as possible, without blocking the game loop.
+and let's put the key input behind a check, so the game interacts as quickly as possible, without blocking the game loop.
 
-`scene`
+## Timing
+
+### scene
 Program.cs
 ```
 ...
@@ -1073,18 +1097,18 @@ Program.cs
 ```
 compile and test.
 
-`voice`
+### voice
 I've changed Input so that it doesn't wait for a user key press. this is also called Non-Blocking input.
 My computer is pretty fast, but this game engine is really slow. it looks like it's running at around 100 milliseconds of delay between updates, or about 10 frames per second.
 As with most games, the biggest reason for this performance is probably because of Draw.
 
-`scene`
+### scene
 comment out Draw and test again.
 
-`voice`
+### voice
 The code that claculates timing is going to be important later, and it feels pretty bad. So before we continue, I want to implement a better time-keeping class.
 
-`scene`
+### scene
 src/MrV/Time.cs
 ```
 using System;
@@ -1145,7 +1169,7 @@ namespace MrV {
 
 ```
 
-`voice`
+### voice
 Awareness of timing is an essential part of a real-time game engine.
 It is required for accurate physics simulation calculations.
 Testing duration is also critical to performance metrics.
@@ -1159,7 +1183,7 @@ Millisecond values are more accurate over long durations, and most convenient fo
 Also, as floating point values increase, they reduce in precision.
 	This is because as the exponent part of the float value increases, the scale of values being tracked changes. Eventually, the exponent will ignore millisecond changes to time.
 
-`scene`
+### scene
 black screen with white rows of text:
 									integer					floating point
 	binary	00000000000000000000000000000000			00000000000000000000000000000000
@@ -1173,13 +1197,13 @@ show floating point number's exponent change as it increases in value.
 after the 'value as time' row exceeds 5 hours, bring the rate increase value back to millisecond.
 mark the floating point values in gray, unmoving, while the integer values are in green, continuing to increase 1 millisecond at a time.
 
-`voice`
+### voice
 Specifically, a game that has running for more than 4.5 hours will be more accurate using integer-based millisecond calculations instead of floating points.
 
-`scene`
+### scene
 back to code
 
-`voice`
+### voice
 This class is a singleton, which allows details about the passage of time to be accessed anywhere in the program, which is very convenient for game physics.
 I'm not making the entire class static because pure static classes create design hazards similar to global variables. we'll talk more about this design choice later.
 You might also notice that DeltaTime gives the same value until UpdateSelf is called.
@@ -1195,7 +1219,7 @@ The `ThrottleUpdate` function is used to smooth out frames, and reduce CPU burde
 The `ThrottleWithoutConsoleKeyPress` interrrupts the throttling when a keypress is detected, so that the game always updates quickly to user input, even if the framerate is set to be low.
 lets test this out.
 
-`scene`
+### scene
 Program.cs
 ```
 ...
@@ -1214,7 +1238,7 @@ Program.cs
 ...
 ```
 
-`voice`
+### voice
 It's possible to design the `Time` class without a necessary `Update` method, but doing so would result in different values for delta time within the same gameloop frame.
 This implementation tries to artificially set the gameloop speed to 20 frames per second. Feel free to experiment with this value.
 A lower framerate, which is a higher frame delay, reduces the burden that this program puts on the CPU.
@@ -1224,10 +1248,12 @@ Notice that `Time.Update();` is called in the game loop, to track the passage of
 
 ---
 
-`scene`
+## Stop the Flickering
+
+### scene
 show the game is running, with the printed DeltaTimeMs value fluctuating
 
-`voice`
+### voice
 Performance is incredibly important to a realtime simulation, and a game especially. User experience is tightly bound to game loop performance.
 Good performance also improves our ability to test, which is also critical to software development.
 
@@ -1235,7 +1261,7 @@ Right now, only one key is being processed per frame. This makes the game feel s
 
 To improve performance immediately for testing, I want to do two quick things: flush the entire input buffer in the input function:
 
-`scene`
+### scene
 Program.cs
 ```
 ...
@@ -1251,10 +1277,10 @@ Program.cs
 ...
 ```
 
-`voice`
+### voice
 like this. and reduce the amount of drawing going on:
 
-`scene`
+### scene
 Program.cs
 ```
 ...
@@ -1269,7 +1295,7 @@ Program.cs
 ...
 ```
 
-`voice`
+### voice
 like this.
 
 There are three specific classes of problems have major impacts on simulation performance that I want to keep adressing in this tutorial:
@@ -1281,7 +1307,7 @@ We can significantly reduce the cost of drawing and the appearance of flickering
 We'll do that by writing our graphics into a separate buffer, and draw that once.
 this technique is called double buffering.
 
-`scene`
+### scene
 cartoon of an artist artist painting a picture
 then the artist flips the picture, presenting it to an audience
 then the artist pulls up another blank canvas
@@ -1295,13 +1321,13 @@ then the artist paints a slightly different picture
 then the artist flips the picture, presenting it to an audience
 then the artist pulls up another blank canvas
 
-`voice`
+### voice
 This technique dramatically reduces flickering by replacing the entire image at once instead of redrawing all different parts one at a time
 It requires a Front Buffer, and a Back Buffer.
   The Front Buffer is displayed to the user. In our program, it is already there. It is the command line console.
   The Back Buffer is where the graphics are rendered in sequence before overwriting the Front Buffer all at once
 
-`scene`
+### scene
 MrV/CommandLine/DrawBuffer.cs
 ```
 using MrV.Geometry;
@@ -1380,7 +1406,7 @@ namespace MrV.CommandLine {
 }
 ```
 
-`voice`
+### voice
 This is a buffer class for drawing console characters. I'll refer to these characters as glyphs.
 The buffer is a 2D array of these glyphs, with some additional convenience methods.
 The class is a partial class so that we can split it's impementation across multiple files. We'll put specialized drawing methods in a separate place.
@@ -1392,7 +1418,7 @@ The square-bracket operator is overloaded so the class can be accessed like a 2D
 	Generations of graphics programmers before you have internalized the ambiguity of dimension order, and unlocked mental resiliency in the process.
 	this is one of the invisible wizard problems that creates undocumented skills shared by many game programmers.
 
-`scene`
+### scene
 scroll down and highlight the last half of the ResizeBuffer method
 write in big bold letters on the side of the screen
   Y  you
@@ -1401,26 +1427,26 @@ write in big bold letters on the side of the screen
   N  need
   I  it
 
-`voice`
+### voice
 This `ResizeBuffer` method is more robust than we need it to be, because it will copy old data into the new buffer to maintain consistency.
 This feature will probably not be needed, so it could be argued the extra code is a waste of time and mental energy, according to the YAGNI or You Aint Gunna Need It principle.
 
-`scene`
+### scene
 gray-out the YAGNI text, and write white text with red outline over it
   I Don't Wanna Worry About It
 
-`voice`
+### voice
 However, this feature fulfills my intuition of how the `ResizeBuffer` function should work. That allows me to comfortably forget about how it actually works later.
 For me, the cognitive load of writing the extra functionality now is less than the cognitive load of having to remember that the feature doesn't exist in the future.
 
-`scene`
+### scene
 scroll down to WriteAt overloads, Clear, and Print + PrintBuffer
 
-`voice`
+### voice
 The buffer needs methods to write glyphs into it. We need a method to clear the buffer before every draw.
 And a a convenience method for printing to the command line console, with a static implementation that could be useful for debugging.
 
-`scene`
+### scene
 MrV/DrawBuffer_geometry.cs
 ```
 using MrV.Geometry;
@@ -1479,7 +1505,7 @@ This functionality still belongs with the DrawBuffer. Maybe we can decide a bett
 
 let's test this out
 
-`scene`
+### scene
 Program.cs
 ```
 ...
@@ -1506,7 +1532,7 @@ Program.cs
 ...
 ```
 
-`voice`
+### voice
 we can and should remove the previous draw functions now, since we shouldn't print directly to the command line anymore, and equivalent logic is in DrawBuffer_geometry.cs.
 
 Our code is now using the `DrawBuffer` as a Graphics Context, which is a computer graphics concept.
@@ -1516,15 +1542,15 @@ We can also add back the test drawing that was causing flickering before, since 
 
 the circle draws more quickly now. but the shape is not actually correct,
 
-`scene`
+### scene
 diagram of console, showing width/height ratio of glyphs
 
-`voice`
+### voice
 because the command line console's characters are not perfect squares
 we can take that into account with our shape drawing code if we can scale our 2D vectors
 Lets add scale methods to Vec2
 
-`scene`
+### scene
 MrV/Geometry/Vec2.cs
 ```
 ...
@@ -1534,11 +1560,11 @@ MrV/Geometry/Vec2.cs
 ...
 ```
 
-`voice`
+### voice
 in addition to Scale, we should be able to undo scaling.
 Also, we will want a version of Scale that returns a new scaled structure without modifying this structure's data.
 
-`scene` 
+### scene 
 MrV/DrawBuffer_geometry.cs
 ```
 ...
@@ -1562,7 +1588,7 @@ MrV/DrawBuffer_geometry.cs
 ...
 ```
 
-`voice`
+### voice
 we need to keep track of the desired scale. for that, we'll add a scale variable to `DrawBuffer`.
 	arguably, the `ShapeScale` variable added to the `DrawBuffer` class is bad design.
 	this partial class implementation could instead be a subclass, to keep a clearer boundary between buffer management and drawing with a scale.
@@ -1578,16 +1604,20 @@ If you want to change the direction of the Y axis in the simulation, you can exp
 
 Because we added the scale member to this class, we don't need to pass it in as a variable. that means we don't change any of the other method signitures. Nice.
 
-`scene`
+### scene
 (run test)
 
-`voice`
+### voice
 Testing with key presses every time is a bit tedious.
 
 I want to be able to test my app more automatically, without having to press keys to do it.
 For that, I will impliment a task scheduler, which we can use for many other purposes later as well.
 
-`scene`
+---
+
+## Task Scheduling
+
+### scene
 MrV/Task/Tasks.cs
 ```
 using System.Collections.Generic;
@@ -1638,7 +1668,7 @@ namespace MrV.Task {
 }
 ```
 
-`voice`
+### voice
 This is a very simple task scheduler, which executes functions at a given delay. This is functionally similar to Javascript's SetTimeout.
 In this implementation, the `Tasks.Task` type is basically a container for a function to invoke, and a time to invoke it.
 The `System.Action` type is a variable that stores a function to invoke later. This can also be accomplished with a delegate, as we saw in `DrawBuffer.IsInsideShapeDelegate`.
@@ -1648,7 +1678,7 @@ A seperate list in RunUpdate gathers tasks to execute before the execution.
 	If an executing Task ends up calling `Tasks.Add` in a nested call, this separation prevents an infinite loop.
 Ordering is done by a Binary Search algorithm, generalized to work on generic records. The implementation of this binary search looks like this:
 
-`scene`
+### scene
 MrV/Algorithm
 ```
 using System;
@@ -1677,7 +1707,7 @@ namespace MrV {
 }
 ```
 
-`voice`
+### voice
 `BinarySearch` is a classic algorithm that works on a list of ordered values. The method assumes the list is ordered, and it will not work if the list isn't sorted.
 `BinarySearch` tests `IComparable` values, which extend a `CompareTo` method. All primitive types, like `float`s and `int`s, are `IComparable`.
 	In the `CompareTo` function,
@@ -1692,7 +1722,7 @@ this algorithm returns the 2's compliment of where the algorithm stopped searchi
 	2's compliment flips all of the binary bits in an integer value. the operation will undo itself.
 	2's compliment of a positive index will always be a negative value, so we can detect if the value already exists or needs to be inserted by checking the sign of the return.
 
-`scene`
+### scene
 Task.cs
 ```
 ...
@@ -1702,7 +1732,7 @@ Task.cs
 ...
 ```
 
-`voice`
+### voice
 I could have also just used the `BinarySearch` method already in C-sharp's List class.
 As long as the `RecordComparer` is created as a static member, there isn't any significant performance gain in using my custom algorithm.
 However, my search algorithm doesn't need to create a mostly empty search element.
@@ -1711,7 +1741,7 @@ However, my search algorithm doesn't need to create a mostly empty search elemen
 Also, this is an excellent example of a templated function using lambda expressions, which my target audience might appreciate.
 	I will continue using more functional programming like this, so please do any additional experimentation and research you need to understand this before watching more.
 
-`scene`
+### scene
 src/Program.cs
 ```
 ...
@@ -1742,27 +1772,29 @@ src/Program.cs
 ...
 ```
 
-`voice`
+### voice
 I need to make sure the `Tasks` are regularly Updated, so I'll include `Tasks.Update` in the `Update` section of my code.
 Before the gameloop, this code creates an automatic test of my application by synthetically setting the program's input variable.
 the first for-loop moves the circle to the right with the 'd' key, and expands the radius with the 'e' key
 the second for-loop moves the circle up with the 'w' key, and reduces the radius with the 'r' key.
 each of the key input changes should happen about 100 milliseconds apart.
 
-`scene`
+### scene
 test the code
 
-`voice`
+### voice
 Nice.
 If the `keyDelayMs` timing is reduced to less than the deltaTime of a frame, some of these inputs will be lost, and the circle will not move the same amount.
 
-`scene`
+## Key Input Dispatcher
+
+### scene
 set the `KeyDelayMs` value to 5 and test again
 
-`voice`
+### voice
 Lets make a better Key Input system to solve this and other bugs.
 
-`scene`
+### scene
 src/MrV/CommandLine/KeyInput.cs
 ```
 using System;
@@ -1830,7 +1862,7 @@ namespace MrV.CommandLine {
 }
 ```
 
-`voice`
+### voice
 A `KeyResponse` is just some function, which happens in response to a keypress.
 I could have used `System.Action` instead, but using a named delegate type means we can change this more easily later.
 A structure keeps the relationship of each Key press and `KeyResponse`, along with a note about the purpose of the key binding.
@@ -1849,7 +1881,7 @@ Otherwise, this class can be accessed statically like any singleton, for conveni
 The `KeyInput` class reads specifically from the C-sharp Console, so it has a conveniently labeled place for that logic.
 The `ToString` method shows how to dynamically query what is bound to each key, which could be useful for exposing dynamic key binding at runtime.
 
-`scene`
+### scene
 src/Program.cs
 ```
 ...
@@ -1879,7 +1911,7 @@ src/Program.cs
 ...
 ```
 
-`voice`
+### voice
 Now keys are bound to functions during initialization.
 This example inlines the very simple functions, and takes advantage of the Note field to create more clarity in the code.
 I personally like this style of keybinding a lot. It feels like how rules of a boardgame are explained before the game starts.
@@ -1887,7 +1919,7 @@ I personally like this style of keybinding a lot. It feels like how rules of a b
 
 Notice that the old code setting the input variable has been replaced with additions to the KeyInput queue. That old input variable is obsolete now, and removed.
 
-`scene`
+### scene
 src/Program.cs
 ```
 ...
@@ -1901,7 +1933,7 @@ src/Program.cs
 ...
 ```
 
-`voice`
+### voice
 Because `KeyInput` takes care of console input logic, the Input function can be dramatically simplified, and so can `Update`.
 
 now when we run the program to test it, key events are not lost, even when the keyDelay is lowered to much less than the `Update`'s `DeltaTime`.
@@ -1913,7 +1945,11 @@ let's keep working on the graphics optimization
 The image doesn't actually need to be fully refresh every frame, only a few characters change each frame.
 This is similar to a graphics optimization technique called Pixel Caching, done here with character glyphs.
 
-`scene`
+---
+
+## Graphics Context
+
+### scene
 src/MrV/CommandLine/GraphicsContext.cs
 ```
 using System;
@@ -1948,7 +1984,7 @@ namespace MrV.CommandLine {
 }
 ```
 
-`voice`
+### voice
 The `GraphicsContext` class is a `DrawBuffer`, and it also keeps track of previous buffer data which was already drawn.
 The decision to inherit `DrawBuffer` could be argued here.
 Conceptually, `GraphicsContext` has two `DrawBuffer`s instead of being a buffer with spare data.
@@ -1960,7 +1996,7 @@ after every complete print, which is commonly called a Render, the current activ
 
 `PrintModifiedOnly` could be further optimized to reduce calls to `SetCursorPosition`.
 
-`scene`
+### scene
 ```
 ...
 		public virtual void PrintModifiedOnly() {
@@ -1984,13 +2020,13 @@ after every complete print, which is commonly called a Render, the current activ
 ...
 ```
 
-`voice`
+### voice
 `Console.Write` implicitly moves the cursor position over one space.
 The cursor position only needs to be set if there is a new row, or if the last glyph was not printed.
 
 In practice, `SetCursorPosition` is an expensive call in the Console API.
 
-`scene`
+### scene
 src/Program.cs
 ```
 ...
@@ -2000,10 +2036,10 @@ src/Program.cs
 ...
 ```
 
-`voice`
+### voice
 The `GraphicsContext` has basically the same API surface as `DrawBuffer`, so it can be substituted without incident.
 
-`scene`
+### scene
 src/Program.cs
 ```
 ...
@@ -2014,7 +2050,7 @@ src/Program.cs
 ...
 ```
 
-`voice`
+### voice
 Using the optimized draw happens in the same way as the previous print, except that `SwapBuffers` is called to swap the draw buffer data at the end.
 A call to `SwapBuffers` might seem like an overly verbose requirement. However, it's very common in graphics APIs, so it's worth getting used to the idea.
 
@@ -2030,7 +2066,9 @@ And sometimes, only small amounts of the screen needs to change.
 
 The graphics look fast enough to test quickly. we still need to keep working with the graphics system to use colors, which is part of the original game design.
 
-`scene`
+## Colors in the Console
+
+### scene
 src/MrV/CommandLine/ConsoleColorPair.cs
 ```
 using System;
@@ -2057,7 +2095,7 @@ namespace MrV.CommandLine {
 }
 ```
 
-`voice`
+### voice
 C-sharp's console API gives us access to 16 colors, in both the foreground and background.
 This structure will be useful to have color data without text in our graphics system.
 
@@ -2067,7 +2105,7 @@ We could do some bitwise tricks to put both 4-bit values into one 8-bit byte, bu
 
 A static constructor remembers what the default console colors are as soon as any ConsoleColorPair code is called. This could help solve some color bugs later.
 
-`scene`
+### scene
 src/MrV/CommandLine/ConsoleGlyph.cs
 ```
 using System;
@@ -2117,7 +2155,7 @@ namespace MrV.CommandLine {
 }
 ```
 
-`voice`
+### voice
 Each glyph on the screen should have the `ConsoleColorPair` qualities, so we can change the color.
 Because each structure is a struct, there can't be inheritance, the glyph must be composed.
 If we want to conveniently access a glyph's colors, we should do it with a properties.
@@ -2128,7 +2166,7 @@ Some convenience methods will help convert text to and from `ConsoleGlyphs`.
 
 Now we need to use the console glyph in the `DrawBuffer`, instead of the character primitive.
 
-`scene`
+### scene
 src/MrV/CommandLine/DrawBuffer.cs
 ```
 ...
@@ -2194,7 +2232,7 @@ src/MrV/CommandLine/DrawBuffer.cs
 ...
 ```
 
-`voice`
+### voice
 I can make the right changes by:
 	search/replace of `char` with `ConsoleGlyph`
 	replace `text.ToCharArray()` with `ConsoleGlyph.Convert(text)`
@@ -2208,7 +2246,7 @@ I can make the right changes by:
 
 Similar changes need to happen in the DrawBuffer_geometry file
 
-`scene`
+### scene
 src/MrV/CommandLine/DrawBuffer_geometry.cs
 ```
 ...
@@ -2252,12 +2290,12 @@ src/MrV/CommandLine/DrawBuffer_geometry.cs
 ...
 ```
 
-`voice`
+### voice
 In DrawBuffer_geometry, search/replace of `char` with `ConsoleGlyph`
 
 And because we changed `DrawBuffer`, we need to change it's inheriting class `GraphicsContext`
 
-`scene`
+### scene
 src/MrV/CommandLine/GraphicsContext
 ```
 ...
@@ -2299,7 +2337,7 @@ in `GraphicsContext`
 		at the very end of the method
 			`ConsoleGlyph.Default.ApplyColor();`
 
-`scene`
+### scene
 src/Program.cs
 ```
 ...
@@ -2320,23 +2358,27 @@ src/Program.cs
 ```
 test the code
 
-`voice`
+### voice
 now we can test these changes and see that our graphics are colored squares instead of plain gray special characters
 
 the graphics are very low resolution.
 
 there is a programming trick called Anti-Aliasing that allows graphics to look like they have higher resolution than they really do.
 
-`scene`
+---
+
+## Naive Anti-Aliasing in the Command Line
+
+### scene
 video showing anti-aliasing
 
-`voice`
+### voice
 this technique requires a large color space to work best. still, even with only 16 colors, we can implement a basic anti-aliasing, and it will help.
 
 The technique requires that we calculate a higher-resolution than we can actually draw, which we call a super-sample.
 once we have a super-sample for each pixel that we are drawing, we can decide how to draw that pixel with more color information.
 
-`scene`
+### scene
 src/MrV/DrawBuffer_geometry.cs
 ```
 ...
@@ -2399,7 +2441,7 @@ src/MrV/DrawBuffer_geometry.cs
 ...
 ```
 
-`voice`
+### voice
 I must admit that this implementation of antialiasing is very naive, and doesn't take color mixing from overlapping geometry into account.
 	This is an intentional choice made in the robustness vs accessability tradeoff I mentioned at the beginning of the tutorial.
 
@@ -2412,7 +2454,7 @@ the `DrawShape` method needs to do more checks per glyph, to count samples.
 the additional nested for-loop counts how many times the `isInsideShape` function would trigger in each glyph's space.
 then, before the glyph is printed, a copy is made with the correct background color based on it's starting background color and sample count.
 
-`scene`
+### scene
 src/MrV/DrawBuffer_geometry
 ```
 ...
@@ -2426,14 +2468,14 @@ src/MrV/DrawBuffer_geometry
 ...
 ```
 
-`voice`
+### voice
 drawing lines is an essential part of testing and debugging vector math, which we may need to do soon.
 while we are in the drawing code, we should add a method to draw lines.
 this creates a thin rectangle, with the center of two of it's opposite edges at the given start and end coordinate.
 
 Vec2 needs some additional math to support this math.
 
-`scene`
+### scene
 ```
 ...
 		public float MagnitudeSqr => x * x + y * y;
@@ -2449,21 +2491,44 @@ PolygonShape.cs, with cartesian plane + grid diagram in small window
 draw point A at 1,1, point B at 3,4
 draw lines AB
 
-`voice`
+### voice
 if you have 2 points in space, you can calculate their difference, or `Delta` with simple subtraction.
 the distance, also called the `Magnitude` of the `Delta`, can be determined with the pythagorean theorum, 'a' squared plus 'b' squared equals 'c' squared.
 the square root operation is fairly expensive for a computer to do accurately, so for performance reasons, it's best to do math that doesn't need square root as much as possible.
 	for this reason, game engine APIs will often include a `MagnitudeSqr`, to eliminate a call to the square-root function. this is fine as long as we compare other squared values
+
+### scene
+draw a thicker line along point AB that stops at length 1, at the edge of the unit circle
+
+### voice
 if we divide the entire vector by it's `Magnitude`, we get it's `Normalized` value, which we can think of as a direction.
-	the x and y components of a normal value are identical to the cosine and sine values of this `Normalized` vector.
-	I felt I was terrible at math in high-school, when I studied trigonometry.
-	As a game developer, I have never needed to know my trig-identities, but using a unit vector to describe direction has been necessary.
+
+### scene
+show angle theta between line AB and the X axis starting at point A
+draw a unit circle (radius 1) arount point A
+draw a horizontal line to the right from point A to the edge of the unit circle, label the X component
+draw a vertical line down from poitn A the of the unit circle, label the y component
+
+### voice
+the x and y components of a normal value are identical to the cosine and sine values of this `Normalized` vector.
+
+As a personal note, I felt I was terrible at math in high-school, especially when I studied trigonometry.
+As a game developer, I have never needed to know my trig-identities, but using a unit vector to describe direction like this has been necessary very often.
+
+### scene
+draw a vertical line up from point A the of the unit circle that is as long as the x component, label it perp-x component
+draw a horizontal line to the right from point A to the edge of the unit circle as long as the y component, label it perp-y
+
+### voice
 Swapping the x and y components of a vector and making one of them negative will give a perpendicular vector.
-we need this perpendicular vector to create the thin rectangle for our line drawing code.
 
-TODO continue reviewing <------
+we need this perpendicular vector to create the thin rectangle for our line drawing
 
-`scene`
+---
+
+## Particles
+
+### scene
 src/MrV/GameEngine/Particle.cs
 ```
 using MrV.CommandLine;
@@ -2497,19 +2562,20 @@ namespace MrV.GameEngine {
 }
 ```
 
-`voice`
+### voice
 We can use the line to visualize the velocity of a moving particle.
 
 This simple particle class is just a circle with a color that moves along a linear path, which is defined by velocity vector.
 
-While drawing, it represents velocity as a line coming out of the edge of its circle.
+The `Draw` code represents velocity as a line coming out of the edge of its circle.
 	if the particle has no velocity, it doesn't draw the velocity line
-	direction is calculated by dividing the velocity by the magnitude. This is the same as just calling the Normalized property.
-	I avoid using Normalized to avoid recalculating the same square root value again. Again, an accurate square-root value is expensive to compute.
+direction is calculated by dividing the velocity by the magnitude.
+	This is the same as just calling the `Normalized` property.
+	But, I avoid using `Normalized` to avoid recalculating the same square root value again. Again, an accurate square-root value is expensive to re-compute.
 
-the Update method will change the position of the particle's cirle based on the velocity, and the amount of time passed.
+the `Update` method will change the position of the particle's cirle based on the velocity, and the amount of time passed.
 
-`scene`
+### scene
 src/Program
 ```
 ...
@@ -2535,16 +2601,16 @@ src/Program
 ...
 ```
 
-`voice`
-To include the moving particle in our app, we need to: initalize it, and add it's draw and update methods to the game loop.
+### voice
+To include the moving particle in our app, we need to: initalize it, and add it's `Draw` and `Update` methods to the game loop.
 
-`scene`
+### scene
 test
 
-`voice`
-this looks pretty satisfying. I wonder if more particles will be even more satisfying. Let's make many of them.
+### voice
+this looks satisfactory. I wonder if more particles will be even more satisfying. Let's make many of them.
 
-`scene`
+### scene
 ```
 ...
 			}
@@ -2578,12 +2644,14 @@ this looks pretty satisfying. I wonder if more particles will be even more satis
 ...
 ```
 
-`voice`
-instead of one particle, I want an array. Let's say 10 elements.
+### voice
+instead of one particle, I want an array. Let's say 10 elements for now.
 
 these need to be initailized, drawn, and updated, just like the old singular particle.
 
-`scene`
+Because I want to make the particles fan out in a circle, I need to add some more math to `Vec2`
+
+### scene
 src/MrV/Geometry/Vec2
 ```
 ...
@@ -2601,22 +2669,24 @@ src/MrV/Geometry/Vec2
 ...
 ```
 
-`voice`
-for the sake of conveniently using normal vectors instead of angles, I'll add these methods to do conversions.
+### voice
+for the sake of conveniently using normal vectors instead of angles, I'll also add these methods to do conversions.
 
-I'm doing conversions to both Radians and Degrees because the standard C# math library uses Radians based on Pi, even though most schools teach angles based on 360 degrees per circle.
-Doing the math in pure radians does mean the computer will need to do less math total.
-	but if we only need the math done during initialization, it makes sense to use the more intuitive format
+I'm doing conversions to both Radians and Degrees because the standard C# math library uses Radians based on Pi, even though most people learn angles based on 360 degrees per circle.
+Doing angle math in pure radians does mean the computer will need to do less conversion math total.
+	but if we only need the math done during initialization, being more efficient has almost no performance gain. It makes much more sense to use the more intuitive 360 degree format here.
 
-`scene`
-test
+### scene
+run the code and see the particles expand out from their origin
 
-`voice`
-this looks cool, but I want a particle explosion. This is a common graphic feature of games, and it's an effective tool for making games feel very alive.
+### voice
+this looks cool. I want to turn this into a particle explosion, which is a common and effective tool for making games feel very alive.
 to do the explosion well, I need a random number generator.
 C-sharp does provide a random number generator class, but I want something more convenient. I want a singleton that I can call statically.
 
-`scene`
+## Rand Singleton
+
+### scene
 src/MrV/GameEngine/Rand.cs
 ```
 namespace MrV.GameEngine {
@@ -2639,15 +2709,15 @@ namespace MrV.GameEngine {
 }
 ```
 
-`voice`
-This random number generator uses XorShift32 to generate fast random numbers. It is a Pseudo-Random Number Generator, which Software develoepers call a PRNG.
+### voice
+This random number generator uses the XorShift32 algorithm to generate fast random numbers. It is a Pseudo-Random Number Generator, which Software develoepers call a PRNG.
 PRNG systems create the illusion of randomness while being exactly reproducable as long as the same starting seed is used.
 	this reproducability is extremely useful for simulation debugging.
 It isn't a high-quality random number generator for statistically robust simulations, but it is very fast.
-If you want a higher quality generator that is a little bit slower, look up SplitMix32
+If you want a higher quality generator that is a little bit slower, look up the SplitMix32 algorithm.
 Like the other singleton classes, this one has a separate static API for convenience, and can also be created as an instance for specific number sequences.
 
-`scene`
+### scene
 src/MrV/Time.cs
 ```
 ...
@@ -2655,10 +2725,10 @@ src/MrV/Time.cs
 ...
 ```
 
+### voice
 to seed our random number generator, we should add an extra static method to Time, so we can have every program use a unique starting point for the random numbers.
 
-`scene`
-test, the particles 
+### scene
 src/Program.cs
 ```
 ...
@@ -2671,11 +2741,12 @@ src/Program.cs
 			}
 ...
 ```
+test the particles code
 
-`voice`
-the particles explode out differently with each runtime. but they don't look like an explosion yet.
+### voice
+the particles spread out differently with each runtime. but they don't look like an explosion yet.
 
-`scene`
+### scene
 src/MrV/GameEngine/Particle.cs
 ```
 ...
@@ -2719,13 +2790,13 @@ src/MrV/GameEngine/Particle.cs
 ...
 ```
 
-`voice`
-I need to add variables to track lifetime, and an enabled state to flip off when lifetime is exceeded.
-update and draw should stop working when enabled is false.
+### voice
+I need to add variables to track lifetime, and an enable them to turn off when lifetime is exceeded.
+`Update` and `Draw` should stop working when `Enabled` is false.
 
 also, I want to stop drawing the direction lines. those were nice for debugging motion, but they don't help the explosion graphic.
 
-`scene`
+### scene
 src/Program.cs
 ```
 ...
@@ -2733,10 +2804,10 @@ src/Program.cs
 ...
 ```
 
-`voice`
+### voice
 this looks more like an explosion, but it's hard to tell from just one run. we should be able to test this more easily
 
-`scene`
+### scene
 ```
 ...
 			KeyInput.Bind(' ', () => {
@@ -2749,13 +2820,15 @@ this looks more like an explosion, but it's hard to tell from just one run. we s
 ...
 ```
 
-`voice`
-This works, but we don't want to re-create the particles each time we press a key.
-the new keyword prompts memory allocation, which is one of the most time consuming basic things the computer does.
-to be clear, this program is not suffering very much from this allocation. this is a very small amount of memory.
-But if we want to scale this explosion up to hundreds or thousands of circles, using new like this will become a problem. we want to avoice allocation as much as possible.
+## Reuse Particles
 
-`scene`
+### voice
+This works, but we don't want to re-create the particles each time we press a key.
+the `new` keyword prompts memory allocation, which is one of the most time consuming basic things the computer does.
+to be clear, this program is not suffering very much from this allocation. this is a very small amount of memory.
+But if we want to scale this explosion up to hundreds or thousands of circles, using `new` like this will become a problem. we want to avoice allocation as much as possible.
+
+### scene
 src/MrV/GameEngine/Particle.cs
 ```
 ...
@@ -2774,11 +2847,11 @@ src/MrV/GameEngine/Particle.cs
 ...
 ```
 
-`voice`
+### voice
 we want an initialization function that re-purposes the existing particle
 the need for this sort of re-initialization would be clearer in a language like C, where memory needs to be manually reclaimed.
 
-`scene`
+### scene
 src/Program.cs
 ```
 ...
@@ -2792,12 +2865,16 @@ src/Program.cs
 ...
 ```
 
-`voice`
-and we want to use the init function instead of new.
+### voice
+and we want to use the `Init` function instead of `new`.
 
 it still doesn't look enough like an explosion for me. I want to see the particles change size as they move.
 
-`scene`
+---
+
+## FloatOverTime
+
+### scene
 src/MrV/GameEngine/FloatOverTime.cs
 ```
 using System.Collections.Generic;
@@ -2864,23 +2941,23 @@ namespace MrV.GameEngine {
 }
 ```
 
-`voice`
-this class interpolates a value over time, with frames given at different points in time.
+### voice
+this class moves a value along a path over time. math calculates a position at any point in time. we call this math interpolation.
 
-It's a templated class because this idea, interpolating a value, is useful for many different kinds of values.
+It's a templated class because the idea of interpolating a value is useful for many different kinds of values.
 It's going to be used for changing the radius of a particle over time.
 it could also be used for changing a particle's color, position, or any concept that can be interpolated between.
 
-Any implementation will need to implement a Lerp method, which explains how to interpolate between values of the used type.
-A list of frames will define the curve of the value, which is how the value interpolates.
-a convenient static constructor that grows and then shrinks a value is included here, which we need for the particle.
+Any implementation will need to implement a `Lerp` method, which explains how to interpolate between values of the used type.
+A list of frames will define the curve of the value, which is the path that the value interpolates over time.
+a convenient static instance that grows and then shrinks a value is included here, which we need for the explosion particle.
 
-the ValueOverTime abstract class defines how the math works.
+the `ValueOverTime` abstract class defines how the math works.
 notably, this class interpolates a curve with sharp transitions from frame to frame.
 the interpolation could be smoother with a spline, which is a clear opportunity for to improve this class later.
 for now, this is sufficient for our simulation.
 
-`scene`
+### scene
 src/Program.cs
 ```
 ...
@@ -2902,20 +2979,24 @@ src/Program.cs
 ...
 ```
 
-`voice`
+### voice
 for a quick test, I'll just initialize the FloatOverTime object as normal game data
 	and use the structure to modify particle radius directly in Update.
 
-`scene`
+### scene
 test
 
-`voice`
+### voice
 this actually looks pretty good now. but writing this much specific logic directly in Update feels bad to me.
-I want a separate class that will handle all of the particles.
+I want a separate class that will handle all of the particle logic.
 I want the class to generate and re-use particles easily and transparently as well.
-That kind of object re-use is done with a data structure called an ObjectPool
+That kind of object re-use is done with a data structure called an ObjectPool.
 
-`scene`
+---
+
+## ObjectPool
+
+### scene
 src/MrV/GameEngine/PolicyDrivenObjectPool.cs
 ```
 using System;
@@ -2997,7 +3078,7 @@ namespace MrV.GameEngine {
 }
 ```
 
-`voice`
+### voice
 we can use this object pool to cache memory for anything that we create and destroy a lot of.
 it could be particles, bullets, enemies, pickups, or really anything.
 
@@ -3005,25 +3086,25 @@ the idea of this class is that a list of objects has some unused objects that ca
 	objects at the end of the list are considred unused, or decommisioned.
 the user must define some policies: how to create objects, how to reuse them, how to mark them as unused, and how to clean them up later.
 importantly this class handles deferred cleanup
-	this objectpool changes the order of objects in the list when they are disposed,
-	so special care needs to be taken if an object is decommissioned while processing the object pool list in a for loop.
-when the user wants to commission an object,
+	this ObjectPool changes the order of objects in the list when they are disposed,
+	so special care needs to be taken if an object is `Decommission`ed while processing the object pool list in a for loop.
+when the user wants to `Commission` an object,
 	if there are no unused objects in the list, a new one is created, added to the list, and given to the user
 	if there is an unused object, the one closest to the edge of free objects is given to the user, and that edge is moved up.
-when the user wants to decommission an object,
+when the user wants to `Decommission` an object,
 	this code checks to make sure that it isn't decommissioning an already decommissioned object
 	and it also protects against mixing deferred and immediate decomissioning
 	then the object to decommission switches places in the list with the last commissioned object
-	then the boundary of decommissioned objects moves down to absorb that  object
+	then the boundary of decommissioned objects moves down to absorb that newly decomissioned object
 if an object needs to be decommissioned, but can't be decomissioned right now (because the object pool is being iterated through)
 	the index of the object to decommission is put into a set (which won't contain duplicate indexes)
-	then during a later time, outside of the objectpool iteration, those objects to decommission are decommissioned in reverse index order
-		the last objects get pushed to the end before the first objects
+	then during a later time, outside of the objectpool iteration, those objects to decommission are decommissioned. this decomissioning has to happen in reverse index order, because removing an index at the front would shift all indexes beyond it.
+		we want the last objects to get pushed to the end first.
 
-This class manages creation of objects in an automated way. The function that creates each object is a Factory Method, and the Object Pool is the factory.
-This implementation could also be explained as using a Strategy Pattern, with it's parameterized Commission and Decommission methods.
+This class manages creation of objects in an automated way. Programmers call the function that creates each object is a Factory Method, and the Object Pool is the Factory.
+This implementation could also be explained as a Strategy Pattern, with it's parameterized Commission and Decommission methods.
 
-`scene`
+### scene
 src/MrV/Program.cs
 ```
 ...
@@ -3049,17 +3130,17 @@ src/MrV/Program.cs
 ...
 ```
 
-`voice`
-lets replace the Particle array with the PolicyDrivenObjectPool of Particle objects.
+### voice
+lets replace the Particle array with the `PolicyDrivenObjectPool` of `Particle` objects.
 we need to define how to create a basic particle
 how to commission a new particle
 and how to decommission a particle
 we don't need to include how to destroy the particle, because our particle doesn't allocate any special resources
 
 the "explosion" KeyInput Bind should change to commission 10 particles.
-a nice side effect of using this new system is that we can create more than just 10 particles, which will help create some interesting tests.
+a nice side effect of using this new system is that we can create more than just 10 particles, which will help create more interesting tests.
 
-`scene`
+### scene
 src/MrV/Program.cs
 ```
 ...
@@ -3071,10 +3152,10 @@ src/MrV/Program.cs
 ...
 ```
 
-`voice`
-the draw code needs to change, to use the particle object pool instead of the old particles array
+### voice
+the `Draw` code needs to change, to use the particle object pool instead of the old particles array
 
-`scene`
+### scene
 src/MrV/Program.cs
 ```
 ...
@@ -3096,19 +3177,25 @@ src/MrV/Program.cs
 ...
 ```
 
-`voice`
-and the update needs to change as well.
-here we can see that particles can be decommissioned while the particles pool is being iterated through.
+### voice
+and the `Update` needs to change as well.
+here we can see that particles could be decommissioned while the particles pool is being iterated through, if we aren't careful.
 after the pool is iterated through, the particlesPool can decommission those deferred particles
 
-`scene`
+### scene
 test
 
-`voice`
+### voice
 this looks pretty great!
 but there is too much particle-specific code in the main loop code for my taste.
 
-`scene`
+the random range calulating code in particular could be more explicit.
+
+---
+
+## RangeF
+
+### scene
 src/MrV/GameEngine/RangF
 ```
 namespace MrV.GameEngine {
@@ -3123,10 +3210,18 @@ namespace MrV.GameEngine {
 }
 ```
 
-`voice`
-before I implement the ParticleSystem class, I want to implement a RangeF class, which is a distributable way of considering a random number in a range.
+### voice
+before I implement the ParticleSystem class, I want to implement a `RangeF` class, which is a distributable way of considering a random number in a range.
 
-`scene`
+If I don't want a random range, I should just be able to use a single value as a constant.
+This creates a range with no domain, which costs pointless multiplication and addition to calculate.
+But because the extra math is done on initialization, optimizing it is not a high priority.
+
+let's get to the particle system.
+
+## ParticleSystem
+
+### scene
 src/MrV/GameEngine/ParticleSystem.cs
 ```
 using MrV.Geometry;
@@ -3199,16 +3294,16 @@ namespace MrV.GameEngine {
 }
 ```
 
-`voice`
+### voice
 This is a very specific particle system implementation for explosions.
 	i won't be modifying this for the rest of the tutorial, so feel free to make it more generalized if you want.
-notice that I'm using RangeF for the values that could be random between two values.
-the PolicyDrivenObjectPool's delegate methods are defined as member functions.
-a Draw method handles drawing of all particles
-and the particle system's Update handles logic related to the Particle.
+notice that I'm using `RangeF` for the values that could be random between two values.
+the `PolicyDrivenObjectPool`'s delegate methods are defined as member functions.
+a `Draw` method handles drawing of all particles
+and the particle system's `Update` handles logic related to the Particle.
 	arguably, all Particle logic, including the movement from Velocity could be moved to this function. I'm leaving that design choice to any audience member willing to make it.
 
-`scene`
+### scene
 src/Program.cs
 ```
 ...
@@ -3240,24 +3335,29 @@ src/Program.cs
 ...
 ```
 
-`voice`
-initialization of the particles is much simpler now
-so is drawing, and updating. all of the interesting logic related to the particle system is comfortably in a class called particle system.
+### voice
+initialization of the `Particle`s is much simpler now
+so is drawing, and updating. all of the interesting logic related to the particle system is comfortably in the `ParticleSystem` class.
 
+### scene
+test the code, showing lots of particles exploding
+
+### voice
 I do want to make a special note here: this tutorial took me a long time to plan, edit, rewrite, record, and edit again.
-	during that time, the particle system went through significant changes.
-	developing this particle system is not as easy as this tutorial made it look.
-	when I first developed the game, I made the particle system much later, and it was bigger, more robust, for different kinds of particle systems.
-	after I realized that I really only use the explosion particle, I greatly simplified the particle system.
+	during that time, the `ParticleSystem` went through significant changes.
+	developing a particle system is not as easy as this tutorial made it look.
+	when I first developed the game, I made the particle system much later, bigger, and more robust, for different kinds of particles.
+	after I realized that I really only use the explosion particle, I greatly simplified it.
 		I also moved this implementation earlier in the tutorial, to really utilize rendering optimizations sooner.
 	if you are having trouble getting the particle system working, know that there is nothing wrong with you. this was difficult.
 	you are practicing hard programming right now. it is good practice when it's difficult. slow down, pay attention, and take a break if you need to.
 	you don't need to feel like you have to rush through this. slow is smooth, and smooth is fast.
 
-`scene`
-test
+---
 
-`scene`
+## Zoom In and Out
+
+### scene
 src/Program.cs
 ```
 ...
@@ -3267,13 +3367,15 @@ src/Program.cs
 ```
 also run.
 
-`voice`
-tp look at particles closer, we should zoom in with our graphics context.
-we can do that by simply modifying the ShapeScale member
+### voice
+to look at particles closer, we should zoom in with our graphics context.
+we can do that by simply modifying the `ShapeScale` member
 
 but doing this doesn't zoom into the center of the screen, it zooms into the origin point. that isn't what we want.
 
-`scene`
+we need some real math to make this zoom look good. 
+
+### scene
 src/MrV/CommandLine/DrawBuffer_geometry_.cs
 ```
 ...
@@ -3325,17 +3427,15 @@ src/MrV/CommandLine/DrawBuffer_geometry_.cs
 ...
 ```
 
-`voice`
-we need some real math to make this zoom look good. 
-
-everything is being drawn by DrawShape, so changes need to be local to this funciton.
+### voice
+everything is being drawn by `DrawShape`, so changes only need to be local to this funciton.
 a new 2D vector member keeps track of the offset of the upper-left corner of the screen
-A new Scale property modifies the ShapeScale value while keeping the center off the screen in the same place
-the math for calculating the center position and moving the offset to center on the center position is very similar.
+A new `Scale` property modifies the `ShapeScale` value while keeping the center off the screen in the same place
+the math for calculating the center position, and moving the offset to center on a new center position is very similar. you are welcome to make a common helper function for that math, I decided to just put the math in the same area of the source file.
 
-the DrawShape function doesn't need to change that much. we need to offset the rendering rectangle by the camera offset, and adjust the sampling point as well.
+the `DrawShape` function doesn't need to change that much. we need to offset the rendering rectangle by the camera's offset, and adjust the sampling point as well.
 
-`scene`
+### scene
 src/LowFiRockBlaster/Program.cs
 ```
 ...
@@ -3349,24 +3449,33 @@ src/LowFiRockBlaster/Program.cs
 ...
 ```
 
-`voice`
-In the game code, the plus and minus keys on the keyboard change the zoom by a common scale factor.
-also, we initialize the camera's center to focus on the particle system
+### voice
+In the game code, the plus and minus keys on the keyboard change the zoom by a common `Scale` factor.
+also, we initialize the camera's center to focus on the particle system. I'm using the raw x/y coordinate in a tuple instead of a named variable because I expect that value will be removed soon.
 
-`scene`
-test
+### scene
+test the code, zooming in and out
 
-`voice`
+### voice
 this particle effect looks better from far away. I think it's good enough for now.
 
 before we move on to creating game elements, lets take a look at the game loop.
 
-I think it looks mostly ok. but I think there is too much test drawing code.
+---
+
+## Draw Lists
+
+### scene
+Program.cs
+
+### voice
+
+I think this code looks mostly ok. but I think there is too much unlabeled test drawing code.
 
 a game engine should have a list of drawable elements, and draw those in a uniform way.
-we should remove specific draw calls and replace them with objects to draw.
+we should remove specific draw calls and replace them with general things to draw.
 
-`scene`
+### scene
 src/LowFiRockBlaster
 ```
 ...
@@ -3403,128 +3512,134 @@ src/LowFiRockBlaster
 ...
 ```
 
+### voice
+a game should have a clear way to draw specific things that are and are not part of the simulation, like User Interface and visual effects vs game objects.
+we can refactor the existing test code into into pre and post processing effects as a test.
 
-`voice`
-a game should have a clear way to draw things that are not part of the simulation, like User Interface and visual effects.
-we can refactor existing test code into into  pre and post processing effects as a test.
+The simulation's elements, like the player, the player's projectiles, asteroids, and ammo pick ups will be drawable objects that populate a draw list.
 
-The simulation elements, like the player, the player's projectiles, asteroids, ammo pick ups, etc. will be drawable objects that populate a draw list.
+## UML
 
-`scene`
+### scene
 UML diagram of IGameObject, IDrawable, UIText, MobieObject, MobielCircle, MobilePolygon
 https://lucid.app/lucidchart/ec14ab7a-a936-4356-bb0e-0326d2a5e45e/edit?viewport_loc=-340%2C-125%2C2514%2C1365%2CHWEp-vi-RSFO&invitationId=inv_571bd2ad-b5a4-4065-9b11-780a61085d7b
 
-`voice`
-The draw list is one of the lists that the game engine will service every frame. All drawable objects will implement the IDrawable interface, as seen in this diagram.
+### voice
+The draw list is one of the lists that the game engine will service every frame. All drawable objects will implement the `IDrawable` interface, as seen in this diagram.
 
 UML diagramming is useful to clearly communicate system architecture.
 	like the design document, it helps explain the concept and goals of a system.
 	also, it becomes less important to make it detailed as a programmer reading it becomes more skilled, and can make some assumptions from experience.
 
-`scene`
+### scene
 still screenshot of the game screen, with labels for the asteroids of different size, player, player's projectiles, and ammo pickup.
 
+### voice
 My game will need moving circles to destroy, which are the conceptual asteroids. The rocks to blast in my lowfi rockblaster game.
-The game's player will be a shape visually distinct from the circles.
+The game's player will be a polygon shape visually distinct from the circles.
 The player will shoot projectiles. I want to see spinning triangles for these projectiles, because I think that will look cool.
 When the player destroys asteroids, they will break into smaller asteroids. the smallest asteroid will turn into an ammo pickup when destroyed.
 I'll also need some user interface that stays static on the screen, to tell the user their score, ammo, and health.
 
-I want to use object oriented programming for this game design. Probably the most well known and well respected guideline for Object Oriented Design is the SOLID principles.
+I want to use Object Oriented Programming for this game design. Probably the most well known and well respected guideline for Object Oriented Design is the SOLID principles.
 
-`scene`
-S Single Responsiblity Principle: each class does one thing.
-O Open-Closed Principle: Classes are open to extension, closed to modification.
-L Liskov Substitution Principle: Objects are substitutable for objects of their superclass.
-I Interface Segregation Principle: Multiple interfaces are better than one general-purpose interface. 
-D Dependency Inversion Principle: Use abstractions so classes don't rely on specific implementations.
+## S. O. L. I. D.
 
-`voice`
+### scene
+black background with white text
+	S Single Responsiblity: each class does one thing.
+	O Open-Closed: Classes are open to extension, closed to modification.
+	L Liskov Substitution: Objects are substitutable for objects of their superclass.
+	I Interface Segregation: Multiple interfaces are better than one general-purpose interface. 
+	D Dependency Inversion: Use abstractions so classes don't rely on specific implementations.
+
+### voice
 Following these restrictions reduces cognitive load as the system grows in complexity, so I agree with SOLID principles in most situations.
 However, I intentionally break the principles as practical and sometimes stylistic choice.
 Choices about architecture design is one of those Invisible Wizard Problems.
----
-logical break for the tutorial
----
 
-`scene`
-highlight 'S Single Responsiblity Principle'
+### scene
+highlight 'S Single Responsiblity'
 
-`voice`
+### voice
 Yes, each class should clearly do one thing. We want few mental burdens, and clear purpose at all times. However, my code already breaks the Single Responsiblity Principle:
 Breaking this rule is common for game programming because of how dynamic the game design process is. Games are constantly trying to be more fun, which is actually moving target.
-To rapidly find what is fun, code is inserted and removed often, to rapid-prototype game mechanics.
-	Intense work pressure can push developers to cut corners with good programming habits, and leave such code in place if it is working.
+To rapidly find what is fun, code is inserted and removed often, to rapid-prototype new game mechanics.
+	Intense work pressure can push developers to cut corners with good programming habits, and leave such messy code in place if it is working.
 	The causes of this pressure are nuanced and interesting enough for another video, but I'll summarize my take on it:
-		the games industry is a victim of it's own success, which makes most people expectations too high.
+		the games industry is a victim of it's own success, which makes most people expectations too high. That creates a lot of pressure to cut corners when it comes to disciplined development.
 At least one of my classes is already doing things that could be argued as extending into new functionality that should be in a different class.
-	DrawBuffer does more than simply manage a buffer. It has a partial class extension where scaled rendering code exists, which was my own compromise that I made with myself, feeling pressure to release this tutorial sooner.
-The new game classes I'll write will also do a lot. MobileCircle will be used for asteroids and for ammo pickups, with no additional subclassing.
+	`DrawBuffer` does more than simply manage a buffer. It has a partial class extension where scaled rendering code exists. The partial class extention was my own compromise on design quality, feeling pressure to release this tutorial sooner.
+The new game classes I'll write will also do a lot. `MobileCircle` will be used for asteroids and for ammo pickups, with no additional subclassing.
 	You'll see how I do that with metadata and lambda expressions.
 In general, I break the Single Responsibility Principle on purpose, to keep file count low, so it's easier to read my code, and easier to think about.
-Personally, I will add additional functionality to a file if I can comfortably hold the additional functionality in my head along with the rest of the file.
-	I will often refactor this kind of code later, sometimes to a separate file instead of a separate class, as I did in the DrawBuffer_geometry source file.
+Personally, I will continue to add functionality to a file if I can comfortably hold the additional functionality in my head along with the rest of the file.
+	I will often refactor this kind of code later.
 
-`scene`
-highlight 'O Open-Closed Principle'
+### scene
+highlight 'O Open-Closed'
 
-`voice`
+### voice
 My code also breaks the Open-Closed Principle:
 I do create small classes that should be easy to extend, in a way that looks like good Open-Closed design.
 However, I write these classes with the specific expectation that you will modify the code yourself. And I wrote the code in a way that is easier for you to copy, and more effortful to extend.
 My code is full of public members named as properties with the expectation that you will refactor that yourself in the future.
 These implementations are explicitly not closed for modification: I want you to modify the code, and make your own design changes. Then it will become your code.
 And crucially, I want you to make mistakes by making changes. Making those mistakes is how you learn. And I hope you are using this tutorial as a learning exercise.
-If I were more serious about making it easy to extend and closed for editing, I would have turned all public members into properties, added the virtual keyword to many methods and properties.
-Personally, I think the Open-Closed principle is better for mostly finished business software, where libraries can be shared with partner businesses, and performance loss from the language features enforcing this principle are negligible.
+If I were more serious about making it easy to extend and closed for editing, I would have turned all public members into properties, added the virtual keyword to many methods and properties, and maybe some XML documentation identifying what kind of extensions I expect.
+Personally, I think the Open-Closed principle is better for mostly finished business software, where libraries should be shared with partner businesses, and performance loss from the language features enforcing this principle are negligible, because they aren't being run in a real-time loop.
 	Game programming in particular is not a good place to make source code difficult to edit and slightly slower by default, and certainly not during prototype iteration.
 
-`scene`
-highlight 'L Liskov Substitution Princicple'
+### scene
+highlight 'L Liskov Substitution'
 
-`voice`
+### voice
 My code will not strictly adhere to the Liskov Substitution Princicple:
 I want to take advantage of good polymorphism, but strict adherence to Liskov Substitution creates inefficient code full of type verification.
 One easy approach to maintain this principle is to avoid inheritance entirely, and create classes that extend functionality with lambda expressions and extra meta-data.
-	I will be doing this myself, but to a limited degree.
+	I will be doing this myself, but to a limited degree, as you'll see with MobileObject.
 	Duck Typing, which is an object design pattern that Python, JavaScript, and Lua use, is the logical extreme of Liskov Substitution.
 		In those scripting languages, most complex objects are the same type, eacn being essentially a dictionary of variables and functions.
-		In practice, this is a mess for code efficiency and compile-time error checking. This is also bad for game programming, especially at the game engine level.
-	Unity, another C# game development environment, uses a Decorator pattern, which enables all GameObjects to substitute for each other.
-		This often requires type verification at runtime when specialized functionality is needed by code, but not always. That's worth discussion in another video.
+		In practice, this is a mess for code efficiency and compile-time error checking. This is also bad for game programming, because of performance costs.
+	Unity, another C# game development environment, uses a Decorator pattern, which enables all GameObjects to substitute for each other, while having differentiated component elements.
+		This often requires type verification at runtime when specialized functionality is needed by code, but not always. That's worth discussion in another video about Unity specifically.
 
-`scene`
-highlight 'I Interface Segregation Principle'
+### scene
+highlight 'I Interface Segregation'
 
-`voice`
+### voice
 My code will break the Interface Segregation Principle:
 I will be making interfaces, becase doing so is good practice for Object Oriented Programming.
 However, I'm not going to make fine-grained Interface separations. I won't need them in practice, and writing them will the increase complexity of this tutorial for little gain.
 For example, it is possible that not all GameObjects will need a position. But I don't want an additional IHasPosition interface.
 	If you want to make the code adhere to Interface Segregation, you are welcome to implement the extra interfaces yourself.
 
-`scene`
-highlight 'D Dependency Inversion Principle'
+### scene
+highlight 'D Dependency Inversion'
 
-`voice`
+### voice
 My code already uses Singletons, which is a gross violation of the Dependency Inversion Principle.
 	To be clear, I hate the fact that my code relies on singletons. Singletons make a brittle design, and it limit future functionality.
-		For example, if I have a Time singleton, and I want to add a localized-time-travel mechanic to my game later, that would require multiple Time objects,
-			which is difficult to do with a Singleton.
+		For example, I have a `Time` singleton, and if I want to add a localized-time-travel, like a region of space that makes physics work backwards, that would require multiple Time objects, which is impossible to do with a Singleton for time.
 	I did write every singleton class to be able to substitute it's the static instance for another one, to help enable prototyping some interesting designs later.
 		If I was serious about those specialized designs, I would not use singletons.
-		A singleton is as a euphamism for a global variable, which is brittle design that hurts expandability, and makes code difficult to share across projects.
-		Singletons, like global variables, create hidden dependencies that are difficult to extract and reason about. When multi-threading gets involved, these kinds of bugs can be unsolvable.
-To be clear, I wrote singletons because I accept them as well understood utilities, as extensions of the programming environment more than program features.
-I explicitly accept the design cost, as many other game engines do (like Unity).
+		Singletons, like global variables, create hidden dependencies that are difficult to extract reason about, and share across projects. When multi-threading gets involved, these kinds of bugs can become unsolvable nightmares.
+To be clear, I wrote singletons because I accept them as well understood utilities, as extensions of the programming environment more than program features, and I expect to enforce single-threading for all game logic.
+I explicitly accept the design cost of Singletons, as many other game engines do (like Unity).
 
-If I did want to create code that didn't use a Time singleton, designed with Dependency Inversion in mind, I would:
-	Create an interface for Time objects
-	Give every object that uses Time a reference to a Time object, via the interface
-	Populate that time object reference on initialization
-	I would add additional properties to each object using a Time to query and change the Time instance at runtime.
+If I did want to create code that didn't use a `Time` singleton, designed with Dependency Inversion in mind, I would:
+	Create an interface for `Time` objects, like `ITime`
+	Give every instance of an object that uses `Time` a reference to a `ITime` object
+	Populate that `ITime` object reference on initialization, probably in a factory method
+	I would also have properties to query and change the Time instance at runtime.
 
-`scene`
+Lets get to implementing some interfaces.
+
+---
+
+## Interfaces
+
+### scene
 src/MrV/GameEngine/IDrawable.cs
 ```
 using MrV.CommandLine;
@@ -3537,12 +3652,11 @@ namespace MrV.GameEngine {
 }
 ```
 
-`voice`
+### voice
 the IDrawable interface in code is more complex than what was shown in the UML diagram.
-Again, the UML diagram helps describe architecture, it doesn't need to be detailed enough to run as executable code.
+Again, the UML diagram helps describe architecture, it doesn't need to be detailed enough to run as executable code. As an experienced programmer, I was able to make assumptions about what should be in the interface.
 
-`voice`
-
+### scene
 src/MrV/GameEngine/IGameObject.cs
 ```
 using MrV.Geometry;
@@ -3557,59 +3671,45 @@ namespace MrV.GameEngine {
 }
 ```
 
-`scene`
+### scene
 This engine uses an interface for all objects called IGameObject. I expect complex objects to inherit this interface, adding their own specialized complexity.
 Notably, Unity has a concrete class called GameObject, and objects of GameObject are extended using a decorator pattern instead of inheritance.
-	The decorator pattern has runtime overhead that we avoid in this implemenation.
-	That design makes more sense for Unity, which is a very dynamic general-purpose engine. This engine will be much less dynamic, but conceivably more performant for it's design.
+	The decorator pattern has runtime overhead that we avoid in this game's implemenation.
+	That decorator design makes more sense for Unity, which is a very dynamic general-purpose engine. This engine will be much less dynamic, but conceivably more performant for it's design.
 
-```
-MobileObject, MobileCircle, MobilePolygon
-```
+---
 
-* * moving polygon (with offset)
-```
-```
-* rotate functionality for the polygon
-```
-```
-* create a player-controlled MobilePolygon class
-  - special note be careful about class design! if you do it while you are tired, you can easily regret writing a strict structure that you later need to unmake
-* add velocity to player class and update method
-```
-```
-* change player velocity, triggered by key input queue
-```
-```
+## TODO
+
+TODO: Code is done, just need the script written
+* show MobileObject code and explain
+* show MobileCircle code and explain
+* show MobilePolygon code and explain
+* create a player MobilePolygon in the Program.cs file
+* create a PlayerController class that changes the velocity of a target MobileObject
+  - special note be careful about class design! if you do it while you are tired, you can easily regret make it rotate
+* make it move with WASD, rotate CW and CW with QE
 * add code for an asteroid
-```
-```
 * add a MemoryPool for the asteroids
-```
-```
 * create a MemoryPool for bullets, triangle shaped MobilePolygons
-```
-```
 * add code to shoot the bullets
-```
-```
 * create naive collision detection that just checks circles, checking all objects in O(n^2) algorithm
-```
-```
 * add code to destroy asteroids when they are hit by a bullet. the bullet should also go away after collision
-```
-```
 * code complexity is about to get crazy, and we'll need debugging. create a Log class with Assert.
-```
-```
 * add Welzl's algorithm for min bounding circle
-```
-```
 * add sub-collision circles to the Polygon, for finer collision detection
-```
-```
+* test with asteroids spawning around the player
+* give the asteroids velocity
+* test player being destroyed by asteroid collision
+* test asteroids being destroied by projectile
+* test asteroids spawning X number of smaller asteroids
+* implement ammo variable for player
+* implement ammo pickup
+* increase asteroid count to 1000, and notice the frame rate change
+* set asteroid count back down to like 100
 * create a SpacePartition class, with drawing functionality for testing
-* requires AABB
-```
-```
-* 
+* test SpacePartition
+* show multiple partition cells capturing the same collision
+* add code to collapse duplicate collisions
+* create code for nested SpacePartition
+* increase asteroid count to 1000, and notice the frame rate change
