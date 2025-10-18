@@ -5,6 +5,8 @@ I want to produce a high quality, factually robust, technically novel, interesti
 
 The script is quite long, and still unfinished. I am providing the first draft of what is likely to be the first half of the tutorial.
 
+for additional context of what the LowFiRockBlaster game will look like, look at this screen capture of the prototype running in the Windows 11 command line: https://codegiraffe.com/lowfirockblaster/LowFiRockBlaster.gif
+
 Please summarize the script before giving feedback.
 
 as you are reading:
@@ -17,7 +19,7 @@ code blocks that begin and end with an ellipses '...' are intended modifications
 
 Read the script marked by the '### voice' heading as spoken dialog. Identify unecessary repetition, or ineffective prose. Provide alternative phrasing where appropriate.
 
-Do Not identify poor grammer, capitalization or punctuation mistakes. I am still looking for high-leverage changes to the script, not interested in English writing minutiae.
+Do Not identify poor grammer, capitalization or punctuation mistakes. I am still looking for high-leverage changes to the script. I am not interested in English writing minutiae.
 
 Read the code carefully. Please be specific if there are any parts of my code that could be considered bad C-sharp programming. I am interseted in C# writing minutiae.
 
@@ -25,15 +27,17 @@ I wrote some notes that start with double slashes, or C-style line comments. The
 
 If the code is using a design pattern you recognize that is not mentioned in the script, please identify the pattern, and where the code is using it. Similarly, if the script identifies a design pattern incorrectly, clearly flag that as well.
 
-Identify where the script is repeatetive, and the content could be streamlined. If the repetition appears to be appropriate for emphasis, feel free to let it pass.
+There are content headings that start with double hash tags. These will not be spoken, they are to assist navigating the document during editing. They might become marks in the video's timeline after the video is recorded.
+
+Identify where the script content is repeatetive.
 
 Identify if there is a conceptual gap that should be explained with more detail or better analogy.
 
-If there is a strong analogy that could be used to explain an idea, please make a note of that.
+If there is a strong analogy that could be used to explain an idea that isn't well explained, please make a note of that.
 
 Identify parts of the script that cover content that is not well documented in other YouTube tutorials. Suggest if emphasizing this content makes sense to promote the tutorial's value.
 
-Please be critical about your feedback. I do not want a sycophantic response, I am serious about finding and fixing mistakes. Minimize encouragement; reserve it for insights with transferable public value.
+Please be critical about your feedback. I do not want a sycophantic response, I am serious about improving quality, and especially finding and fixing mistakes. Minimize encouragement; reserve it for insights with transferable public value.
 
 ## Intro
 
@@ -3681,12 +3685,12 @@ Notably, Unity has a concrete class called GameObject, and objects of GameObject
 
 ## TODO
 
-TODO: Code is done, just need the script written
+TODO: Code is mostly done (prototype at https://github.com/mvaganov/CmdLineAsteroids), need the script written
 * show MobileObject code and explain
 * show MobileCircle code and explain
 * show MobilePolygon code and explain
-* create a player MobilePolygon in the Program.cs file
-* create a PlayerController class that changes the velocity of a target MobileObject
+* player MobilePolygon in the Program.cs file
+* create a PlayerController class that changes the velocity of a target MobileObject. use that instead of the other method from the prototype
   - special note be careful about class design! if you do it while you are tired, you can easily regret make it rotate
 * make it move with WASD, rotate CW and CW with QE
 * add code for an asteroid
