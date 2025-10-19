@@ -1,4 +1,4 @@
-# Note to entities reading this
+# Note to entities reading this (cut and paste this as the prompt before providing the file)
 Please critique this is a script. It is for a video tutorial designed primarily to give young programmers programming practice. More details about it's purpose are found in the script itself.
 
 I want to produce a high quality, factually robust, technically novel, interesting teaching artifact that other software developers can feel good about learning from.
@@ -37,7 +37,7 @@ If there is a strong analogy that could be used to explain an idea that isn't we
 
 Identify parts of the script that cover content that is not well documented in other YouTube tutorials. Suggest if emphasizing this content makes sense to promote the tutorial's value.
 
-Please be critical about your feedback. I do not want a sycophantic response, I am serious about improving quality, and especially finding and fixing mistakes. Minimize encouragement; reserve it for insights with transferable public value.
+Please be critical about your feedback. I do not want a sycophantic response, I am serious about improving quality and fixing mistakes. Minimize encouragement; reserve it for insights with transferable public value.
 
 ## Intro
 
@@ -3683,13 +3683,12 @@ Notably, Unity has a concrete class called GameObject, and objects of GameObject
 
 ---
 
-## TODO
-
+## TODO finish the script. notes below:
 TODO: Code is mostly done (prototype at https://github.com/mvaganov/CmdLineAsteroids), need the script written
 * show MobileObject code and explain
 * show MobileCircle code and explain
 * show MobilePolygon code and explain
-* player MobilePolygon in the Program.cs file
+* create a player MobilePolygon in the Program.cs file
 * create a PlayerController class that changes the velocity of a target MobileObject. use that instead of the other method from the prototype
   - special note be careful about class design! if you do it while you are tired, you can easily regret make it rotate
 * make it move with WASD, rotate CW and CW with QE
