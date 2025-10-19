@@ -1,7 +1,7 @@
 # Note to entities reading this (cut and paste this as the prompt before providing the file)
-Please critique this is a script. It is for a video tutorial designed primarily to give young programmers programming practice. More details about it's purpose are found in the script itself.
+Please critique this is a script. It is for a video tutorial designed primarily to give young programmers valuable programming practice. The programming practice should encourage development of intellectual skills for implementing high value computer programming, especially efficient software simulations. More details about it's purpose are found in the script itself.
 
-I want to produce a high quality, factually robust, technically novel, interesting teaching artifact that other software developers can feel good about learning from.
+I want to produce a high quality, factually robust, technically novel, interesting teaching artifact that other software developers can feel good about learning from. 
 
 The script is quite long, and still unfinished. I am providing the first draft of what is likely to be the first half of the tutorial.
 
@@ -133,7 +133,7 @@ montage of code in Visual Studio 2022, and the game running with the code in the
 ### voice
 I'll be using C sharp as the programming language.
 I assume you already have a C sharp runtime, compiler, and IDE installed. These are non negotiable.
-I also assume you know the basics of how to program command line applications in C sharp, including Object Oriented Programming basics.
+I also assume you know the basics of how to program command line applications in C sharp, including Object Oriented Programming basics, which I might refer to as OOP.
 You can still follow along without that knowledge, but I recommend you start with that foundation.
 
 ### scene
@@ -242,7 +242,17 @@ Identify clear goals that you can start implementing, and give yourself the grac
 ## Draw Rectangle
 
 ### scene
-back to program.cs
+src/MrV/LowFiRockBlaster/Program.cs
+
+### voice
+C-sharp is an Object Oriented language modeled after Java. That is why our code is contained in this Program class.
+
+In Object Oriented Programming, variables and functionality are combined into a structure that is named for a purpose. We will see examples of this in the tutorial soon.
+
+The entry point of this Object Oriented program is written differently. It's only purpose is to execute a `static` `Main` entry-point function, which doesn't even really need the Program object to exist.
+
+### scene
+Program.cs
 ```
 ...
 		public static void Main(string[] args) {
@@ -277,7 +287,7 @@ For the sake of clarity, I will try not obfuscate the game with optimizations wh
 	- an example of this habit can be seen in this code, where I use the prefix increment operator.
 		it's one assembly instruction faster than postfix, for old compilers only.
 		It's an old habit from my days as a flip-phone game developer, and you will just need to suffer through it in this tutorial.
-DrawRectangle has a pretty standard nested for loop iterating over a two-dimensional space.
+`DrawRectangle` has a pretty standard nested for loop iterating over a two-dimensional space.
 the logic here places the command line cursor exactly at each position in the rectangle before printing a character.
 
 Before moving on, let's take a moment to understand this logic.
@@ -448,7 +458,13 @@ also, this project needs to be serious about 2 dimensional math.
 Two dimensional vectors are extremely common in game programming frameworks.
 this is a very basic 2D vector structure, which we'll add to during the tutorial.
 
-this code is very densly written, using inlined curlybrackets for simple lines of code, and the expression-bodied fat-arrow for single line methods.
+`Vec2` is an Object Oriented structure. In the OOP style, `Vec2` is a combination of variables that describe two dimensional space, and functions that support use of this structure.
+
+`Vec2` makes all of it's members public. As a general rule, it's bad practice in OOP to have everything public; Instead, an Object should hide as many implementation details as possible, with public accessors and properties. This is done to make changing implementation details easier in the future, and to avoid burdening programmers with implementation details. However, this specific class is often designed this way, because it is simple enough for most programmers to understand completely with little effort, and unlikely to change it's already written functionality later.
+
+Also, my tutorial expects you to implement style and code improvements later, because it is good practice.
+
+this code is very densly written, with little vertical whitespace, using inlined curlybrackets for simple lines of code, and the expression-bodied fat-arrow for single line methods. I want it to be easy to see without scrolling, and easy copy.
 
 this code also shows operator overloading, an implicit constructor that converts tuples into 2D vectors, and an interpolated string.
 	these features are not available in all other languages, but I am taking advantage of their inclusion in C-sharp.
@@ -554,7 +570,37 @@ AABB.cs, with cartesian plane + grid diagram in small window
 A box can be described with two `Vec2` structures, bounded by edges aligned on the x and y axis. We call this an Axis Aligned Bounding Box or `AABB`.
 This is a simple description of space in a simulation, and it is used for many kinds of clalculations. 
 
+Here we see a more common OOP style applied. The member variables are still public, but they are named in a way that suggests them to be C-sharp properties. A C-sharp property pretends to be a variable, but it is a function.
+
+`Width` and `Height` are both implicit `get` properties. They are not real variables, they are the result of simple math, which is re-computed every time `Width` or `Height` is accessed from thie `AABB`. You'll see both `get` and `set` properties later in the tutorial.
+
+`Min` and `Max` are capitalized public variables because:
+	If I were doing this tutorial myself, I would convert these public members into a private members that have public property `get` and `set` methods.
+
 ### scene
+```
+		private Vec2 _min, _max;
+		public Vec2 Min {
+			get => _min;
+			set => _min = value;
+		}
+		public Vec2 Max {
+			get => _max;
+			set => _max = value;
+		}
+```
+
+### voice
+the code would look something like this
+
+However, I am leaving the variables as public variables because it is easier for you to copy, and will make no functional difference to the syntax if they are turned into properties.
+
+In my coding style, lowercase member variables are explicitly primitives, and should probably be replaced with properties. lowercase members that start with underscores are explicitly designed as private, and should not be accessed publicly,
+
+let's use this structure in our code now.
+
+### scene
+Program.cs
 ```
 ...
 		public static void DrawRectangle(AABB aabb, char letterToPrint) {
@@ -573,23 +619,12 @@ src/LowFiRockBlaster/Program.cs, add to Main
 notice I'm again using `public static` functions, and calling a common function that has the logic written once
 	In most cases, computer programmers focus on having a Single Point Of Truth wherever possible, even at the cost of performance.
 	Being undisciplined about a Single Point of Truth leads to technical debt, which is an Invisible Wizard Problems that I'm trying to avoid in this tutorial.
-	If we can keep complicated logic in one place, then we only need to fix one place when there is a bug.
+	If we can keep complicated logic in one place, then we only need to fix one place when there is a bug, or a need to change.
 		This creates less confusion, and less cognitive load.
-	It is true that inlining, or writing the function again, will improve runtime speed.
-		But the runtime speed improvement is tiny compared to the lost programmer time when reading, writing, and fixing the code.
+	It is true that inlining, or writing the function again in place, will improve runtime speed.
+		But the runtime speed improvement is tiny compared to the lost programmer time when reading, writing, and modifying the code.
 	Single Point Of Truth is an optimization for the Programmer, not for the computer.
-		This is right to do because most of the time, the programmer's costs is much higher than runtime costs for the computer.
-
-Width and Height are public properties, which are methods that look like functions. these only use get methods.
-	You'll see set properties later in the tutorial.
-
-Also, notice how I am naming my variables. I make my public variables capitalized, which is the standard for C# properties.
-	I do this intentionally, with the understanding that these variables should actually be private members with public property accessors.
-	If I were doing this tutorial myself, I would convert public members into a private members with public property get and set methods.
-	I am leaving the variables public because it is easier for you to copy, and will make no functional difference to the syntax.
-
-In my coding style, lowercase member variables are explicitly primitives, which should actually not be accessed publicly,
-	unless the class is a datastructure that exists solely to wrap around those members, like the `Vec2` struct.
+		This is right to do because usually, the programmer's time costs are much higher than runtime costs for the computer.
 
 ### scene
 writing and compiling program.cs
@@ -627,6 +662,8 @@ draw a circle at position 3,4 with a radius or 2. label radius with a line at 0 
 
 ### voice
 A circle can be described as a Vector with one additional value for radius.
+
+I'm leaving the data members public as a stylistic choice. It's another very simple structure, with clear conceptual boundaries, so I don't feel bad about leaving it exposed.
 
 ### scene
 src/MrV/Geometry/PolygonShape.cs
@@ -669,14 +706,12 @@ Check the description for additional explanation about the difference between va
 //  CodeMonkey: https://youtu.be/KGFAnwkO0Pk
 //  MarkInman: https://youtu.be/95SkyJe3Fe0
 
-You should also notice that I am using public variables. Again, it is considered best practice to use private variables wherever possible.
-However, small structures with very clear conceptual boundaries like these are often left exposed, even after rapid prototyping.
-
 ---
 
 ## Drawing Math in the Command Line
 
 ### scene
+Program.cs
 ```
 ...
 		public static void DrawCircle(Circle c, char letterToPrint) {
@@ -722,7 +757,7 @@ However, small structures with very clear conceptual boundaries like these are o
 the circle drawing code is more complex than the rectangle drawing code, but starts with the same principles.
 we iterate across a 2 dimensional area with a nested for-loop, just like with a rectangle.
 instead of printing the character at every location, we check to see if the character is inside of the circle, and only print if it is.
-one important additional optimization here is limiting the size of the rectangle. we calculate the start and end bounds of this region with the circle's Extent.
+one important additional optimization here is limiting the size of the rectangle. we calculate the start and end bounds of this region with the circle's extent.
 
 the logic to test if a point is inside of a circle is really important to the concept of a circle, so it should probably live in the circle class
 
@@ -750,7 +785,7 @@ split screen, showing Program.cs
 ```
 
 ### voice
-There is some `Circle` specific logic written in Program.cs right here. It should really be in the `Circle` class instead.
+The `Circle` specific logic written in Program.cs should really be in the `Circle` class.
 
 This is a method extraction refactor, and it helps create a Single Point Of Truth for our circle logic.
 
@@ -804,17 +839,17 @@ draw point A at 1,1, point B at 3,4, point C at 1,7, and point D at 8,4
 draw lines AB, BC, CD, and DA
 
 ### voice
-	imagine a ray from the given point, going to the right.
+imagine a ray from the given point, going to the right.
 
 ### scene
 draw a point T at 4,3
 draw a horizontal arrow extending to the right
 
 ### voice
-	if that ray crosses the polygon's edges an odd number of times, then the point is inside of the polygon
-	the inner loop checks if the ray from pt crosses an edge
-		first check to see if the point is in range of the edge at all
-		then do the math to test if the ray's x intersection is on the edge
+if that ray crosses the polygon's edges an odd number of times, then the point is inside of the polygon
+the inner loop checks if the ray from pt crosses an edge
+	first check to see if the point is in range of the edge at all
+	then do the math to test if the ray's x intersection is on the edge
 
 Finding the bounding rectangle of the polygon is also not straight forward, so we should have a function
 	it check every point, looking for the minimum and maximum values
