@@ -13,15 +13,15 @@ as you are reading:
 
 Consider each section labeled '### scene' as a description of what is visually shown. These sections are followed by a '### voice' section, narrating the visuals.
 
-Code will be in most scenes, between tripple back-tick '```' headings, as is common in markdown. I will record myself typing this code in Microsoft Visual Studio Community 2022 during narration.
+Code will be in most scenes, between triple back-tick '```' headings, as is common in markdown. I will record myself typing this code in Microsoft Visual Studio Community 2022 during narration.
 
 code blocks that begin and end with an ellipses '...' are intended modifications of previous code. If it is unclear what code is being modified, make a note of that.
 
-Read the script marked by the '### voice' heading as spoken dialog. Identify unecessary repetition, or ineffective prose. Provide alternative phrasing where appropriate.
+Read the script marked by the '### voice' heading as spoken dialog. Identify unnecessary repetition, or ineffective prose. Provide alternative phrasing where appropriate.
 
-Do Not identify poor grammer, capitalization or punctuation mistakes. I am still looking for high-leverage changes to the script. I am not interested in English writing minutiae.
+Do Not identify poor grammar, capitalization or punctuation mistakes. I am still looking for high-leverage changes to the script. I am not interested in English writing minutiae.
 
-Read the code carefully. Please be specific if there are any parts of my code that could be considered bad C-sharp programming. I am interseted in C# writing minutiae.
+Read the code carefully. Please be specific if there are any parts of my code that could be considered bad C-sharp programming. I am interested in C# writing minutiae.
 
 I wrote some notes that start with double slashes, or C-style line comments. These notes will not be read out loud.
 
@@ -29,7 +29,7 @@ If the code is using a design pattern you recognize that is not mentioned in the
 
 There are content headings that start with double hash tags. These will not be spoken, they are to assist navigating the document during editing. They might become marks in the video's timeline after the video is recorded.
 
-Identify where the script content is repeatetive.
+Identify where the script content is repetetive.
 
 Identify if there is a conceptual gap that should be explained with more detail or better analogy.
 
