@@ -1,5 +1,4 @@
-# Note to entities reading this (cut and paste this as the prompt before providing the file)
-Please critique this is a script. It is for a video tutorial designed primarily to give young programmers valuable programming practice. The programming practice should encourage development of intellectual skills for implementing high value computer programming, especially efficient software simulations. More details about it's purpose are found in the script itself.
+Please critique this script. It is for a video tutorial designed primarily to give young programmers valuable programming practice. The programming practice should encourage development of intellectual skills for implementing high value computer programming, especially efficient software simulations. More details about it's purpose are found in the script itself.
 
 I want to produce a high quality, factually robust, technically novel, interesting teaching artifact that other software developers can feel good about learning from. 
 
@@ -29,7 +28,7 @@ If the code is using a design pattern you recognize that is not mentioned in the
 
 There are content headings that start with double hash tags. These will not be spoken, they are to assist navigating the document during editing. They might become marks in the video's timeline after the video is recorded.
 
-Identify where the script content is repetetive.
+Identify where the script content is repetitive.
 
 Identify if there is a conceptual gap that should be explained with more detail or better analogy.
 
@@ -50,7 +49,7 @@ pause for 2 seconds, with no voice over
 ### scene
 Montage of the LowFiRockBlaster game.
 	show command-line window with 2D graphics rendered using colored character glyphs.
-	a player's ship shaped like a V flys around with simple 2D physics, shooting and destroying circle asteroids, and collecting circle ammo pickups.
+	a player's ship shaped like a V flies around with simple 2D physics, shooting and destroying circle asteroids, and collecting circle ammo pickups.
 	game view pans smoothly following the player, also zooming in and out, showing how floating-point vector graphics are rendered using command line glyphs.
 
 ### voice
@@ -74,7 +73,7 @@ white text on black background, list the following:
 	... and more
 
 ### voice
-I'll show all the code and give explainations, starting from an empty project for the Command Line Console.
+I'll show all the code and give explanations, starting from an empty project for the Command Line Console.
 	This will include graphics, math, optimization, data structures, collision detection, and more.
 I'll also offer in-context advice and best practices from my decades of experience as a game developer and computer science instructor.
 	I want you to understand the bottom-up implementation of a game engine, which will improve your decision making in software development generally.
@@ -101,12 +100,14 @@ white text on black background:
 	- ChatGPT 2025/09/14
 
 ### voice
-Another invisible wizard problem is the rapid replacement of programmers with AI in the software development industry.
-Even if AI systems write most of the world's code, they still lack something, which Geoffrey Hinton warned about, and the AI's will admit.
+Another invisible wizard problem is the rapid replacement of programmers with Machine Intelligence tools.
+Even if machines write most of the world's code, they lack what Geoffrey Hinton warned about, and the AI's will admit.
 They lack real understanding.
-Artificial Intelligences need humans who can translate lived experience into software accessible tools, and simulations. These simulations help train AI, and augment toolchains.
+Machine intelligence can generate code, but it needs us to ground it in real logic with simulations.
+
+Simulations help train machine intelligences, and augment toolchains at runtime.
 Learning how to build simulations yourself, in a mostly agnostic tech stack like in the command line, is a powerful skill. Having it will make you useful to AI in the future.
-With this skill, you can help shape how AI connects to human reality.
+With this skill, you can help shape how machine intelligence connects to human reality.
 
 ### scene
 back to the montage of LowFiRockBlaster
@@ -118,7 +119,7 @@ I've summoned that ancient motivation to capture your attention now, while I tea
 Check the description for the Github project link if you want the code. Continue watching if you want a thorough lesson to understand the code.
 
 I spent a few weeks creating this game, and a few months writing this script.
-Please do not misunderstand that this program just fell out of my head in one moment. It didn't even fall out of a larg language model. Real programming takes time.
+Please do not misunderstand that this program just fell out of my head in one moment. It didn't even fall out of a large language model. Real programming takes time.
 Your projects will take a long time to finish too, even if they use a tutorial like this as a starting point.
 Be patient with yourself. Be disciplined with yourself. I believe anyone who sits with these ideas can learn them well. Especially you, even if you don't consider yourself skilled with math.
 For context, I was terrible at math in High School, especially at Trigonometry, which I will be using in this tutorial. I learned what I know because of practice doing projects like this.
@@ -191,7 +192,7 @@ I'll be writing everything in my own MrV namespace, I recommend you name your ow
 I'll also be using a compact whitespace style, so I can fit as much code on the screen as possible.
 
 Let's run this code to make sure everything works. If your program does not compile and run, stop the video and get it working.
-Unfortuantely, most programming environments require some configuration, even with an automatic installer.
+Unfortunately, most programming environments require some configuration, even with an automatic installer.
 
 ### scene
 start the Visual Studio Installer
@@ -228,14 +229,14 @@ design.md
 Before I start writing the game, I want to have a clear set of goals.
 An imagined goal is a necessary starting point for any project.
 A written list of features and expectations is essential for a project that will take more than a few days to finish.
-Clear Top-Down design addresses Confusion and Scope Ambiguitiy, which are Invisible Wizard Problems that a software developer should always keep in mind.
+Clear Top-Down design addresses Confusion and Scope Ambiguity, which are Invisible Wizard Problems that a software developer should always keep in mind.
 Project managers might call this a Work Breakdown Structure. Game Developers might call this a Game Design Document.
 More experienced developers will need fewer details and less structure to create a product.
 	If this seems too sparse for your own projects, please add more details in your own project.
 I recommend you add just enough detail to your list of expectations that you feel you will remember your vision when you read the document again.
 	Avoid adding more detail than you need.
 	Expect your goals to change while you are achieving them, especially for game development where fun is a moving target.
-Spending too much time writing a design or specification is sometimes called Analysis Paralisys.
+Spending too much time writing a design or specification is sometimes called Analysis Paralysis.
 	it is a real cause for projects to fail before they even start.
 Identify clear goals that you can start implementing, and give yourself the grace to update the document later.
 
@@ -291,7 +292,7 @@ For the sake of clarity, I will try not obfuscate the game with optimizations wh
 the logic here places the command line cursor exactly at each position in the rectangle before printing a character.
 
 Before moving on, let's take a moment to understand this logic.
-It seems pretty specific to the command line console, but gaining familiarity with this two dimenstional iteration will help with may other kinds of problem solving in the future.
+It seems pretty specific to the command line console, but gaining familiarity with this two dimensional iteration will help with may other kinds of problem solving in the future.
 
 ### scene
 show the code and running output
@@ -464,7 +465,7 @@ this is a very basic 2D vector structure, which we'll add to during the tutorial
 
 Also, my tutorial expects you to implement style and code improvements later, because it is good practice.
 
-this code is very densly written, with little vertical whitespace, using inlined curlybrackets for simple lines of code, and the expression-bodied fat-arrow for single line methods. I want it to be easy to see without scrolling, and easy copy.
+this code is very densely written, with little vertical whitespace, using inlined curly-brackets for simple lines of code, and the expression-bodied fat-arrow for single line methods. I want it to be easy to see without scrolling, and easy copy.
 
 this code also shows operator overloading, an implicit constructor that converts tuples into 2D vectors, and an interpolated string.
 	these features are not available in all other languages, but I am taking advantage of their inclusion in C-sharp.
@@ -488,13 +489,13 @@ src/LowFiRockBlaster/Program.cs, add to Main
 ### voice
 We should start using the 2D vector concept now, in this rectangle drawing code.
 
-I'll be doing more of this kind of code refactoring during my tutorial, but not nearly as much as I did while writing the game for myself.
-Real programmers constantly rewrite their own code, often renaming variables, and adding or removing new code structures for many different reasons.
-Know that this tutorial is the result of lots of such rewrites, and I have minimized the rerwites to be easier on you.
-If you are new to programming, you need to know that this is how big projects are written: one step at a time, with lots of rewrites, and tests between changes.
-I sincerely apologize for speeding it up my development process. Please learn what you can from my compressed examples, and do pause and rewind the video for yourself as needed.
+I'll be doing more of this kind of code refactoring during my tutorial, but not nearly as much as I did while writing the game for myself. Which brings up an important point.
+Real programmers constantly refactor their own code, renaming variables, and changing code structures for many reasons, especially to make their code require less effort to understand.
+If you're new to programming, know that this is how all big projects are written: one step at a time, with lots of refactoring, and tests between changes.
+This habit is almost as important as debugging if you want to write complex software like realtime simulations, so I'll be show some examples of it on purpose.
+Learn what you can from my refactoring examples. I apologize for backtracking, and hope that you'll pause and rewind the video as needed.
 
-Notice that I made a new `DrawRectangle` function, and I'm using the old `DrawRectangle` function in this new one.
+Notice that I made a new `DrawRectangle` function, and I'm using the old `DrawRectangle` function in this new one. This is also called "overloading" the function.
 
 ### scene
 black background with dark-gray grid, 10x10 squares
@@ -568,17 +569,14 @@ AABB.cs, with cartesian plane + grid diagram in small window
 
 ### voice
 A box can be described with two `Vec2` structures, bounded by edges aligned on the x and y axis. We call this an Axis Aligned Bounding Box or `AABB`.
-This is a simple description of space in a simulation, and it is used for many kinds of clalculations. 
+This is a simple description of space in a simulation, and it is used for many kinds of calculations. 
 
-Here we see a more common OOP style applied. The member variables are still public, but they are named in a way that suggests them to be C-sharp properties. A C-sharp property pretends to be a variable, but it is a function.
-
-`Width` and `Height` are both implicit `get` properties. They are not real variables, they are the result of simple math, which is re-computed every time `Width` or `Height` is accessed from thie `AABB`. You'll see both `get` and `set` properties later in the tutorial.
-
-`Min` and `Max` are capitalized public variables because:
-	If I were doing this tutorial myself, I would convert these public members into a private members that have public property `get` and `set` methods.
+`Width` and `Height` are both implicit `get` properties. They're not real variables, they're the result of simple math, re-computed every time `Width` or `Height` is accessed from an `AABB` instance.
 
 ### scene
 ```
+...
+		//public Vec2 Min, Max;
 		private Vec2 _min, _max;
 		public Vec2 Min {
 			get => _min;
@@ -588,14 +586,25 @@ Here we see a more common OOP style applied. The member variables are still publ
 			get => _max;
 			set => _max = value;
 		}
+...
 ```
 
 ### voice
-the code would look something like this
+`Min` and `Max` are capitalized public variables because:
+	If I were following this tutorial myself, I would convert these public members into a private members that have public property `get` and `set` methods.
+
+In my coding style, lowercase member variables are explicitly primitives, and should not be called directly outside of the class.
+
+### scene
+```
+...
+		public Vec2 Min, Max;
+...
+```
+
+### voice
 
 However, I am leaving the variables as public variables because it is easier for you to copy, and will make no functional difference to the syntax if they are turned into properties.
-
-In my coding style, lowercase member variables are explicitly primitives, and should probably be replaced with properties. lowercase members that start with underscores are explicitly designed as private, and should not be accessed publicly,
 
 let's use this structure in our code now.
 
@@ -616,15 +625,9 @@ src/LowFiRockBlaster/Program.cs, add to Main
 ...
 ```
 
-notice I'm again using `public static` functions, and calling a common function that has the logic written once
-	In most cases, computer programmers focus on having a Single Point Of Truth wherever possible, even at the cost of performance.
-	Being undisciplined about a Single Point of Truth leads to technical debt, which is an Invisible Wizard Problems that I'm trying to avoid in this tutorial.
-	If we can keep complicated logic in one place, then we only need to fix one place when there is a bug, or a need to change.
-		This creates less confusion, and less cognitive load.
-	It is true that inlining, or writing the function again in place, will improve runtime speed.
-		But the runtime speed improvement is tiny compared to the lost programmer time when reading, writing, and modifying the code.
-	Single Point Of Truth is an optimization for the Programmer, not for the computer.
-		This is right to do because usually, the programmer's time costs are much higher than runtime costs for the computer.
+notice I'm again using `public static` functions, and calling a common function that has the logic written once. this is single point of truth.
+	Prioritizing single point of truth saves time debugging and refactoring, even if it slightly impacts runtime with extra method calls. human programming hours are almost always more expensive than CPU cycles.
+	This is an invisible wizard problem too: being undisciplined about a Single Point of Truth leads to technical debt, which experienced developers learn to avoid.
 
 ### scene
 writing and compiling program.cs
@@ -970,7 +973,7 @@ Program.cs
 ### voice
 
 A game engine has 4 main regions: initialization, draw, input, and update.
-initialization happens before the game loop, and the game loop repeats draw, input, and update in series.
+initialization happens once before the game loop. The game loop repeats draw, input, and update in series.
 each single iteration through the loop is a frame.
 
 we should formalize this a bit more clearly in the code.
@@ -1023,6 +1026,12 @@ C-sharp enables us to create local functions, which help us name and organize ou
 
 many programmers, myself included, consider it good programming style to use small functions, with descriptive but concise names, and only one or two levels of indentation wherever possible.
 lets run this refactored code to make sure it still works how it used to.
+
+it's worth mentioning that entire system will assume a single thread. this is a common technical constraint on game engines.
+to put it simply, threading creates more invisible wizard problems.
+	Making this thread-safe would require semaphore logic that would hurt performance and cause an explosion of complexity.
+	Many simulations are valuable because of deterministic logic over time. Threaded simulation logic would essentially make that impossible.
+	Some future features, like networked multiplayer, would need to be threaded. but that code should be separate from the game loop.
 
 ### scene
 run the code to show that it still works the same way
@@ -1255,7 +1264,7 @@ In the worst case for this design:
 	to a very keen-eyed observer, this will look like a strange stutter, where the game slows down a lot, and then speeds up a lot, over the course of only a few milliseconds.
 	the proper solution to this problem would not be a change to the timing system, but a change to the code causing the lag spike.
 The `ThrottleUpdate` function is used to smooth out frames, and reduce CPU burden.
-The `ThrottleWithoutConsoleKeyPress` interrrupts the throttling when a keypress is detected, so that the game always updates quickly to user input, even if the framerate is set to be low.
+The `ThrottleWithoutConsoleKeyPress` interrupts the throttling when a keypress is detected, so that the game always updates quickly to user input, even if the framerate is set to be low.
 lets test this out.
 
 ### scene
@@ -2641,13 +2650,13 @@ src/Program
 ```
 
 ### voice
-To include the moving particle in our app, we need to: initalize it, and add it's `Draw` and `Update` methods to the game loop.
+To include the moving particle in our app, we need to: initialize it, and add it's `Draw` and `Update` methods to the game loop.
 
 ### scene
 test
 
 ### voice
-this looks satisfactory. I wonder if more particles will be even more satisfying. Let's make many of them.
+One particle seems to work. More particles will be required.
 
 ### scene
 ```
@@ -2686,7 +2695,7 @@ this looks satisfactory. I wonder if more particles will be even more satisfying
 ### voice
 instead of one particle, I want an array. Let's say 10 elements for now.
 
-these need to be initailized, drawn, and updated, just like the old singular particle.
+these need to be initialized, drawn, and updated, just like the old singular particle.
 
 Because I want to make the particles fan out in a circle, I need to add some more math to `Vec2`
 
@@ -2754,7 +2763,7 @@ PRNG systems create the illusion of randomness while being exactly reproducable 
 	this reproducability is extremely useful for simulation debugging.
 It isn't a high-quality random number generator for statistically robust simulations, but it is very fast.
 If you want a higher quality generator that is a little bit slower, look up the SplitMix32 algorithm.
-Like the other singleton classes, this one has a separate static API for convenience, and can also be created as an instance for specific number sequences.
+Like my other singleton classes, this one has a separate static API for convenience, and can also be created as an instance for specific number sequences.
 
 ### scene
 src/MrV/Time.cs
@@ -3574,7 +3583,7 @@ UML diagramming is useful to clearly communicate system architecture.
 still screenshot of the game screen, with labels for the asteroids of different size, player, player's projectiles, and ammo pickup.
 
 ### voice
-My game will need moving circles to destroy, which are the conceptual asteroids. The rocks to blast in my lowfi rockblaster game.
+My game will need moving circles to destroy, which are the conceptual asteroids; the rocks to blast in my lowfi rockblaster game.
 The game's player will be a polygon shape visually distinct from the circles.
 The player will shoot projectiles. I want to see spinning triangles for these projectiles, because I think that will look cool.
 When the player destroys asteroids, they will break into smaller asteroids. the smallest asteroid will turn into an ammo pickup when destroyed.
@@ -3586,9 +3595,9 @@ I want to use Object Oriented Programming for this game design. Probably the mos
 
 ### scene
 black background with white text
-	S Single Responsiblity: each class does one thing.
+	S Single Responsibility: each class does one thing.
 	O Open-Closed: Classes are open to extension, closed to modification.
-	L Liskov Substitution: Objects are substitutable for objects of their superclass.
+	L Liskov Substitution: Be able to substitute objects with a child class object.
 	I Interface Segregation: Multiple interfaces are better than one general-purpose interface. 
 	D Dependency Inversion: Use abstractions so classes don't rely on specific implementations.
 
@@ -3598,17 +3607,17 @@ However, I intentionally break the principles as practical and sometimes stylist
 Choices about architecture design is one of those Invisible Wizard Problems.
 
 ### scene
-highlight 'S Single Responsiblity'
+highlight 'S Single Responsibility'
 
 ### voice
-Yes, each class should clearly do one thing. We want few mental burdens, and clear purpose at all times. However, my code already breaks the Single Responsiblity Principle:
+Yes, each class should clearly do one thing. We want few mental burdens, and clear purpose at all times. However, my code already breaks the Single Responsibility Principle:
 Breaking this rule is common for game programming because of how dynamic the game design process is. Games are constantly trying to be more fun, which is actually moving target.
 To rapidly find what is fun, code is inserted and removed often, to rapid-prototype new game mechanics.
 	Intense work pressure can push developers to cut corners with good programming habits, and leave such messy code in place if it is working.
 	The causes of this pressure are nuanced and interesting enough for another video, but I'll summarize my take on it:
 		the games industry is a victim of it's own success, which makes most people expectations too high. That creates a lot of pressure to cut corners when it comes to disciplined development.
 At least one of my classes is already doing things that could be argued as extending into new functionality that should be in a different class.
-	`DrawBuffer` does more than simply manage a buffer. It has a partial class extension where scaled rendering code exists. The partial class extention was my own compromise on design quality, feeling pressure to release this tutorial sooner.
+	`DrawBuffer` does more than simply manage a buffer. It has a partial class extension where scaled rendering code exists. The partial class extension was my own compromise on design quality, feeling pressure to release this tutorial sooner.
 The new game classes I'll write will also do a lot. `MobileCircle` will be used for asteroids and for ammo pickups, with no additional subclassing.
 	You'll see how I do that with metadata and lambda expressions.
 In general, I break the Single Responsibility Principle on purpose, to keep file count low, so it's easier to read my code, and easier to think about.
