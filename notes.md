@@ -3604,25 +3604,23 @@ black background with white text
 ### voice
 Following these restrictions reduces cognitive load as the system grows in complexity, so I agree with SOLID principles in most situations.
 However, I intentionally break the principles as practical and sometimes stylistic choice.
-Choices about architecture design is one of those Invisible Wizard Problems.
+Choices about architecture design is one of those Invisible Wizard Problems that is worth discussing.
 
 ### scene
 highlight 'S Single Responsibility'
 
 ### voice
-Yes, each class should clearly do one thing. We want few mental burdens, and clear purpose at all times. However, my code already breaks the Single Responsibility Principle:
-Breaking this rule is common for game programming because of how dynamic the game design process is. Games are constantly trying to be more fun, which is actually moving target.
-To rapidly find what is fun, code is inserted and removed often, to rapid-prototype new game mechanics.
-	Intense work pressure can push developers to cut corners with good programming habits, and leave such messy code in place if it is working.
-	The causes of this pressure are nuanced and interesting enough for another video, but I'll summarize my take on it:
-		the games industry is a victim of it's own success, which makes most people expectations too high. That creates a lot of pressure to cut corners when it comes to disciplined development.
-At least one of my classes is already doing things that could be argued as extending into new functionality that should be in a different class.
+Each class should clearly do one thing, to clarify purpose and reduce mental burden.
+My code already breaks the Single Responsibility Principle, like most prototypes.
+Game programmers are usually in a rapid-prototyping mode because game design is constantly trying to make a game more fun, and fun is a moving target.
+	in many ways, the games industry is a victim of it's own success, with so many clear examples of very fun software.
+	High quality expectations strain engineering discipline as developers cut corners for rapid prototyping. And time obligations encourage leaving messy code in place once it works.
+At least one of my classes is already doing things that could be argued as extending into new functionality, which should be in a different class.
 	`DrawBuffer` does more than simply manage a buffer. It has a partial class extension where scaled rendering code exists. The partial class extension was my own compromise on design quality, feeling pressure to release this tutorial sooner.
 The new game classes I'll write will also do a lot. `MobileCircle` will be used for asteroids and for ammo pickups, with no additional subclassing.
 	You'll see how I do that with metadata and lambda expressions.
 In general, I break the Single Responsibility Principle on purpose, to keep file count low, so it's easier to read my code, and easier to think about.
-Personally, I will continue to add functionality to a file if I can comfortably hold the additional functionality in my head along with the rest of the file.
-	I will often refactor this kind of code later.
+Personally, I will keep adding to a file if I can comfortably hold the code in my head. Then I will refactor the code later.
 
 ### scene
 highlight 'O Open-Closed'
