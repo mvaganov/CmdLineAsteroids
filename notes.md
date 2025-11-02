@@ -461,9 +461,10 @@ this is a very basic 2D vector structure, which we'll add to during the tutorial
 
 `Vec2` is an Object Oriented structure. In the OOP style, `Vec2` is a combination of variables that describe two dimensional space, and functions that support use of this structure.
 
-`Vec2` makes all of it's members public. As a general rule, it's bad practice in OOP to have everything public; Instead, an Object should hide as many implementation details as possible, with public accessors and properties. This is done to make changing implementation details easier in the future, and to avoid burdening programmers with implementation details. However, this specific class is often designed this way, because it is simple enough for most programmers to understand completely with little effort, and unlikely to change it's already written functionality later.
+`Vec2` makes all of it's members public. As a general rule, it's bad practice in OOP to have everything public; Instead, an Object should hide as many implementation details as possible, with public accessors and properties. This makes implementation details easier to change in the future, and to avoid burdening programmers with the cognitive load of implementation details.
+However, the `Vec2` class is often designed this way, because it is simple enough for most programmers to understand completely with little effort, and unlikely to change it's already written functionality later.
 
-Also, my tutorial expects you to implement style and code improvements later, because it is good practice.
+This tutorial will add more functionality to the `Vec2` class later.
 
 this code is very densely written, with little vertical whitespace, using inlined curly-brackets for simple lines of code, and the expression-bodied fat-arrow for single line methods. I want it to be easy to see without scrolling, and easy copy.
 
@@ -558,7 +559,12 @@ namespace MrV.Geometry {
 		public float Width => (Max.x - Min.x);
 		public float Height => (Max.y - Min.y);
 		public AABB(AABB r) : this(r.Min, r.Max) { }
-		public AABB(Vec2 min, Vec2 max) { Min = min; Max = max; }
+		public AABB(Vec2 min, Vec2 max) {
+			Min = min; Max = max;
+			if (Width < 0 || Height < 0) {
+				throw new System.Exception($"invalid dimensions: {Width}x{Height}");
+			}
+		}
 		public AABB(float minx, float miny, float maxx, float maxy) :
 			this(new Vec2(minx, miny), new Vec2(maxx, maxy)) { }
 		public override string ToString() => $"[min{Min}, max{Max}, w/h({Width}, {Height})]";
@@ -1911,14 +1917,15 @@ namespace MrV.CommandLine {
 ```
 
 ### voice
-A `KeyResponse` is just some function, which happens in response to a keypress.
-I could have used `System.Action` instead, but using a named delegate type means we can change this more easily later.
-A structure keeps the relationship of each Key press and `KeyResponse`, along with a note about the purpose of the key binding.
+The `KeyInput` class is like an Observer Pattern watching `Console` input, binding specific responses to specific key presses.
+A `KeyResponse` is a delegate type, a specific kind of function, which is invoked in response to a keypress.
+I could have used `System.Action` instead `KeyResponse`, but using a named delegate type means we can change this more easily later.
+The structure `KeyResponseRecord` keeps `KeyResponse` connected to key presses, along with a note about the purpose of the key binding.
 	The `KeyType` is templated because this implementation will just use characters, but any type of input should work as well.
 A `Dispatcher` manages a queue of events, and those events are mapped in a `dispatchTable` to responses.
 	This is a general concept that is useful in many domains beyond key input handling.
-	If we were making a scripting engine or multiplayer system, we could use this dispatcher for a critical part of the system there.
-`BindKeyResponse` will bind a `KeyResponse` delegate to a key.
+	If we were making a scripting engine or multiplayer system, we could also use this dispatcher for mapping requests from those systems to functions.
+The `BindKeyResponse` method will bind a `KeyResponse` delegate to a key.
 	If the key has never been bound before, a new list of KeyResponses will be created for that key.
 Events added to the `Dispatcher` will be consumed all at once.
 Just like the task scheduler, execution will happen from a list that can't be added to while actions are processed.
@@ -2954,6 +2961,11 @@ namespace MrV.GameEngine {
 		public abstract T Lerp(float t, T start, T end);
 		public ValueOverTime(IList<Frame<T>> curve) {
 			this.curve = curve;
+			for (int i = 1; i < curve.Count; i++) {
+				if (curve[i].time < curve[i - 1].time) {
+					throw new System.Exception("curve time values should be sorted least to greatest");
+				}
+			}
 		}
 		public bool TryGetValue(float time, out T value) {
 			if (curve == null || curve.Count == 0) {
@@ -3150,7 +3162,7 @@ if an object needs to be decommissioned, but can't be decomissioned right now (b
 		we want the last objects to get pushed to the end first.
 
 This class manages creation of objects in an automated way. Programmers call the function that creates each object is a Factory Method, and the Object Pool is the Factory.
-This implementation could also be explained as a Strategy Pattern, with it's parameterized Commission and Decommission methods.
+This implementation could also be explained as a Strategy Pattern, with it's parameterized Commission and Decommission methods that can be set without subclassing.
 
 ### scene
 src/MrV/Program.cs
@@ -3185,7 +3197,7 @@ how to commission a new particle
 and how to decommission a particle
 we don't need to include how to destroy the particle, because our particle doesn't allocate any special resources
 
-the "explosion" KeyInput Bind should change to commission 10 particles.
+the "explosion" `KeyInput` Bind should change to commission 10 particles.
 a nice side effect of using this new system is that we can create more than just 10 particles, which will help create more interesting tests.
 
 ### scene
@@ -3611,32 +3623,28 @@ highlight 'S Single Responsibility'
 
 ### voice
 Each class should clearly do one thing, to clarify purpose and reduce mental burden.
-My code already breaks the Single Responsibility Principle, like most prototypes.
-Game programmers are usually in a rapid-prototyping mode because game design is constantly trying to make a game more fun, and fun is a moving target.
-	in many ways, the games industry is a victim of it's own success, with many clear examples of very fun software.
-	High quality expectations strain engineering discipline as developers cut corners for rapid prototyping. And time obligations encourage leaving messy code in place once it works.
-At least one of my classes is already extending into new functionality, which should be in a different class.
+At least one of my classes is already breaking this rule by extending into new functionality.
 	`DrawBuffer` does more than simply manage a buffer. It has a partial class extension where scaled vector graphics rendering code exists.
-	The partial class extension is a compromise on design quality. I feel pressure to release this tutorial sooner. And because I understand that it's bad to have a class responsible for solving a lot of different problems, I separated these problem spaces with separate files.
-The new game classes I'll write will also do a lot. `MobileCircle` will be used for asteroids and for ammo pickups, with no additional subclassing.
+	The partial class extension is a compromise on design quality. I feel pressure to release this tutorial sooner. But because I understand that it's bad to have a class responsible for solving a lot of different problems, I separate these problem spaces with separate files.
+`MobileCircle` will also do a lot. It will be used for asteroids and for ammo pickups, with no additional subclassing.
 	You'll see how I do that with metadata and lambda expressions.
-I also break the Single Responsibility Principle on purpose, to keep file count low, so it's easier to read my code, and easier to think about.
-The `PolicyDrivenObjectPool` class could have been 3 classes, but I put all of the logic into one class and one file.
-As an example, I did break up `KeyInput` into multiple classes, because one of the conceptual units, the `KeyDispatcher`, could be used for more features soon.
-
-While writing code personally, I will usually keep adding to a file if I can comfortably hold the code in my head. Then, as I have mentioned before, I will refactor code later after revisiting it with a different problem in mind.
+I also break the Single Responsibility Principle on purpose, to keep file and class count low, so it's easier to read my code, and easier to think about my project.
+`PolicyDrivenObjectPool` class could've been 3 classes, but I put it into one class and one file.
+`KeyInput` did break into multiple classes, because one of the conceptual units, the `KeyDispatcher`, could enable more features.
 
 ### scene
 highlight 'O Open-Closed'
 
 ### voice
 My code also breaks the Open-Closed Principle:
-I do create small classes that should be easy to extend, in a way that looks like good Open-Closed design.
-However, I wrote these classes expecting you will refactor the code yourself. I want you to modify the code, and make your own design changes. Then it will become your code.
-And crucially, I want you to make mistakes by making your own changes. Making those mistakes is how you will learn. I hope you are using this tutorial as a learning exercise.
-If I were more serious about making classes easy to extend and closed for editing, I would have turned all public members into properties, added the virtual keyword to many methods and properties, and maybe some XML documentation identifying what kind of extensions I expect.
-Strict adherence to the Open-Closed principle also has subtle performance costs, at runtime, and during development time.
-Personally, I think strict adherence to the Open-Closed principle is better for mostly finished business software, when design decisions have almost all been made, where libraries should be shared with partner businesses, and performance loss is negligible because there isn't a real-time loop.
+I did create small classes, and extend them. However, I wrote these classes expecting you will refactor the code yourself.
+	I want you to modify the code, and make your own design changes. Then it will be your code.
+And crucially, I want you to make mistakes by making your own changes. Making those mistakes is how you will learn the most. I hope you are using this tutorial as a learning exercise.
+
+If I were more strict Open-Closed, I would have turned all public members into properties, added the virtual keyword to many methods and properties, and maybe some XML documentation identifying what kind of extensions I expect.
+Strict adherence to the Open-Closed principle has subtle performance costs. At runtime, virtual functions are more expensive than normal methods. And during development time, more code is more cognitive load.
+
+Personally, I think strict adherence to Open-Closed is better for mostly finished business software, after design decisions have almost all been made, where libraries should be shared with partner businesses, and performance loss is negligible because there isn't a real-time loop.
 
 ### scene
 highlight 'L Liskov Substitution'
@@ -3645,35 +3653,28 @@ highlight 'L Liskov Substitution'
 My code will not strictly adhere to the Liskov Substitution Princicple:
 I want to take advantage of good polymorphism, but strict adherence to Liskov Substitution creates inefficient code full of type verification.
 	Careless implementation can also create security vulnerabilities, because it can allow new code to execute in an old system.
-	The `sealed` keyword exists to prevent much of this security vulnerability.
-One easy approach to maintain this principle is to avoid inheritance entirely, and create classes that extend functionality with lambda expressions and extra meta-data.
-	I will be doing this myself, but to a limited degree, as you'll see with `MobileObject`.
+	The `sealed` keyword exists to prevent much of this kind of security vulnerability.
+One approach to maintain this principle is to avoid inheritance entirely, and create classes that extend functionality with lambda expressions and extra meta-data.
+	I will be doing this myself with `MobileObject`.
 	Duck Typing, which is an object design pattern that Python, JavaScript, and Lua use, is an extreme of this design.
-		In those scripting languages, most complex objects are the same type, each being essentially a dictionary of variables and functions.
-		In practice, this is a mess for code efficiency and compile-time error checking. This is also bad for performance.
-	Unity, another C# game development environment, uses a Decorator pattern, which enables all GameObjects to substitute for each other, while having differentiated component elements.
-		This often requires type verification at runtime when specialized functionality is needed by code, but not always. That's worth discussion in another video about Unity specifically.
 
 ### scene
 highlight 'I Interface Segregation'
 
 ### voice
-My code will break the Interface Segregation Principle:
-I will be making interfaces, becase doing so is good practice for Object Oriented Programming.
-However, I'm not going to make fine-grained Interface separations. I won't need them in practice, and writing them will the increase complexity of this tutorial for little gain.
+My code will bend the Interface Segregation Principle:
+I'm not going to make fine-grained Interface separations. I won't need them in practice, and writing them will the increase complexity of this tutorial for little gain.
 For example, it is possible that not all GameObjects will need a position. But I don't want an additional IHasPosition interface.
-	If you want to make the code adhere to Interface Segregation, you are welcome to implement the extra interfaces yourself.
 
 ### scene
 highlight 'D Dependency Inversion'
 
 ### voice
-My code already uses Singletons, which is a gross violation of the Dependency Inversion Principle.
-	To be clear, I hate the fact that my code relies on singletons. Singletons make a brittle design, and it limit future functionality.
-		For example, I have a `Time` singleton, and if I want to add a localized-time-travel, like a region of space that makes physics work backwards, that would require multiple Time objects, which is impossible to do with a Singleton for time.
+My code already uses several kind of Singletons, which is a gross violation of the Dependency Inversion Principle.
+	To be clear, I hate the fact that my code relies on singletons. They are like global variables, create hidden dependencies that are difficult to extract or reason about, and difficult to share across projects. If multi-threading gets involved, Singletons can create nightmarish bugs. In short, singletons make a brittle design, limiting future functionality.
+		For example, I have a `Time` singleton, and if I want to add a localized-time-travel, like a region of space that makes physics work backwards, that would require multiple local Time objects.
 	I did write every singleton class to be able to substitute it's the static instance for another one, to help enable prototyping some interesting designs later.
 		If I was serious about those specialized designs, I would not use singletons.
-		Singletons, like global variables, create hidden dependencies that are difficult to extract reason about, and share across projects. When multi-threading gets involved, these kinds of bugs can become unsolvable nightmares.
 To be clear, I wrote singletons because I accept them as well understood utilities, as extensions of the programming environment more than program features, and I expect to enforce single-threading for all game logic.
 I explicitly accept the design cost of Singletons, as many other game engines do (like Unity).
 
