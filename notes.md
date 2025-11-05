@@ -101,7 +101,7 @@ white text on black background:
 
 ### voice
 Another invisible wizard problem, and one of my motivations for making this tutorial, is the rapid replacement of programmers with machine intelligence tools.
-Even if machines generate code, they lack still need humans to ground algorithms in reality, to solve real problems.
+Even if machines generate code, they still need humans to ground algorithms in reality, to solve real problems.
 
 Simulations created by humans will help ground algorithms in reality. Simulations are predictive models that software can access. These help train better machine intelligence, and augment toolchains at runtime.
 Learning how to build simulations yourself, in a mostly agnostic tech stack like the command line, is a powerful skill. Having it will make you useful to AI in the future.
@@ -114,19 +114,19 @@ back to the montage of LowFiRockBlaster
 
 ### voice
 This simulation tutorial is for a space-shooter game inspired by "Spacewar!" from 1962, written for the command line console.
-The idea is as old as videogames. It was the reason why the C programming language and Unix operating system were invented.
+The idea is as old as video games. It was the reason why the C programming language and Unix operating system were invented.
 I've summoned that ancient motivation to capture your attention now, while I teach you foundational concepts for writing a simulation and game engine.
 Check the description for the Github project link if you want the code. Continue watching if you want a thorough lesson to understand the code.
 
 I spent a few weeks creating this game, and a few months writing this script.
-Please do not misunderstand that this program just fell out of my head in one moment. It didn't even fall out of a large language model. Real programming takes time.
+Please do not misunderstand that this program just fell out of my head in one moment. Real programming takes time.
 Your projects will take a long time to finish too, even if they use a tutorial like this as a starting point.
 Be patient with yourself. Be disciplined with yourself. I believe anyone who sits with these ideas can learn them well. Especially you, even if you don't consider yourself skilled with math.
-For context, I was terrible at math in High School, especially at Trigonometry, which I will be using in this tutorial. I learned what I know because of practice doing projects like this.
-My guidance will follow roughly the same path I went through while making this game a few months ago,
+For context, I was terrible at math in High School, especially at Trigonometry, which I will be using in this tutorial. I was also a terrible programmer when I started, having spent most of my youth playing games and sketching. I learned what I know because of practice doing projects like this. It took me years. I hope my example can power-level you, and get you there much faster.
+My guidance in this tutorial will follow roughly the same path I went through while making this game a few months ago,
 	but it will be much faster, even with a few detours to explain some math, architecture, and game engine optimizations.
 This tutorial doesn't capture the vast majority of the difficulty of writing this project. What you will see is just the parts curated for your understanding.
-As you do this work, please be patient with your own mistakes, and the frustration that follows. Frustration is the sweat of learning. It is a sign that your mind is growing. Engage with it. And take a break if you need it. This video will still be here when you are ready.
+As you do this work, please be patient with your own mistakes, and the frustration that follows. Frustration is the sweat of learning. It is a sign that your mind is growing. Engage with it. And take a break if you need it. Sleep is so important to knowledge formation. This video will still be here when you are ready.
 
 ### scene
 montage of code in Visual Studio 2022, and the game running with the code in the background
@@ -296,6 +296,8 @@ It seems pretty specific to the command line console, but gaining familiarity wi
 
 ### scene
 show the code and running output
+make a breakpoint at the first line and run it in debug mode
+step over each line, and show variables changing
 ```
 ...
 			int width = 80;
@@ -308,6 +310,12 @@ show the code and running output
 
 ### voice
 this code will write 80 hashtag characters in a row.
+
+here you can see that I've made a breakpoint by clicking a red dot in the margin at the left.
+when I run this in debug mode, the code stops at this point. I can see variables, and advance the point of execution one line of code at a time.
+
+here, we can see the `col` variable increasing, and printing the hashtag in the loop.
+when `col` is no longer less than `width`, the loop stops.
 
 ### scene
 show the code and running output
@@ -326,8 +334,12 @@ show the code and running output
 ### voice
 this code will write 80 times 23 hashtag characters, still all in one row.
 
+it's a loop inside of a loop, called a nested loop. it almost draws a rectangle.
+
 ### scene
 show the code and running output
+put a break point at the for loop and run in debug mode again.
+continue instead of stepping over each line
 ```
 			int width = 80, height = 23;
 			char letterToPrint = '#';
@@ -342,8 +354,10 @@ show the code and running output
 ### voice
 this code will write a rectangle 80 wide and 23 tall.
 
+after each loop drawing a line of hashtags, it goes to the next line. then the loop starts again.
+
 ### scene
-show the code and running output
+show the code. remove all breakpoints. show output
 ```
 ...
 		int width = 80, height = 23;
@@ -369,6 +383,8 @@ show the code and running output
 ### voice
 If we turn this into a function, we can print a new distinct rectangle right after this one.
 Doing this allows us to call the function at any time from any place in our program.
+
+I'll stop using break-point debugging, and assume that you can try it on your own to learn more about what is going on.
 
 ### scene
 show the code and running output
@@ -703,14 +719,16 @@ black background, 3 rows of labeled white boxes (each white box has 4 smaller gr
 	1 box labeled [points], followed by the label `PolygonShape`
 
 ### voice
-These data structures are small and simple in memory.
-Each float taking up only 4 bytes. `Vec2` is a total of 8 bytes. `AABB` is 16. `Circle` is 12. The points array of `PolygonShape` is a reference, which is also small, probably 8 bytes.
-Because they are simple in memory, these are written as struct Value types instead of class Reference types. A Value type has certain memory advantages.
-A program passes all struct data by value instead of by reference. That means all data is copied each time it is used.
-	References are almost always the same size, which is 8 bytes on a 64 bit CPU. the For small structures, especially less than or equal to 8 bytes, passing by value saves a CPU time.
+These data structures are `struct` types, which are small and simple in memory.
+Each float takes up only 4 bytes. `Vec2` is a total of 8 bytes. `AABB` is 16. `Circle` is 12. The points array of `PolygonShape` is a reference, which is also small, probably 8 bytes.
+Because they are simple in memory, they're written as `struct` Value types instead of class Reference types.
+You can think of a value type as a pocket-sized snack of computer data, which is easy for the computer to take anywhere and extract value anytime.
+A the reference type `class` is more like a restaurant reservation. To extract value, the computer needs extra effort to go someplace specific, and can typically find more rich value there.
+A Value type can have memory advantages.
+	Small `struct`s saves time and space on a modern 64 bit CPU, as long as they are smaller than the standard reference size, which is usually 8 bytes on a modern 64 bit CPU. 
 	For larger structs, there are still advantages.
-		the CPU is more certain about the value of a value-type, because it doesn't need to check a reference. This design eliminates cache misses for this data.
-Check the description for additional explanation about the difference between value type and refernce type:
+		Copying the whole value means the CPU is more certain about the values, and it doesn't need to check a reference. This design eliminates cache misses, which is a real cost in high performance computing.
+Check the description for additional explanation about the difference between value type and reference type:
 //`add to description` Value Type vs. Reference Type:
 //  CodeMonkey: https://youtu.be/KGFAnwkO0Pk
 //  MarkInman: https://youtu.be/95SkyJe3Fe0
@@ -855,24 +873,24 @@ draw a point T at 4,3
 draw a horizontal arrow extending to the right
 
 ### voice
-if that ray crosses the polygon's edges an odd number of times, then the point is inside of the polygon
-the inner loop checks if the ray from pt crosses an edge
+if that ray crosses the polygon's edges an odd number of times, then the raycast came from inside of the polygon
+the inner loop checks if the ray crosses an edge
 	first check to see if the point is in range of the edge at all
 	then do the math to test if the ray's x intersection is on the edge
 
 Finding the bounding rectangle of the polygon is also not straight forward, so we should have a function
-	it check every point, looking for the minimum and maximum values
-	the minimum and maximum values are output that as a bounding box
-This method can fail if the polygon is not correctly formed. This TryGet pattern is common in C# when failure is possible.
-
-With this we can create a draw method for polygons
+	it checks every point's location, looking for the minimum and maximum x/y values
+	the minimum and maximum values are given as output, as the opposite corners of a bounding box
+This method can fail if the polygon is not correctly formed.
 
 ### scene
 Program.cs
 ```
 ...
 		public static void DrawPolygon(Vec2[] poly, char letterToPrint) {
-			PolygonShape.TryGetAABB(poly, out Vec2 start, out Vec2 end);
+			if (!PolygonShape.TryGetAABB(poly, out Vec2 start, out Vec2 end)) {
+				return;
+			}
 			for (int y = (int)start.y; y < end.y; ++y) {
 				for (int x = (int)start.x; x < end.x; ++x) {
 					if (x < 0 || y < 0) { continue; }
@@ -886,6 +904,11 @@ Program.cs
 		}
 ...
 ```
+
+### voice
+With this we can create a draw method for polygons
+
+The TryGet pattern is common in C# when failure is possible. It supports an elegant test for failure without resorting to exception handling.
 
 ```
 ...
@@ -954,7 +977,7 @@ The core of any simulation or game engine is a game loop, like this.
 We can use this interactive loop to test parts of our game as we write it.
 First, let's test circle drawing.
 
-I'll add this basic swtich statement to trigger changes to my simulation with key presses.
+I'll add this basic `switch` statement to trigger changes to my simulation with key presses.
 This is a lot of logic to insert into the game loop, which does feel bad to me as a game engine developer.
 
 ### scene
@@ -1106,7 +1129,7 @@ public static void Main(string[] args) {
 ```
 
 ### voice
-this is a perfectly valid implemenatation in C-sharp as well. but for the sake of one fewer class, I'll keep writing in local functions in static main.
+this is a perfectly valid implementation in C-sharp as well. but for the sake of one fewer class, I'll keep writing in local functions in static main.
 I'll just delete this Game class, and put the Main method back.
 
 ### scene
@@ -1160,7 +1183,7 @@ As with most games, the biggest reason for this performance is probably because 
 comment out Draw and test again.
 
 ### voice
-The code that claculates timing is going to be important later, and it feels pretty bad. So before we continue, I want to implement a better time-keeping class.
+The code that calculates timing is going to be important later, and it feels pretty bad. So before we continue, I want to implement a better time-keeping class.
 
 ### scene
 src/MrV/Time.cs
@@ -1172,7 +1195,7 @@ namespace MrV {
 	/// <summary>
 	/// Keeps track of timing, specifically for frame-based update in a game loop.
 	/// <list type="bullet">
-	/// <item>Uses C# <see cref="Stopwatch"/> as cannonical timer implementation</item>
+	/// <item>Uses C# <see cref="Stopwatch"/> as canonical timer implementation</item>
 	/// <item>Floating point values are convenient for physics calculations</item>
 	/// <item>Floating point timestamps are stored as 'double' for precision, since 'float' becomes less accurate than 1ms after 4.5 hours</item>
 	/// <item>Time is also calculated in milliseconds, since all floating points (even doubles) become less accurate as values increase</item>
@@ -1184,6 +1207,7 @@ namespace MrV {
 		protected float _deltaTimeSec;
 		protected long _timeMsOfCurrentFrame;
 		protected double _timeSecOfCurrentFrame;
+		protected double _fractionalMsRemainder;
 		protected static Time _instance;
 		public static long CurrentTimeMs => DateTimeOffset.Now.ToUnixTimeMilliseconds();
 		public long DeltaTimeMilliseconds => _deltaTimeMs;
@@ -1194,10 +1218,14 @@ namespace MrV {
 		public float DeltaTimeSecCalculateNow => (float)(_timer.Elapsed.TotalSeconds - _timeSecOfCurrentFrame);
 		public static long TimeMsCurrentFrame => Instance.TimeMillisecondsCurrentFrame;
 		public static double TimeSecCurrentFrame => Instance.TimeSecondsCurrentFrame;
-		public static Time Instance => _instance != null ? _instance : _instance = new Time();
+		public static Time Instance {
+			get => _instance != null ? _instance : _instance = new Time();
+			set => _instance = value;
+		}
 		public static long DeltaTimeMs => Instance.DeltaTimeMilliseconds;
 		public static float DeltaTimeSec => Instance.DeltaTimeSeconds;
 		public static void Update() => Instance.UpdateTiming();
+		public static void Update(float deltaTimeSeconds) => Instance.UpdateTiming(deltaTimeSeconds);
 		public static void SleepWithoutConsoleKeyPress(int ms) => Instance.ThrottleUpdate(ms, () => Console.KeyAvailable);
 		public Time() {
 			_timer = new Stopwatch();
@@ -1207,10 +1235,20 @@ namespace MrV {
 			UpdateTiming();
 		}
 		public void UpdateTiming() {
-			_deltaTimeMs = DeltaTimeMsCalculateNow;
-			_deltaTimeSec = DeltaTimeSecCalculateNow;
-			_timeSecOfCurrentFrame = _timer.Elapsed.TotalSeconds;
-			_timeMsOfCurrentFrame = _timer.ElapsedMilliseconds;
+			UpdateTiming(DeltaTimeSecCalculateNow);
+		}
+		public void UpdateTiming(float deltaTimeSeconds) {
+			_deltaTimeSec = deltaTimeSeconds;
+			float milliseconds = _deltaTimeSec * 1000;
+			_deltaTimeMs = (long)milliseconds;
+			_fractionalMsRemainder += milliseconds - _deltaTimeMs;
+			if (_fractionalMsRemainder >= 1) {
+				int extraMillisecond = (int)_fractionalMsRemainder;
+				_deltaTimeMs += extraMillisecond;
+				_fractionalMsRemainder -= extraMillisecond;
+			}
+			_timeSecOfCurrentFrame = _timeSecOfCurrentFrame + _deltaTimeSec;
+			_timeMsOfCurrentFrame = _timeMsOfCurrentFrame + _deltaTimeMs;
 		}
 		public void ThrottleUpdate(int idealFrameDelayMs, Func<bool> interruptSleep = null) {
 			long soon = _timeMsOfCurrentFrame + idealFrameDelayMs;
@@ -1220,7 +1258,6 @@ namespace MrV {
 		}
 	}
 }
-
 ```
 
 ### voice
@@ -1293,13 +1330,21 @@ Program.cs
 ```
 
 ### voice
-It's possible to design the `Time` class without a necessary `Update` method, but doing so would result in different values for delta time within the same gameloop frame.
-This implementation tries to artificially set the gameloop speed to 20 frames per second. Feel free to experiment with this value.
+It's possible to design the `Time` class without a necessary `Update` method, but doing so would result in different values for delta time within the same game loop frame.
+
+Assume the delta time will be different each frame of the game loop, because the `Time` class measures real time.
+
+This realtime implementation tries to artificially set the game loop speed to 20 frames per second. YOu should experiment with this value.
 A lower framerate, which is a higher frame delay, reduces the burden that this program puts on the CPU.
 	A lower CPU burden improves performance of the rest of your computer while this game is running.
 
-Notice that `Time.Update();` is called in the game loop, to track the passage of time and guage the cost of the entire process for `SleepWithoutConsoleKeyPress`.
+Notice that `Time.Update();` is called in the game loop, to track the passage of time and gauge the cost of the entire process for `SleepWithoutConsoleKeyPress`.
 
+If the simulation's goal is fast prediction with a fixed-time-step, pass the time step into `Time.Update()`, and remove the call to `SleepWithoutConsoleKeyPress`.
+
+Game engines like Unity actually do both real-time and fixed-time calculations.
+	separate Updates are at different intervals, to give performant calculations to graphics related code, and time-step consistency to physics related code.
+	This implementation of `Time` could support something similar to Unity if `Time`'s static `Instance` alternates between realtime and a fixed-time instances.
 ---
 
 ## Stop the Flickering
@@ -1352,7 +1397,7 @@ Program.cs
 ### voice
 like this.
 
-There are three specific classes of problems have major impacts on simulation performance that I want to keep adressing in this tutorial:
+There are three specific classes of problems have major impacts on simulation performance that I want to keep addressing in this tutorial:
 	Drawing, Memory Allocation, and Collision detection.
 
 Let's continue improve drawing.
@@ -1463,8 +1508,8 @@ namespace MrV.CommandLine {
 ### voice
 This is a buffer class for drawing console characters. I'll refer to these characters as glyphs.
 The buffer is a 2D array of these glyphs, with some additional convenience methods.
-The class is a partial class so that we can split it's impementation across multiple files. We'll put specialized drawing methods in a separate place.
-This code uses C-sharp's contiguous block 2D array allocation instead of an array-of-arrays, which some progammers might be more familiar with.
+The class is a partial class so that we can split it's implementation across multiple files. We'll put specialized drawing methods in a separate place.
+This code uses C-sharp's contiguous block 2D array allocation instead of an array-of-arrays, which some programmers might be more familiar with.
 Notice that Height is the first dimension and Width is the second. These dimensions can be in either order, but it should be consistent once it is selected.
 	I choose Height first because it intuitively follows the existing rectangle code, and also improves CPU cache locality when scanning horizontally, which is historically how graphics work.
 The square-bracket operator is overloaded so the class can be accessed like a 2D array in our code.
@@ -1483,7 +1528,7 @@ write in big bold letters on the side of the screen
 
 ### voice
 This `ResizeBuffer` method is more robust than we need it to be, because it will copy old data into the new buffer to maintain consistency.
-This feature will probably not be needed, so it could be argued the extra code is a waste of time and mental energy, according to the YAGNI or You Aint Gunna Need It principle.
+This feature will probably not be needed, so it could be argued the extra code is a waste of time and mental energy, according to the YAGNI or "You Ain't Gunna Need It" principle.
 
 ### scene
 gray-out the YAGNI text, and write white text with red outline over it
@@ -1494,7 +1539,7 @@ However, this feature fulfills my intuition of how the `ResizeBuffer` function s
 For me, the cognitive load of writing the extra functionality now is less than the cognitive load of having to remember that the feature doesn't exist in the future.
 
 ### scene
-scroll down to WriteAt overloads, Clear, and Print + PrintBuffer
+scroll down to `WriteAt` overloads, Clear, and Print + PrintBuffer
 
 ### voice
 The buffer needs methods to write glyphs into it. We need a method to clear the buffer before every draw.
@@ -1656,7 +1701,7 @@ then we need to test against the scaled point, which is being printed to the uns
 If you want to change the direction of the Y axis in the simulation, you can experiment with changing the sign of the y-value of `ShapeScale`.
 	I recommend doing that later, after we implement a moving camera.
 
-Because we added the scale member to this class, we don't need to pass it in as a variable. that means we don't change any of the other method signitures. Nice.
+Because we added the scale member to this class, we don't need to pass it in as a variable. that means we don't change any of the other method signatures. Nice.
 
 ### scene
 (run test)
@@ -1665,7 +1710,7 @@ Because we added the scale member to this class, we don't need to pass it in as 
 Testing with key presses every time is a bit tedious.
 
 I want to be able to test my app more automatically, without having to press keys to do it.
-For that, I will impliment a task scheduler, which we can use for many other purposes later as well.
+For that, I will implement a task scheduler, which we can use for many other purposes later as well.
 
 ---
 
@@ -1728,7 +1773,7 @@ In this implementation, the `Tasks.Task` type is basically a container for a fun
 The `System.Action` type is a variable that stores a function to invoke later. This can also be accomplished with a delegate, as we saw in `DrawBuffer.IsInsideShapeDelegate`.
 Each task also keeps track of what line of code called `Tasks.Add`, which is very valuable information when debugging asynchronous functionality like this.
 Execution of tasks happen in the Update method, where the next Task to execute is at the front of a the Tasks list.
-A seperate list in RunUpdate gathers tasks to execute before the execution.
+A separate list in RunUpdate gathers tasks to execute before the execution.
 	If an executing Task ends up calling `Tasks.Add` in a nested call, this separation prevents an infinite loop.
 Ordering is done by a Binary Search algorithm, generalized to work on generic records. The implementation of this binary search looks like this:
 
@@ -1828,7 +1873,7 @@ src/Program.cs
 
 ### voice
 I need to make sure the `Tasks` are regularly Updated, so I'll include `Tasks.Update` in the `Update` section of my code.
-Before the gameloop, this code creates an automatic test of my application by synthetically setting the program's input variable.
+Before the game loop, this code creates an automatic test of my application by synthetically setting the program's input variable.
 the first for-loop moves the circle to the right with the 'd' key, and expands the radius with the 'e' key
 the second for-loop moves the circle up with the 'w' key, and reduces the radius with the 'r' key.
 each of the key input changes should happen about 100 milliseconds apart.
@@ -1969,7 +2014,7 @@ src/Program.cs
 ### voice
 Now keys are bound to functions during initialization.
 This example inlines the very simple functions, and takes advantage of the Note field to create more clarity in the code.
-I personally like this style of keybinding a lot. It feels like how rules of a boardgame are explained before the game starts.
+I personally like this style of keybinding a lot. It feels like how rules of a board game are explained before the game starts.
 	It allows definitions of controls to happen closer other important context for those controls.
 
 Notice that the old code setting the input variable has been replaced with additions to the KeyInput queue. That old input variable is obsolete now, and removed.
@@ -2043,11 +2088,11 @@ namespace MrV.CommandLine {
 The `GraphicsContext` class is a `DrawBuffer`, and it also keeps track of previous buffer data which was already drawn.
 The decision to inherit `DrawBuffer` could be argued here.
 Conceptually, `GraphicsContext` has two `DrawBuffer`s instead of being a buffer with spare data.
-I decided to use inheritance because `GraphicsContext` would want an API surface similar to `DrawBuffer`, and `_lastBuffer` ccould be the second buffer internally.
+I decided to use inheritance because `GraphicsContext` would want an API surface similar to `DrawBuffer`, and `_lastBuffer` should be private data anyway, so the implementation is not important outside of the class.
 
 The new `PrintModifiedOnly` method checks every character to determine if it is the same as the last character printed.
 only different characters are printed.
-after every complete print, which is commonly called a Render, the current active buffer and last buffer can switch places.
+after every complete print, which graphics developers also call a Render, the current active buffer and last buffer can switch places.
 
 `PrintModifiedOnly` could be further optimized to reduce calls to `SetCursorPosition`.
 
@@ -2077,9 +2122,9 @@ after every complete print, which is commonly called a Render, the current activ
 
 ### voice
 `Console.Write` implicitly moves the cursor position over one space.
-The cursor position only needs to be set if there is a new row, or if the last glyph was not printed.
+The cursor position needs to be set to another location if there is a new row, or if the last glyph was not printed.
 
-In practice, `SetCursorPosition` is an expensive call in the Console API.
+This added complexity is worth it because this is the inner loop of rendering code. In most games, this a major performance bottleneck. And I know from experience that `SetCursorPosition` is a noticeable call that doesn't need to happen every time.
 
 ### scene
 src/Program.cs
@@ -2106,18 +2151,22 @@ src/Program.cs
 ```
 
 ### voice
-Using the optimized draw happens in the same way as the previous print, except that `SwapBuffers` is called to swap the draw buffer data at the end.
-A call to `SwapBuffers` might seem like an overly verbose requirement. However, it's very common in graphics APIs, so it's worth getting used to the idea.
+The optimized print works like the previous print method, except that `SwapBuffers` is called to swap the draw buffer data at the end.
+A call to `SwapBuffers` might seem like an overly verbose requirement. However, it's very common as an explicit requirement in graphics APIs, so it's worth getting used to the idea.
 
-The first time I wrote this program, I didn't separate `DrawBuffer` with `GraphicsContext`, I just wrote them all in the same class.
+The first time I wrote this program, I didn't separate `DrawBuffer` with `GraphicsContext`, I just wrote all the functionality in the same class.
 I want to make a special note about it because I want to remind the audience that software design is difficult, and refactoring is common.
-	and I want to emphasize that doing something for the first time means you should be comfortable with imperfect design.
-	every major computer programming problem I have ever solved started with a relatively messy intuitive solution.
-	My messy code didn't evolve into something that made sense until I sat with it for a while and re-wrote it.
-	Be patient with yourself as a developer. Give yourself the grace to rewrite messy code later.
+	and I want to emphasize that doing something for the first time, also called prototyping, means you should be comfortable with imperfect design.
+	every major computer programming problem I have ever solved started with a relatively messy prototype solution, developed incrementally by intuition.
+	My messy code didn't evolve into something that really made sense until I sat with it for a while and refactored.
+	Be patient with yourself too. Give yourself the grace to refactor messy code later.
 
+### scene
+test the program
+
+### voice
 Running this program is *much* faster than it used to be. Most of the time draw happens, there is actually no change at all.
-And sometimes, only small amounts of the screen needs to change.
+And most often, only small amounts of the screen needs to change.
 
 The graphics look fast enough to test quickly. we still need to keep working with the graphics system to use colors, which is part of the original game design.
 
@@ -2131,17 +2180,17 @@ using System;
 namespace MrV.CommandLine {
 	public struct ConsoleColorPair {
 		private byte _fore, _back;
-		public ConsoleColor fore { get => (ConsoleColor)_fore; set => _fore = (byte)value; }
-		public ConsoleColor back { get => (ConsoleColor)_back; set => _back = (byte)value; }
+		public ConsoleColor Fore { get => (ConsoleColor)_fore; set => _fore = (byte)value; }
+		public ConsoleColor Back { get => (ConsoleColor)_back; set => _back = (byte)value; }
 		public ConsoleColorPair(ConsoleColor fore, ConsoleColor back) {
 			_back = (byte)back;
 			_fore = (byte)fore;
 		}
 		public void Apply() {
-			Console.ForegroundColor = fore;
-			Console.BackgroundColor = back;
+			Console.ForegroundColor = Fore;
+			Console.BackgroundColor = Back;
 		}
-		public static ConsoleColorPair Default = new ConsoleColorPair(ConsoleColor.Gray, ConsoleColor.Black);
+		public static readonly ConsoleColorPair Default = new ConsoleColorPair(ConsoleColor.Gray, ConsoleColor.Black);
 		public static ConsoleColorPair Current => new ConsoleColorPair(Console.ForegroundColor, Console.BackgroundColor);
 		static ConsoleColorPair() {
 			Default = Current;
@@ -2158,7 +2207,7 @@ These values are stored as 1-byte values instead of the default enumeration type
 
 We could do some bitwise tricks to put both 4-bit values into one 8-bit byte, but that memory optimization doesn't actually help because of struct memory alignment in C-sharp.
 
-A static constructor remembers what the default console colors are as soon as any ConsoleColorPair code is called. This could help solve some color bugs later.
+A static constructor remembers what the default console colors are as soon as any `ConsoleColorPair` code is called. This could help solve some color bugs later.
 
 ### scene
 src/MrV/CommandLine/ConsoleGlyph.cs
@@ -2179,8 +2228,8 @@ namespace MrV.CommandLine {
 				}
 			}
 		}
-		public ConsoleColor Fore { get { return colorPair.fore; } set { colorPair.fore = value; } }
-		public ConsoleColor Back { get { return colorPair.back; } set { colorPair.back = value; } }
+		public ConsoleColor Fore { get { return colorPair.Fore; } set { colorPair.Fore = value; } }
+		public ConsoleColor Back { get { return colorPair.Back; } set { colorPair.Back = value; } }
 		public ConsoleGlyph(char letter, ConsoleColorPair colorPair) { this.letter = letter; this.colorPair = colorPair; }
 		public static implicit operator ConsoleGlyph(ConsoleColor color) => new ConsoleGlyph(' ', Default.Fore, color);
 		public ConsoleGlyph(char letter, ConsoleColor fore, ConsoleColor back) :
@@ -2211,8 +2260,8 @@ namespace MrV.CommandLine {
 ```
 
 ### voice
-Each glyph on the screen should have the `ConsoleColorPair` qualities, so we can change the color.
-Because each structure is a struct, there can't be inheritance, the glyph must be composed.
+Each glyph on the screen should have `ConsoleColorPair` qualities, so we can change colors.
+the glyph can't inherit from `ConsoleColorPair` because C# doesn't permit inheritance for struct types.
 If we want to conveniently access a glyph's colors, we should do it with a properties.
 There are two constructors, and an implicit constructor, all eventually calling the same base constructor, so we keep a Single Point of Truth.
 A few readonly constant-like values will help conveniently define things like a default clear canvas, which is different from an explicitly empty canvas.
@@ -2223,6 +2272,7 @@ Now we need to use the console glyph in the `DrawBuffer`, instead of the charact
 
 ### scene
 src/MrV/CommandLine/DrawBuffer.cs
+show the process explained in the voice section
 ```
 ...
 	public partial class DrawBuffer {
@@ -2303,6 +2353,7 @@ Similar changes need to happen in the DrawBuffer_geometry file
 
 ### scene
 src/MrV/CommandLine/DrawBuffer_geometry.cs
+show the process explained in the voice section
 ```
 ...
 		public void DrawShape(IsInsideShapeDelegate isInsideShape, Vec2 start, Vec2 end, ConsoleGlyph letterToPrint) {
@@ -2352,6 +2403,7 @@ And because we changed `DrawBuffer`, we need to change it's inheriting class `Gr
 
 ### scene
 src/MrV/CommandLine/GraphicsContext
+show the process explained in the voice section
 ```
 ...
 		public virtual void PrintModifiedOnly() {
@@ -2386,7 +2438,7 @@ in `GraphicsContext`
 	search/replace of `char` with `ConsoleGlyph`
 	in `PrintModifiedOnly()`, replace the `isSame` variable initialization using a double-equal operator with
 		`bool isSame = this[row, col].Equals(_lastBuffer[row, col]);`
-	in `PrintModiefiedOnly`,
+	in `PrintModifiedOnly`,
 		just before `Console.Write(glyph);`, add
 			`glyph.ApplyColor();`
 		at the very end of the method
@@ -2428,7 +2480,7 @@ there is a programming trick called Anti-Aliasing that allows graphics to look l
 video showing anti-aliasing
 
 ### voice
-this technique requires a large color space to work best. still, even with only 16 colors, we can implement a basic anti-aliasing, and it will help.
+this technique requires a large color space to work best. still, even with only 16 colors, we can implement a basic anti-aliasing, and it will help the graphics a bit.
 
 The technique requires that we calculate a higher-resolution than we can actually draw, which we call a super-sample.
 once we have a super-sample for each pixel that we are drawing, we can decide how to draw that pixel with more color information.
@@ -2488,7 +2540,7 @@ src/MrV/DrawBuffer_geometry.cs
 					}
 					if (countSamples == 0) { continue; }
 					ConsoleGlyph glyph = glyphToPrint;
-					glyph.back = AntiAliasColorMap[(int)glyphToPrint.back, countSamples - 1].back;
+					glyph.Back = AntiAliasColorMap[(int)glyphToPrint.Back, countSamples - 1].Back;
 					WriteAt(glyph, y, x);
 				}
 			}
@@ -2497,20 +2549,24 @@ src/MrV/DrawBuffer_geometry.cs
 ```
 
 ### voice
-I must admit that this implementation of antialiasing is very naive, and doesn't take color mixing from overlapping geometry into account.
+The first part of the class, the static constructor, initializes the `AntiAliasColorMap` lookup table for anti-aliased colors.
+
+I must admit that this implementation of anti-aliasing is very naive, and doesn't take color mixing from overlapping geometry into account.
 	This is an intentional choice made in the robustness vs accessability tradeoff I mentioned at the beginning of the tutorial.
 
 because all of the draw methods use `DrawShape`, we can accomplish all of our Anti-Aliasing by only modifying that one method.
 
 at the beginning of the implementation of this partial class, I'll define the anti-alias gradients for each color.
-	this will only be meaningful for the bright colors in out 16 color range
+	this will only be meaningful for the bright colors in our 16 color range
 
 the `DrawShape` method needs to do more checks per glyph, to count samples.
 the additional nested for-loop counts how many times the `isInsideShape` function would trigger in each glyph's space.
-then, before the glyph is printed, a copy is made with the correct background color based on it's starting background color and sample count.
+the amount of indentation in this function triggers me, but I know that this is in the inner loop of a rendering algorithm, so I hesitate to extract a method. I don't want to pay the execution cost of an extra method for every glyph of every frame.
+
+before the glyph is printed, a copy is made with the correct background color based on it's starting background color and sample count.
 
 ### scene
-src/MrV/DrawBuffer_geometry
+src/MrV/DrawBuffer_geometry.cs
 ```
 ...
 		public void DrawLine(Vec2 start, Vec2 end, float thickness, ConsoleGlyph letterToPrint) {
@@ -2526,7 +2582,7 @@ src/MrV/DrawBuffer_geometry
 ### voice
 drawing lines is an essential part of testing and debugging vector math, which we may need to do soon.
 while we are in the drawing code, we should add a method to draw lines.
-this creates a thin rectangle, with the center of two of it's opposite edges at the given start and end coordinate.
+this creates a thin rectangle, bisected by the line being drawn.
 
 Vec2 needs some additional math to support this math.
 
@@ -2548,9 +2604,10 @@ draw lines AB
 
 ### voice
 if you have 2 points in space, you can calculate their difference, or `Delta` with simple subtraction.
-the distance, also called the `Magnitude` of the `Delta`, can be determined with the pythagorean theorum, 'a' squared plus 'b' squared equals 'c' squared.
-the square root operation is fairly expensive for a computer to do accurately, so for performance reasons, it's best to do math that doesn't need square root as much as possible.
-	for this reason, game engine APIs will often include a `MagnitudeSqr`, to eliminate a call to the square-root function. this is fine as long as we compare other squared values
+the distance, also called the `Magnitude` of the `Delta`, can be determined with the pythagorean theorem, 'horizontal' squared plus 'vertical' squared equals 'hypotenuse' squared.
+the square root operation is fairly expensive for a computer to do accurately, so for performance reasons, it's best to do math that avoids square root where possible.
+	for this reason, game engine APIs will often include a `MagnitudeSqr`, to eliminate a call to the square-root function.
+	this is fine as long as we compare it against other squared values
 
 ### scene
 draw a thicker line along point AB that stops at length 1, at the edge of the unit circle
@@ -2560,15 +2617,16 @@ if we divide the entire vector by it's `Magnitude`, we get it's `Normalized` val
 
 ### scene
 show angle theta between line AB and the X axis starting at point A
-draw a unit circle (radius 1) arount point A
+draw a unit circle (radius 1) around point A
 draw a horizontal line to the right from point A to the edge of the unit circle, label the X component
-draw a vertical line down from poitn A the of the unit circle, label the y component
+draw a vertical line down from point A the of the unit circle, label the y component
 
 ### voice
 the x and y components of a normal value are identical to the cosine and sine values of this `Normalized` vector.
 
 As a personal note, I felt I was terrible at math in high-school, especially when I studied trigonometry.
-As a game developer, I have never needed to know my trig-identities, but using a unit vector to describe direction like this has been necessary very often.
+In retrospect, I wish I had a game developer teach me something like this in high-school.
+As a game developer, I have never needed to know my trig-identities, but using a unit vector to describe direction like this has been necessary very often, and remains useful in 3D math as well.
 
 ### scene
 draw a vertical line up from point A the of the unit circle that is as long as the x component, label it perp-x component
@@ -2628,7 +2686,7 @@ direction is calculated by dividing the velocity by the magnitude.
 	This is the same as just calling the `Normalized` property.
 	But, I avoid using `Normalized` to avoid recalculating the same square root value again. Again, an accurate square-root value is expensive to re-compute.
 
-the `Update` method will change the position of the particle's cirle based on the velocity, and the amount of time passed.
+the `Update` method will change the position of the particle's circle based on the velocity, and the amount of time passed.
 
 ### scene
 src/Program
@@ -2663,7 +2721,7 @@ To include the moving particle in our app, we need to: initialize it, and add it
 test
 
 ### voice
-One particle seems to work. More particles will be required.
+One particle seems to work. More particles will be required for the simulation graphic effects.
 
 ### scene
 ```
@@ -2702,7 +2760,7 @@ One particle seems to work. More particles will be required.
 ### voice
 instead of one particle, I want an array. Let's say 10 elements for now.
 
-these need to be initialized, drawn, and updated, just like the old singular particle.
+these need to be initialized, drawn, and updated, just like the old single particle.
 
 Because I want to make the particles fan out in a circle, I need to add some more math to `Vec2`
 
@@ -2725,17 +2783,17 @@ src/MrV/Geometry/Vec2
 ```
 
 ### voice
-for the sake of conveniently using normal vectors instead of angles, I'll also add these methods to do conversions.
+for the sake of working with angles, I'll add methods that convert angles to unit vectors.
 
-I'm doing conversions to both Radians and Degrees because the standard C# math library uses Radians based on Pi, even though most people learn angles based on 360 degrees per circle.
-Doing angle math in pure radians does mean the computer will need to do less conversion math total.
-	but if we only need the math done during initialization, being more efficient has almost no performance gain. It makes much more sense to use the more intuitive 360 degree format here.
+There are conversions for both Radians and Degrees because the standard C# math library uses Radians even though most people find 360 degrees more intuitive.
+Doing angle math in pure radians means the computer does less conversion math total.
+	but during initialization, more efficient math has almost no performance gain. It makes more sense to use the more intuitive 360 degree format there.
 
 ### scene
 run the code and see the particles expand out from their origin
 
 ### voice
-this looks cool. I want to turn this into a particle explosion, which is a common and effective tool for making games feel very alive.
+this looks cool. I'll turn this into an explosion, which is a common tool for making graphics feel more alive.
 to do the explosion well, I need a random number generator.
 C-sharp does provide a random number generator class, but I want something more convenient. I want a singleton that I can call statically.
 
@@ -2765,23 +2823,11 @@ namespace MrV.GameEngine {
 ```
 
 ### voice
-This random number generator uses the XorShift32 algorithm to generate fast random numbers. It is a Pseudo-Random Number Generator, which Software develoepers call a PRNG.
-PRNG systems create the illusion of randomness while being exactly reproducable as long as the same starting seed is used.
-	this reproducability is extremely useful for simulation debugging.
-It isn't a high-quality random number generator for statistically robust simulations, but it is very fast.
-If you want a higher quality generator that is a little bit slower, look up the SplitMix32 algorithm.
+This random number generator uses the "XorShift32" algorithm to generate fast random numbers. It's a PRNG, or Pseudo-Random Number Generator.
+PRNG systems create the illusion of randomness while being exactly reproducible as long as the same starting seed is used. reproducibility is extremely useful for simulation debugging.
+This isn't a very high-quality random number generator for statistically robust simulations, but it is very fast.
+If you want a higher quality generator that is a little bit slower, look up the "SplitMix32" algorithm.
 Like my other singleton classes, this one has a separate static API for convenience, and can also be created as an instance for specific number sequences.
-
-### scene
-src/MrV/Time.cs
-```
-...
-		public static long CurrentTimeMs => DateTimeOffset.Now.ToUnixTimeMilliseconds();
-...
-```
-
-### voice
-to seed our random number generator, we should add an extra static method to Time, so we can have every program use a unique starting point for the random numbers.
 
 ### scene
 src/Program.cs
@@ -2799,6 +2845,8 @@ src/Program.cs
 test the particles code
 
 ### voice
+We'll seed our random number generator with the time in milliseconds, which will probably be unique each time we run the program.
+
 the particles spread out differently with each runtime. but they don't look like an explosion yet.
 
 ### scene
@@ -2878,10 +2926,11 @@ this looks more like an explosion, but it's hard to tell from just one run. we s
 ## Reuse Particles
 
 ### voice
-This works, but we don't want to re-create the particles each time we press a key.
-the `new` keyword prompts memory allocation, which is one of the most time consuming basic things the computer does.
-to be clear, this program is not suffering very much from this allocation. this is a very small amount of memory.
-But if we want to scale this explosion up to hundreds or thousands of circles, using `new` like this will become a problem. we want to avoice allocation as much as possible.
+This works, but we don't want to re-create the particles with `new` each time we press a key.
+the `new` keyword prompts memory allocation, which is one of the most unpredictably time consuming basic things the computer program does.
+memory allocation is expensive because they simply need more logic, and that logic must interact with the operating system in a thread safe way.
+this specific program is not suffering very much from this memory allocation, because this is a very small amount of memory.
+But if we want to scale this explosion up to hundreds or thousands of circles every frame, using `new` like this will become a problem.
 
 ### scene
 src/MrV/GameEngine/Particle.cs
@@ -2903,8 +2952,7 @@ src/MrV/GameEngine/Particle.cs
 ```
 
 ### voice
-we want an initialization function that re-purposes the existing particle
-the need for this sort of re-initialization would be clearer in a language like C, where memory needs to be manually reclaimed.
+we want to avoid that allocation as much as possible. at the very least, we want a function that can repurpose existing memory, so we don't need to allocate more.
 
 ### scene
 src/Program.cs
@@ -2919,11 +2967,13 @@ src/Program.cs
 			}, "explosion");
 ...
 ```
+also test the code
 
 ### voice
-and we want to use the `Init` function instead of `new`.
+we want to use the `Init` function instead of `new`. this design pattern is called an Object Pool, where the `particles` array acts as the pool.
+I'll create a better implementation of the object pool soon.
 
-it still doesn't look enough like an explosion for me. I want to see the particles change size as they move.
+the results still doesn't look enough like an explosion for me. I want to see the particles change size as they move.
 
 ---
 
@@ -2936,9 +2986,10 @@ using System.Collections.Generic;
 
 namespace MrV.GameEngine {
 	public class FloatOverTime : ValueOverTime<float> {
-		public static FloatOverTime GrowAndShrink = new FloatOverTime(new Frame<float>[] {
+		private static readonly Frame<float>[] From0To1To0 = new Frame<float>[] {
 			new Frame<float>(0, 0), new Frame<float>(0.5f, 1), new Frame<float>(1, 0)
-		});
+		};
+		public static FloatOverTime GrowAndShrink = new FloatOverTime(From0To1To0);
 		public FloatOverTime(IList<Frame<float>> curve) : base(curve) {}
 		public override float Lerp(float percentageProgress, float start, float end) {
 			float delta = end - start;
@@ -3002,19 +3053,20 @@ namespace MrV.GameEngine {
 ```
 
 ### voice
-this class moves a value along a path over time. math calculates a position at any point in time. we call this math interpolation.
+this class moves a value along a path. math calculates a position at any point in time. This math is called "linear interpolation", and programmers often call it "Lerp". Some programmers and designers also call it "tweening".
 
-It's a templated class because the idea of interpolating a value is useful for many different kinds of values.
+The class doing the core logic is a templated class because the idea of interpolating a value is useful for many different kinds of values.
 It's going to be used for changing the radius of a particle over time.
 it could also be used for changing a particle's color, position, or any concept that can be interpolated between.
 
-Any implementation will need to implement a `Lerp` method, which explains how to interpolate between values of the used type.
+Any concrete implementation will need to implement a `Lerp` method, which explains how to interpolate between values of the used type.
 A list of frames will define the curve of the value, which is the path that the value interpolates over time.
 a convenient static instance that grows and then shrinks a value is included here, which we need for the explosion particle.
 
-the `ValueOverTime` abstract class defines how the math works.
+the `ValueOverTime` abstract class defines how most of the math works.
 notably, this class interpolates a curve with sharp transitions from frame to frame.
-the interpolation could be smoother with a spline, which is a clear opportunity for to improve this class later.
+the constructor makes sure the curve's frames are ordered correctly.
+the interpolation could be smoother if it wasn't purely linear, using spline math for example. That is a clear opportunity to improve this class later.
 for now, this is sufficient for our simulation.
 
 ### scene
@@ -3040,17 +3092,16 @@ src/Program.cs
 ```
 
 ### voice
-for a quick test, I'll just initialize the FloatOverTime object as normal game data
-	and use the structure to modify particle radius directly in Update.
+for a quick test, I'll just initialize the `FloatOverTime` object as normal game data
+	and use the structure to modify particle radius directly in `Update`.
 
 ### scene
 test
 
 ### voice
-this actually looks pretty good now. but writing this much specific logic directly in Update feels bad to me.
-I want a separate class that will handle all of the particle logic.
-I want the class to generate and re-use particles easily and transparently as well.
-That kind of object re-use is done with a data structure called an ObjectPool.
+this actually looks pretty good now. but writing this much specific logic directly in `Update` feels bad to me.
+I want a separate class to handle particle logic.
+I and I want an object pool to generate and re-use particles easily and transparently.
 
 ---
 
@@ -3068,7 +3119,7 @@ namespace MrV.GameEngine {
 		private int _freeObjectCount = 0;
 		public Func<T> CreateObject;
 		public Action<T> DestroyObject, CommissionObject, DecommissionObject;
-		private HashSet<int> _delayedDecommission = new HashSet<int>();
+		private SortedSet<int> _delayedDecommission = new SortedSet<int>();
 
 		public int Count => _allObjects.Count - _freeObjectCount;
 		public T this[int index] => index < Count
@@ -3081,6 +3132,7 @@ namespace MrV.GameEngine {
 		}
 		public T Commission() {
 			T freeObject = default;
+			// if threading, `lock(_allObjects)` around the rest of this method until the return
 			if (_freeObjectCount == 0) {
 				freeObject = CreateObject.Invoke();
 				_allObjects.Add(freeObject);
@@ -3090,6 +3142,28 @@ namespace MrV.GameEngine {
 			}
 			if (CommissionObject != null) { CommissionObject(freeObject); }
 			return freeObject;
+		}
+		public IList<T> Commission(int count) {
+			T[] objects = new T[count];
+			int countToCreate = count - _freeObjectCount;
+			int index = 0;
+			while (_freeObjectCount > 0 && index < count) {
+				objects[index++] = _allObjects[_allObjects.Count - _freeObjectCount];
+				--_freeObjectCount;
+			}
+			if (countToCreate > 0) {
+				int targetBufferSize = _allObjects.Count + countToCreate;
+				if (_allObjects.Capacity < targetBufferSize) {
+					_allObjects.Capacity = targetBufferSize;
+				}
+				for (int i = 0; i < countToCreate; ++i) {
+					T newObject = CreateObject.Invoke();
+					_allObjects.Add(newObject);
+					objects[index++] = newObject;
+				}
+			}
+			if (CommissionObject != null) { Array.ForEach(objects, CommissionObject); }
+			return objects;
 		}
 		public void Decommission(T obj) => DecommissionAtIndex(_allObjects.IndexOf(obj));
 		public void DecommissionAtIndex(int indexOfObject) {
@@ -3101,6 +3175,7 @@ namespace MrV.GameEngine {
 				return;
 			}
 			T obj = _allObjects[indexOfObject];
+			// if threading, `lock(_allObjects)` around the rest of this method
 			++_freeObjectCount;
 			int beginningOfFreeList = _allObjects.Count - _freeObjectCount;
 			_allObjects[indexOfObject] = _allObjects[beginningOfFreeList];
@@ -3127,11 +3202,10 @@ namespace MrV.GameEngine {
 		}
 		public void ServiceDelayedDecommission() {
 			if (_delayedDecommission.Count == 0) { return; }
-			List<int> decommisionNow = new List<int>(_delayedDecommission);
-			decommisionNow.Sort();
+			List<int> decommissionNow = new List<int>(_delayedDecommission);
 			_delayedDecommission.Clear();
-			for (int i = decommisionNow.Count - 1; i >= 0; --i) {
-				DecommissionAtIndex(decommisionNow[i]);
+			for (int i = decommissionNow.Count - 1; i >= 0; --i) {
+				DecommissionAtIndex(decommissionNow[i]);
 			}
 		}
 	}
@@ -3139,30 +3213,36 @@ namespace MrV.GameEngine {
 ```
 
 ### voice
-we can use this object pool to cache memory for anything that we create and destroy a lot of.
+this object pool will cache memory for anything that we create and destroy a lot of.
 it could be particles, bullets, enemies, pickups, or really anything.
 
-the idea of this class is that a list of objects has some unused objects that can be reused later.
-	objects at the end of the list are considred unused, or decommisioned.
+the idea of this class is that a big list of objects has some unused objects that can be reused later.
+	objects at the end of the list are considered unused, or decommissioned.
+
+the result of this is similar to a Flyweight pattern, where the real memory cost of an object is abstracted behind a reference, which can be re-used by many other data structures.
+
 the user must define some policies: how to create objects, how to reuse them, how to mark them as unused, and how to clean them up later.
 importantly this class handles deferred cleanup
-	this ObjectPool changes the order of objects in the list when they are disposed,
-	so special care needs to be taken if an object is `Decommission`ed while processing the object pool list in a for loop.
+	this ObjectPool changes the order of objects in the list when they are decommissioned,
+	so special care needs to be taken if an object is decommissioned while processing the object pool list in a for loop.
 when the user wants to `Commission` an object,
-	if there are no unused objects in the list, a new one is created, added to the list, and given to the user
+	if there are no unused objects in the list, a new one is created using a provided policy, then added to the list, and given to the user
 	if there is an unused object, the one closest to the edge of free objects is given to the user, and that edge is moved up.
+	an overloaded `Commission` method takes a count. it extends the `List` capacity in batches. this batch allocation could be more efficient if there was a `CreateObjectBatch` policy, but that will probably only improve performance for an object pool of value types.
 when the user wants to `Decommission` an object,
-	this code checks to make sure that it isn't decommissioning an already decommissioned object
-	and it also protects against mixing deferred and immediate decomissioning
+	this code checks to make sure that it isn't decommissioning an already decommissioned object,
+	along with protecting against mixing deferred and immediate decommissioning
 	then the object to decommission switches places in the list with the last commissioned object
-	then the boundary of decommissioned objects moves down to absorb that newly decomissioned object
-if an object needs to be decommissioned, but can't be decomissioned right now (because the object pool is being iterated through)
-	the index of the object to decommission is put into a set (which won't contain duplicate indexes)
-	then during a later time, outside of the objectpool iteration, those objects to decommission are decommissioned. this decomissioning has to happen in reverse index order, because removing an index at the front would shift all indexes beyond it.
+	then the boundary of decommissioned objects moves down to absorb that newly decommissioned object
+if an object needs to be decommissioned, but can't be decommissioned right now
+	the index of the object to decommission is put into a set, which can't contain duplicate indexes
+	then during a later time, outside of the object pool iteration, those objects to decommission are decommissioned.
+	decommissioning has to happen in reverse index order, because removing an index at the front would shift and invalidate all indexes beyond it.
 		we want the last objects to get pushed to the end first.
 
-This class manages creation of objects in an automated way. Programmers call the function that creates each object is a Factory Method, and the Object Pool is the Factory.
-This implementation could also be explained as a Strategy Pattern, with it's parameterized Commission and Decommission methods that can be set without subclassing.
+This class manages object creation in an automated way.
+Programmers call the function that creates each object is a Factory Method. the Object Pool is the Factory.
+This implementation could also be explained as a Strategy Pattern, because it's parameterized Commission and Decommission methods that can be set without subclassing.
 
 ### scene
 src/MrV/Program.cs
@@ -3178,7 +3258,8 @@ src/MrV/Program.cs
 					p.Init(new Circle((10, 10), Rand.Number * particleRad), direction * Rand.Number * particleSpeed,
 						ConsoleColor.White, Rand.Range(.25f, 1));
 				},
-				p => p.enabled = false);
+				p => p.enabled = false,
+				null);
 			Rand.Instance.Seed = (uint)Time.CurrentTimeMs;
 			KeyInput.Bind(' ', () => {
 				for (int i = 0; i < 10; ++i) {
@@ -3191,14 +3272,19 @@ src/MrV/Program.cs
 ```
 
 ### voice
-lets replace the Particle array with the `PolicyDrivenObjectPool` of `Particle` objects.
-we need to define how to create a basic particle
-how to commission a new particle
-and how to decommission a particle
+lets replace the `Particle` array with the `PolicyDrivenObjectPool` of `Particle` objects.
+we need to define
+	how to create a basic particle
+	how to commission a new particle
+	and how to decommission a particle
 we don't need to include how to destroy the particle, because our particle doesn't allocate any special resources
 
 the "explosion" `KeyInput` Bind should change to commission 10 particles.
 a nice side effect of using this new system is that we can create more than just 10 particles, which will help create more interesting tests.
+
+Instead of using a for-loop, it's probably a good idea to create a `Commission` function that takes a count and returns an array of objects.
+	Creating memory batches going to be more efficient, and `PolicyDrivenObjectPool` is the perfect place for that logic.
+	To do that properly,
 
 ### scene
 src/MrV/Program.cs
@@ -3614,9 +3700,10 @@ black background with white text
 	D Dependency Inversion: Use abstractions so classes don't rely on specific implementations.
 
 ### voice
-Following these restrictions reduces cognitive load as the system grows in complexity, so I agree with SOLID principles in most situations.
+Following these constraints reduces cognitive load as the system grows in complexity, so I agree with SOLID principles in most situations.
 However, I intentionally break the principles as practical and sometimes stylistic choice.
-Choices about architecture design is one of those Invisible Wizard Problems that is worth discussing in the context of this project.
+
+For game development, SOLID principles are usually aspirational not rigid. Game development instead focuses on rapid prototyping, user experience, and a historically under-resourced development environment. Meanwhile, game projects still suffer from poor engineering discipline as projects grow. Less total attention means choices must be more efficient. That makes understanding nuances of programming architecture arguably more critical for game development.
 
 ### scene
 highlight 'S Single Responsibility'
@@ -3624,37 +3711,38 @@ highlight 'S Single Responsibility'
 ### voice
 Each class should clearly do one thing, to clarify purpose and reduce mental burden.
 At least one of my classes is already breaking this rule by extending into new functionality.
-	`DrawBuffer` does more than simply manage a buffer. It has a partial class extension where scaled vector graphics rendering code exists.
-	The partial class extension is a compromise on design quality. I feel pressure to release this tutorial sooner. But because I understand that it's bad to have a class responsible for solving a lot of different problems, I separate these problem spaces with separate files.
-`MobileCircle` will also do a lot. It will be used for asteroids and for ammo pickups, with no additional subclassing.
+`DrawBuffer` does more than simply manage a buffer.
+	It has a partial class extension where scaled vector graphics rendering code exists.
+	The partial class extension is my compromise on design quality. I feel pressure to release this tutorial soon. But because I understand that it's bad to have a class responsible for many different problems, I separate these problem spaces with separate files.
+`MobileCircle` will also be responsible for a lot. It will be used for asteroids and for ammo pickups, with no additional subclassing.
 	You'll see how I do that with metadata and lambda expressions.
-I also break the Single Responsibility Principle on purpose, to keep file and class count low, so it's easier to read my code, and easier to think about my project.
+I also break the Single Responsibility Principle to keep file and class count low, so it's easier to read my code, and easier to think about my project.
 `PolicyDrivenObjectPool` class could've been 3 classes, but I put it into one class and one file.
-`KeyInput` did break into multiple classes, because one of the conceptual units, the `KeyDispatcher`, could enable more features.
+`KeyInput` did break into multiple classes, because there are many conceptual units, and the `KeyDispatcher` part could enable more features in the future.
 
 ### scene
 highlight 'O Open-Closed'
 
 ### voice
-My code also breaks the Open-Closed Principle:
+My code also breaks Open-Closed in principle:
 I did create small classes, and extend them. However, I wrote these classes expecting you will refactor the code yourself.
 	I want you to modify the code, and make your own design changes. Then it will be your code.
-And crucially, I want you to make mistakes by making your own changes. Making those mistakes is how you will learn the most. I hope you are using this tutorial as a learning exercise.
+	And crucially, I want you to make mistakes by making your own changes. Making those mistakes is how you will learn the most.
 
-If I were more strict Open-Closed, I would have turned all public members into properties, added the virtual keyword to many methods and properties, and maybe some XML documentation identifying what kind of extensions I expect.
-Strict adherence to the Open-Closed principle has subtle performance costs. At runtime, virtual functions are more expensive than normal methods. And during development time, more code is more cognitive load.
+If I were more strict about Open-Closed, I would have turned all public members into properties, added the virtual keyword to many methods and properties, and maybe some XML documentation identifying what kind of extensions I expect.
+Strict adherence to the Open-Closed principle has subtle performance costs. At runtime, virtual functions are more expensive than normal methods. And during development time, more written code is more cognitive load.
 
-Personally, I think strict adherence to Open-Closed is better for mostly finished business software, after design decisions have almost all been made, where libraries should be shared with partner businesses, and performance loss is negligible because there isn't a real-time loop.
+Personally, I think strict adherence to Open-Closed is better for mostly finished business software, after design decisions have almost all been made, when libraries should be shared with partner businesses, and performance loss is negligible because there isn't a real-time loop.
 
 ### scene
 highlight 'L Liskov Substitution'
 
 ### voice
 My code will not strictly adhere to the Liskov Substitution Princicple:
-I want to take advantage of good polymorphism, but strict adherence to Liskov Substitution creates inefficient code full of type verification.
-	Careless implementation can also create security vulnerabilities, because it can allow new code to execute in an old system.
+I want to take advantage of good polymorphism, but strict adherence to Liskov Substitution creates inefficient code full of type verification that is prepared for inheritance.
+	Careless inheritance decisions can also create security vulnerabilities, because virtual functions can allow new code to execute in an old system.
 	The `sealed` keyword exists to prevent much of this kind of security vulnerability.
-One approach to maintain this principle is to avoid inheritance entirely, and create classes that extend functionality with lambda expressions and extra meta-data.
+One approach to maintain Liskov Substitution is to avoid inheritance entirely, and create classes that extend functionality with lambda expressions and extra meta-data.
 	I will be doing this myself with `MobileObject`.
 	Duck Typing, which is an object design pattern that Python, JavaScript, and Lua use, is an extreme of this design.
 
@@ -3664,25 +3752,29 @@ highlight 'I Interface Segregation'
 ### voice
 My code will bend the Interface Segregation Principle:
 I'm not going to make fine-grained Interface separations. I won't need them in practice, and writing them will the increase complexity of this tutorial for little gain.
-For example, it is possible that not all GameObjects will need a position. But I don't want an additional IHasPosition interface.
+For example, it is possible that not all GameObjects will need a position. But I don't want an additional `IHasPosition` interface.
 
 ### scene
 highlight 'D Dependency Inversion'
 
 ### voice
 My code already uses several kind of Singletons, which is a gross violation of the Dependency Inversion Principle.
-	To be clear, I hate the fact that my code relies on singletons. They are like global variables, create hidden dependencies that are difficult to extract or reason about, and difficult to share across projects. If multi-threading gets involved, Singletons can create nightmarish bugs. In short, singletons make a brittle design, limiting future functionality.
-		For example, I have a `Time` singleton, and if I want to add a localized-time-travel, like a region of space that makes physics work backwards, that would require multiple local Time objects.
-	I did write every singleton class to be able to substitute it's the static instance for another one, to help enable prototyping some interesting designs later.
+	To be clear, I hate the fact that my code relies on singletons. They are like global variables, which create hidden dependencies that are difficult to extract or reason about, and make the code difficult to share across projects.
+	If multi-threading gets involved, Singletons can create nightmarish bugs.
+	In short, singletons make a brittle design, limiting future functionality.
+	I did intentionally write every singleton class to be able to substitute it's the static instance for another one, to help enable prototyping interesting designs later.
+	And I acknowledge that convenient static access will probably result in technical debt.
 		If I was serious about those specialized designs, I would not use singletons.
-To be clear, I wrote singletons because I accept them as well understood utilities, as extensions of the programming environment more than program features, and I expect to enforce single-threading for all game logic.
-I explicitly accept the design cost of Singletons, as many other game engines do (like Unity).
+To be clear, I wrote singletons because I accept them as well understood utilities, as extensions of the programming environment more than program features.
+I also expect to enforce single-threading for game logic, reducing design costs of singletons.
+I explicitly accept the design costs of Singletons, as many other game engines do (like Unity).
 
 If I did want to create code that didn't use a `Time` singleton, designed with Dependency Inversion in mind, I would:
 	Create an interface for `Time` objects, like `ITime`
 	Give every instance of an object that uses `Time` a reference to a `ITime` object
 	Populate that `ITime` object reference on initialization, probably in a factory method
 	I would also have properties to query and change the Time instance at runtime.
+	All of this would provide no real value for my current game design.
 
 Lets get to implementing some interfaces.
 
