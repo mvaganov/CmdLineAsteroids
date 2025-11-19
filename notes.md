@@ -3240,9 +3240,9 @@ if an object needs to be decommissioned, but can't be decommissioned right now
 	decommissioning has to happen in reverse index order, because removing an index at the front would shift and invalidate all indexes beyond it.
 		we want the last objects to get pushed to the end first.
 
-This class manages object creation in an automated way.
-Programmers call the function that creates each object is a Factory Method. the Object Pool is the Factory.
-This implementation could also be explained as a Strategy Pattern, because it's parameterized Commission and Decommission methods that can be set without subclassing.
+A few design patterns are implemented in this class. The function that creates each object is called a Factory Method. the Object Pool is the Factory.
+
+The implementation could described as using a Strategy Pattern, because it has parameterized Commission and Decommission methods.
 
 ### scene
 src/MrV/Program.cs
@@ -3261,30 +3261,21 @@ src/MrV/Program.cs
 				p => p.enabled = false,
 				null);
 			Rand.Instance.Seed = (uint)Time.CurrentTimeMs;
-			KeyInput.Bind(' ', () => {
-				for (int i = 0; i < 10; ++i) {
-					particlesPool.Commission();
-				}
-			}, "explosion");
+			KeyInput.Bind(' ', () => particlesPool.Commission(10), "explosion");
 			FloatOverTime growAndShrink = FloatOverTime.GrowAndShrink;
 			while (running) {
 ...
 ```
 
 ### voice
-lets replace the `Particle` array with the `PolicyDrivenObjectPool` of `Particle` objects.
-we need to define
+to replace the `Particle` array with the `PolicyDrivenObjectPool` of `Particle` objects, we need to define
 	how to create a basic particle
 	how to commission a new particle
 	and how to decommission a particle
 we don't need to include how to destroy the particle, because our particle doesn't allocate any special resources
 
 the "explosion" `KeyInput` Bind should change to commission 10 particles.
-a nice side effect of using this new system is that we can create more than just 10 particles, which will help create more interesting tests.
-
-Instead of using a for-loop, it's probably a good idea to create a `Commission` function that takes a count and returns an array of objects.
-	Creating memory batches going to be more efficient, and `PolicyDrivenObjectPool` is the perfect place for that logic.
-	To do that properly,
+a nice side effect of using this new system is that we can easily create more than 10 particles at the same time, which create more interesting visual tests.
 
 ### scene
 src/MrV/Program.cs
@@ -3325,8 +3316,10 @@ src/MrV/Program.cs
 
 ### voice
 and the `Update` needs to change as well.
-here we can see that particles could be decommissioned while the particles pool is being iterated through, if we aren't careful.
-after the pool is iterated through, the particlesPool can decommission those deferred particles
+
+we need to avoid decommissioning a particle while the particles pool is being iterated through. instead, those particles need to be marked for decommission.
+
+after the pool is iterated through, the particlesPool can decommission those marked particles.
 
 ### scene
 test
@@ -3335,7 +3328,7 @@ test
 this looks pretty great!
 but there is too much particle-specific code in the main loop code for my taste.
 
-the random range calulating code in particular could be more explicit.
+the random range calculating code in particular could be more clear and more modular.
 
 ---
 
@@ -3357,10 +3350,10 @@ namespace MrV.GameEngine {
 ```
 
 ### voice
-before I implement the ParticleSystem class, I want to implement a `RangeF` class, which is a distributable way of considering a random number in a range.
+before I implement the ParticleSystem class, I want to implement a `RangeF` class, which is a modular way of considering a random number in a range.
 
-If I don't want a random range, I should just be able to use a single value as a constant.
-This creates a range with no domain, which costs pointless multiplication and addition to calculate.
+If I don't want a random range, I should just be able to use a single value as a constant with the single float constructor.
+This creates a range with zero domain, which costs pointless multiplication and addition to calculate.
 But because the extra math is done on initialization, optimizing it is not a high priority.
 
 let's get to the particle system.
@@ -3370,6 +3363,7 @@ let's get to the particle system.
 ### scene
 src/MrV/GameEngine/ParticleSystem.cs
 ```
+using MrV.CommandLine;
 using MrV.Geometry;
 using System;
 
@@ -3422,6 +3416,7 @@ namespace MrV.GameEngine {
 		}
 		public void Update() {
 			for (int i = 0; i < ParticlePool.Count; ++i) {
+				// possible to update decommissioned object. cost of updating stale object assumed less than servicing decommissions every iteration.
 				ParticlePool[i].Update();
 				float timeProgress = ParticlePool[i].LifetimeCurrent / ParticlePool[i].LifetimeMax;
 				ParticlePool[i].Circle.radius = GetSizeAtTime(timeProgress) * ParticlePool[i].OriginalSize;
@@ -3431,11 +3426,7 @@ namespace MrV.GameEngine {
 			}
 			ParticlePool.ServiceDelayedDecommission();
 		}
-		public void Emit(int count = 1) {
-			for (int i = 0; i < count; ++i) {
-				ParticlePool.Commission();
-			}
-		}
+		public void Emit(int count = 1) => ParticlePool.Commission(count);
 	}
 }
 ```
@@ -3463,6 +3454,11 @@ src/Program.cs
 ...
 ```
 
+### voice
+initialization of the `Particle`s is much simpler now
+
+### scene
+src/Program.cs
 ```
 ...
 				graphics.DrawPolygon(polygonShape, ConsoleColor.Yellow);
@@ -3482,8 +3478,7 @@ src/Program.cs
 ```
 
 ### voice
-initialization of the `Particle`s is much simpler now
-so is drawing, and updating. all of the interesting logic related to the particle system is comfortably in the `ParticleSystem` class.
+drawing and updating is also simpler. implementation details of the particle system are now comfortably in the `ParticleSystem` class.
 
 ### scene
 test the code, showing lots of particles exploding
@@ -3493,10 +3488,10 @@ I do want to make a special note here: this tutorial took me a long time to plan
 	during that time, the `ParticleSystem` went through significant changes.
 	developing a particle system is not as easy as this tutorial made it look.
 	when I first developed the game, I made the particle system much later, bigger, and more robust, for different kinds of particles.
-	after I realized that I really only use the explosion particle, I greatly simplified it.
+		I realized later that I really only use the explosion particle, so I greatly simplified it.
 		I also moved this implementation earlier in the tutorial, to really utilize rendering optimizations sooner.
-	if you are having trouble getting the particle system working, know that there is nothing wrong with you. this was difficult.
-	you are practicing hard programming right now. it is good practice when it's difficult. slow down, pay attention, and take a break if you need to.
+	if you are having trouble getting the particle system working, know that there is nothing wrong with you. this is a complicated design, and my refactoring style is a challenge to follow.
+	This is good practice. slow down to pay attention, and take a break if you need to.
 	you don't need to feel like you have to rush through this. slow is smooth, and smooth is fast.
 
 ---
@@ -3507,6 +3502,7 @@ I do want to make a special note here: this tutorial took me a long time to plan
 src/Program.cs
 ```
 ...
+			KeyInput.Bind(' ', () => particles.Emit(10), "explosion");
 			KeyInput.Bind('-', () => graphics.ShapeScale *= 1.5f, "zoom out");
 			KeyInput.Bind('=', () => graphics.ShapeScale /= 1.5f, "zoom in");
 ...
@@ -3517,7 +3513,7 @@ also run.
 to look at particles closer, we should zoom in with our graphics context.
 we can do that by simply modifying the `ShapeScale` member
 
-but doing this doesn't zoom into the center of the screen, it zooms into the origin point. that isn't what we want.
+but doing this doesn't zoom into the center of the screen, it zooms into the origin point, at the upper-left. that isn't what we want.
 
 we need some real math to make this zoom look good. 
 
@@ -3537,6 +3533,17 @@ src/MrV/CommandLine/DrawBuffer_geometry_.cs
 				SetCameraCenter(center);
 			}
 		}
+...
+```
+
+### voice
+everything is being drawn by `DrawShape`, so changes only need to be local to this function.
+a new 2D vector member keeps track of the offset of the upper-left corner of the screen
+A new `Scale` property modifies the `ShapeScale` value while keeping the center off the screen in the same place
+
+### scene
+```
+...
 		public Vec2 GetCameraCenter() {
 			Vec2 cameraCenterPercentage = (0.5f, 0.5f);
 			Vec2 cameraCenterOffset = Size.Scaled(cameraCenterPercentage);
@@ -3555,6 +3562,10 @@ src/MrV/CommandLine/DrawBuffer_geometry_.cs
 ...
 ```
 
+### voice
+the math for calculating the center position, and moving the offset to center on a new center position is very similar. There should probably be a common helper function for that math, but I decided to just put the same math in the same area of the source file.
+
+### scene
 ```
 ...
 		public void DrawShape(IsInsideShapeDelegate isInsideShape, Vec2 start, Vec2 end, ConsoleGlyph glyphToPrint) {
@@ -3564,6 +3575,10 @@ src/MrV/CommandLine/DrawBuffer_geometry_.cs
 ...
 ```
 
+### voice
+the `DrawShape` function doesn't need to change that much. we need to offset the rendering rectangle by the camera's offset
+
+### scene
 ```
 ...
 							for (float sampleX = 0; sampleX < 1; sampleX += SuperSampleIncrement) {
@@ -3572,14 +3587,8 @@ src/MrV/CommandLine/DrawBuffer_geometry_.cs
 								if (pointIsInside) {
 ...
 ```
-
 ### voice
-everything is being drawn by `DrawShape`, so changes only need to be local to this funciton.
-a new 2D vector member keeps track of the offset of the upper-left corner of the screen
-A new `Scale` property modifies the `ShapeScale` value while keeping the center off the screen in the same place
-the math for calculating the center position, and moving the offset to center on a new center position is very similar. you are welcome to make a common helper function for that math, I decided to just put the math in the same area of the source file.
-
-the `DrawShape` function doesn't need to change that much. we need to offset the rendering rectangle by the camera's offset, and adjust the sampling point as well.
+and we need to adjust the sampling point as well.
 
 ### scene
 src/LowFiRockBlaster/Program.cs
@@ -3596,14 +3605,15 @@ src/LowFiRockBlaster/Program.cs
 ```
 
 ### voice
-In the game code, the plus and minus keys on the keyboard change the zoom by a common `Scale` factor.
-also, we initialize the camera's center to focus on the particle system. I'm using the raw x/y coordinate in a tuple instead of a named variable because I expect that value will be removed soon.
+In the game code, the plus and minus keys on the keyboard will change the zoom using the new `Scale` property.
+
+also, we need to initialize the camera's center to focus on the particle system.
 
 ### scene
-test the code, zooming in and out
+test the code, spawning particles, and zooming in and out
 
 ### voice
-this particle effect looks better from far away. I think it's good enough for now.
+I think this particle effect looks better from far away, and I think it's good enough for now.
 
 before we move on to creating game elements, lets take a look at the game loop.
 
@@ -3615,11 +3625,10 @@ before we move on to creating game elements, lets take a look at the game loop.
 Program.cs
 
 ### voice
-
 I think this code looks mostly ok. but I think there is too much unlabeled test drawing code.
 
-a game engine should have a list of drawable elements, and draw those in a uniform way.
-we should remove specific draw calls and replace them with general things to draw.
+a game engine should have a clear list of drawable elements, and draw those in a uniform way.
+we should remove specific draw calls and replace them with more generalized draw calls.
 
 ### scene
 src/LowFiRockBlaster
@@ -3667,27 +3676,27 @@ The simulation's elements, like the player, the player's projectiles, asteroids,
 ## UML
 
 ### scene
-UML diagram of IGameObject, IDrawable, UIText, MobieObject, MobielCircle, MobilePolygon
+UML diagram of IGameObject, IDrawable, UIText, MobileObject, MobileCircle, MobilePolygon
 https://lucid.app/lucidchart/ec14ab7a-a936-4356-bb0e-0326d2a5e45e/edit?viewport_loc=-340%2C-125%2C2514%2C1365%2CHWEp-vi-RSFO&invitationId=inv_571bd2ad-b5a4-4065-9b11-780a61085d7b
 
 ### voice
 The draw list is one of the lists that the game engine will service every frame. All drawable objects will implement the `IDrawable` interface, as seen in this diagram.
 
-UML diagramming is useful to clearly communicate system architecture.
+UML diagramming like this is useful to communicate system architecture.
 	like the design document, it helps explain the concept and goals of a system.
-	also, it becomes less important to make it detailed as a programmer reading it becomes more skilled, and can make some assumptions from experience.
+	also, it becomes less important to make it detailed as a programmer reading it is more skilled, because they can make more assumptions from experience.
 
 ### scene
 still screenshot of the game screen, with labels for the asteroids of different size, player, player's projectiles, and ammo pickup.
 
 ### voice
-My game will need moving circles to destroy, which are the conceptual asteroids; the rocks to blast in my lowfi rockblaster game.
+As a reminder, my game will need moving circles to destroy, which are the conceptual asteroids; the rocks to blast in my lowfi rockblaster game.
 The game's player will be a polygon shape visually distinct from the circles.
 The player will shoot projectiles. I want to see spinning triangles for these projectiles, because I think that will look cool.
 When the player destroys asteroids, they will break into smaller asteroids. the smallest asteroid will turn into an ammo pickup when destroyed.
 I'll also need some user interface that stays static on the screen, to tell the user their score, ammo, and health.
 
-I want to use Object Oriented Programming for this game design. Probably the most well known and well respected guideline for Object Oriented Design is the SOLID principles.
+I want to use Object Oriented Programming for this game design because it's a natural way of thinking about software problems for me. Probably the most well known and well respected guideline for Object Oriented Design is the SOLID principles.
 
 ## S. O. L. I. D.
 
@@ -3700,25 +3709,32 @@ black background with white text
 	D Dependency Inversion: Use abstractions so classes don't rely on specific implementations.
 
 ### voice
-Following these constraints reduces cognitive load as the system grows in complexity, so I agree with SOLID principles in most situations.
-However, I intentionally break the principles as practical and sometimes stylistic choice.
+Following these constraints generally reduces cognitive load as the system grows in complexity, so I agree with SOLID principles in most situations.
+However, I intentionally break SOLID principles, also in support of reducing cognitive load, especially while doing game development.
 
-For game development, SOLID principles are usually aspirational not rigid. Game development instead focuses on rapid prototyping, user experience, and a historically under-resourced development environment. Meanwhile, game projects still suffer from poor engineering discipline as projects grow. Less total attention means choices must be more efficient. That makes understanding nuances of programming architecture arguably more critical for game development.
+For game development, SOLID principles are more aspirational than necessary. Game development prioritizes rapid prototyping, user experience, runtime performance, in a typically financially under-resourced development environment.
+Game projects often suffer from poor engineering discipline as projects grow because of these other priorities. Game projects also often fail because those other priorities are not taken seriously.
+Understanding the nuanced value of software architecture is arguably more critical in game development, because of opportunity costs from the other priorities.
+
+As a general rule in my own programming, I don't apply "good architecture" design if it increases cognitive load without clearly helping code reuse.
 
 ### scene
 highlight 'S Single Responsibility'
 
 ### voice
-Each class should clearly do one thing, to clarify purpose and reduce mental burden.
-At least one of my classes is already breaking this rule by extending into new functionality.
+Each class should clearly do one thing, to clarify purpose and reduce mental burden. This is an extension of the simpler "functions should only do one thing" ethic, which is largely a good heuristic that reduces cognitive load.
+
+At least one of my classes is already bending Single Responsibility by handling varied functionality.
 `DrawBuffer` does more than simply manage a buffer.
 	It has a partial class extension where scaled vector graphics rendering code exists.
-	The partial class extension is my compromise on design quality. I feel pressure to release this tutorial soon. But because I understand that it's bad to have a class responsible for many different problems, I separate these problem spaces with separate files.
-`MobileCircle` will also be responsible for a lot. It will be used for asteroids and for ammo pickups, with no additional subclassing.
+	The partial class extension is my compromise on design quality. I feel pressure to release this tutorial soon.
+	But because I understand that it's bad to have a class responsible for many different problems, I separate these problem spaces with separate files.
+`MobileCircle` will also be responsible for a lot. It will be used for asteroids and for ammo pickups, with no additional sub-classing.
 	You'll see how I do that with metadata and lambda expressions.
-I also break the Single Responsibility Principle to keep file and class count low, so it's easier to read my code, and easier to think about my project.
-`PolicyDrivenObjectPool` class could've been 3 classes, but I put it into one class and one file.
-`KeyInput` did break into multiple classes, because there are many conceptual units, and the `KeyDispatcher` part could enable more features in the future.
+The `PolicyDrivenObjectPool` class could've been 3 classes, but I put it into one class and one file, intentionally.
+`KeyInput` did break into multiple classes, because there are distinct conceptual units, and the `KeyDispatcher` part could enable more features in the future. Still, all of those related classes are in one file.
+
+Breaking the Single Responsibility Principle in this way keeps file and class count lower, so it's easier for me to read my code, and easier to think about my project.
 
 ### scene
 highlight 'O Open-Closed'
@@ -3726,56 +3742,72 @@ highlight 'O Open-Closed'
 ### voice
 My code also breaks Open-Closed in principle:
 I did create small classes, and extend them. However, I wrote these classes expecting you will refactor the code yourself.
-	I want you to modify the code, and make your own design changes. Then it will be your code.
-	And crucially, I want you to make mistakes by making your own changes. Making those mistakes is how you will learn the most.
+	I want you to modify the code, and make your own design changes. Then it will be your code. Your empowerment is a specific goal of mine.
+	I also want you to make mistakes by making your own changes. Making those mistakes is how you will learn the most.
+	Also, there is a lot of internal data and functionality that I want leave exposed, because that will enable more flexible prototyping, and more efficient data flows. This is especially true for data structures that impact gameplay and user interface.
 
-If I were more strict about Open-Closed, I would have turned all public members into properties, added the virtual keyword to many methods and properties, and maybe some XML documentation identifying what kind of extensions I expect.
-Strict adherence to the Open-Closed principle has subtle performance costs. At runtime, virtual functions are more expensive than normal methods. And during development time, more written code is more cognitive load.
+If I were more strict about Open-Closed, I would have turned all public members into properties, added the virtual keyword to many methods and properties, and maybe some XML documentation identifying what kind of extensions I expect. That isn't useful work for you, and it isn't useful for me either.
 
-Personally, I think strict adherence to Open-Closed is better for mostly finished business software, after design decisions have almost all been made, when libraries should be shared with partner businesses, and performance loss is negligible because there isn't a real-time loop.
+Strict adherence to the Open-Closed principle also has subtle performance costs. At runtime, virtual functions are more expensive than normal methods. Get and Set functions can force pointless processing overhead, and cognitive load.
+And during development time, more written code in general is more cognitive load.
+
+Personally, I think strict adherence to Open-Closed is better for mostly finished business software, after design decisions have almost all been made.
+Focus on Open-Closed if code libraries should be shared with partners who don't want to know implementation details, and performance loss is negligible because there isn't a real-time loop.
 
 ### scene
 highlight 'L Liskov Substitution'
 
 ### voice
 My code will not strictly adhere to the Liskov Substitution Princicple:
-I want to take advantage of good polymorphism, but strict adherence to Liskov Substitution creates inefficient code full of type verification that is prepared for inheritance.
-	Careless inheritance decisions can also create security vulnerabilities, because virtual functions can allow new code to execute in an old system.
-	The `sealed` keyword exists to prevent much of this kind of security vulnerability.
-One approach to maintain Liskov Substitution is to avoid inheritance entirely, and create classes that extend functionality with lambda expressions and extra meta-data.
+I want to take advantage of good polymorphism for conceptual clarity, but I also acknowledge that has downsides. There are subtle performance costs for virtual functions and reflection that are helpful to avoid in game development.
+Also, very strict adherence to Liskov Substitution requires type verification if you want to avoid bugs effectively, which can lead to real inefficiencies.
+Also, careless inheritance decisions can create security vulnerabilities, because virtual functions can allow new code to execute in an old system.
+	The `sealed` keyword exists specifically to prevent much of this kind of security vulnerability. And the `sealed` keyword also prevents code reuse.
+
+One approach to maintain Liskov Substitution is to minimize inheritance and Object Oriented Programming in general.
+	An old technique called a 'plex' has become more popular recently under the name 'fat struct', which defines large structures with an integer type ID and meta-data, changing functionality with switch statements or function pointers.
 	I will be doing this myself with `MobileObject`.
-	Duck Typing, which is an object design pattern that Python, JavaScript, and Lua use, is an extreme of this design.
+Duck Typing is an object design pattern that Python, JavaScript, and Lua use, which adheres to Liskov Substitution on accident.
+	That pattern has scalability problems with performance and complexity, but it can be very useful when extremely dynamic programming is desired more than performant programming.
 
 ### scene
 highlight 'I Interface Segregation'
 
 ### voice
 My code will bend the Interface Segregation Principle:
-I'm not going to make fine-grained Interface separations. I won't need them in practice, and writing them will the increase complexity of this tutorial for little gain.
-For example, it is possible that not all GameObjects will need a position. But I don't want an additional `IHasPosition` interface.
+I'm not going to make fine-grained Interface separations because writing them will the increase complexity of this tutorial for little gain.
+For example, it is possible that not all GameObjects will need a position. But I don't want an additional `IHasPosition` interface that is separate from `IGameObject`.
 
 ### scene
 highlight 'D Dependency Inversion'
 
 ### voice
-My code already uses several kind of Singletons, which is a gross violation of the Dependency Inversion Principle.
-	To be clear, I hate the fact that my code relies on singletons. They are like global variables, which create hidden dependencies that are difficult to extract or reason about, and make the code difficult to share across projects.
-	If multi-threading gets involved, Singletons can create nightmarish bugs.
+My code already uses several kinds of Singletons, which is a gross violation of the Dependency Inversion Principle.
+	To be clear, I dislike the fact that my code relies on singletons.
+	Convenient static access will often result in technical debt. Like global variables, these create hidden dependencies that are difficult to extract or reason about as the project gets bigger.
+	Singletons also make code difficult to share across projects.
+	If multi-threading gets involved, Singletons, like global variables, can create nightmarish bugs that can only be solved with heavy-handed semaphores.
 	In short, singletons make a brittle design, limiting future functionality.
-	I did intentionally write every singleton class to be able to substitute it's the static instance for another one, to help enable prototyping interesting designs later.
-	And I acknowledge that convenient static access will probably result in technical debt.
-		If I was serious about those specialized designs, I would not use singletons.
-To be clear, I wrote singletons because I accept them as well understood utilities, as extensions of the programming environment more than program features.
+	I did intentionally write singleton classes to be able to substitute the static instance for another instance, to help enable prototyping interesting designs later. This opens the door to a singleton-less design later.
+To be clear, I wrote classes as singletons because I accept their functionality as well understood utilities, more as extensions of the programming environment than software features.
 I also expect to enforce single-threading for game logic, reducing design costs of singletons.
-I explicitly accept the design costs of Singletons, as many other game engines do (like Unity).
+I explicitly accept the design costs of Singletons, as do many other game engines do (like Unity). My ability to rapidly prototype is simply that important.
 
-If I did want to create code that didn't use a `Time` singleton, designed with Dependency Inversion in mind, I would:
-	Create an interface for `Time` objects, like `ITime`
-	Give every instance of an object that uses `Time` a reference to a `ITime` object
-	Populate that `ITime` object reference on initialization, probably in a factory method
-	I would also have properties to query and change the Time instance at runtime.
-	All of this would provide no real value for my current game design.
+To create code without singletons, I would:
+	create an interface type for each singleton
+	each class using the singleton would have it's own reference to the interface
+	I would populate the interface variable in a factory method.
+	And all of this would provide no real user experience value for my current game design.
+		Functionally, it would hurt performance by increasing memory usage with duplicate references to the same object, and also slow down my programming at the same time.
 
+This discussion about SOLID principles has been a bit of an opinionated rant.
+I want to include exactly this kind of content in my educational tutorial because I believe this is extremely valuable for junior developers to be exposed to. It's important to know that not all rules are worth following.
+Rules are for people who don't know any better. Once you understand the reason for the rules, you will know when you can ignore them, for everyone's benefit.
+
+### scene
+'the more you know' rainbow, except the text is 'invisible wizard knowledge'
+
+### voice
 Lets get to implementing some interfaces.
 
 ---
@@ -3796,7 +3828,7 @@ namespace MrV.GameEngine {
 ```
 
 ### voice
-the IDrawable interface in code is more complex than what was shown in the UML diagram.
+the `IDrawable` interface in code is more complex than what was shown in the UML diagram.
 Again, the UML diagram helps describe architecture, it doesn't need to be detailed enough to run as executable code. As an experienced programmer, I was able to make assumptions about what should be in the interface.
 
 ### scene
