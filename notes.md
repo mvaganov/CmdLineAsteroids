@@ -3219,8 +3219,6 @@ it could be particles, bullets, enemies, pickups, or really anything.
 the idea of this class is that a big list of objects has some unused objects that can be reused later.
 	objects at the end of the list are considered unused, or decommissioned.
 
-the result of this is similar to a Flyweight pattern, where the real memory cost of an object is abstracted behind a reference, which can be re-used by many other data structures.
-
 the user must define some policies: how to create objects, how to reuse them, how to mark them as unused, and how to clean them up later.
 importantly this class handles deferred cleanup
 	this ObjectPool changes the order of objects in the list when they are decommissioned,
@@ -3240,9 +3238,16 @@ if an object needs to be decommissioned, but can't be decommissioned right now
 	decommissioning has to happen in reverse index order, because removing an index at the front would shift and invalidate all indexes beyond it.
 		we want the last objects to get pushed to the end first.
 
-A few design patterns are implemented in this class. The function that creates each object is called a Factory Method. the Object Pool is the Factory.
+Besides the obvious "memory pool" pattern, a few other known design patterns are implemented in this class:
+	The function that creates each object could be called a Factory Method. the Object Pool is the Factory.
+	This policy-driven implementation could described as using a Strategy Pattern, because it has parameterized Commission and Decommission methods.
+	this Object Pool's `Commission` results are similar to the Flyweight pattern, because the real memory and complexity cost of an object is abstracted behind a reference, and used by potentially many other data structures.
 
-The implementation could described as using a Strategy Pattern, because it has parameterized Commission and Decommission methods.
+C-programmers might be dissatisfied with this class. If this code were in C or C plus plus, the memory pool could be more efficient with block allocation.
+	This would speed up the allocation, reduce total allocation count, and help reduce cache misses.
+	We can still do block allocation in C-sharp using a struct or value type,
+	--however the side effect of completely copied data on the stack would probably more-than negate any efficiency gains,
+	--especially when the syntax cost of r-value juggling is taken into account.
 
 ### scene
 src/MrV/Program.cs
@@ -3693,10 +3698,12 @@ still screenshot of the game screen, with labels for the asteroids of different 
 As a reminder, my game will need moving circles to destroy, which are the conceptual asteroids; the rocks to blast in my lowfi rockblaster game.
 The game's player will be a polygon shape visually distinct from the circles.
 The player will shoot projectiles. I want to see spinning triangles for these projectiles, because I think that will look cool.
-When the player destroys asteroids, they will break into smaller asteroids. the smallest asteroid will turn into an ammo pickup when destroyed.
+When the player destroys asteroids, they will break into smaller asteroids. after 2 breaks, the asteroids will break into an ammo pickup.
 I'll also need some user interface that stays static on the screen, to tell the user their score, ammo, and health.
 
-I want to use Object Oriented Programming for this game design because it's a natural way of thinking about software problems for me. Probably the most well known and well respected guideline for Object Oriented Design is the SOLID principles.
+I want to use Object Oriented Programming for this game design because it's a natural way of thinking about software problems in game development for me.
+
+Probably the most well known and well respected guideline for Object Oriented Design is the SOLID principles.
 
 ## S. O. L. I. D.
 
@@ -3709,32 +3716,49 @@ black background with white text
 	D Dependency Inversion: Use abstractions so classes don't rely on specific implementations.
 
 ### voice
-Following these constraints generally reduces cognitive load as the system grows in complexity, so I agree with SOLID principles in most situations.
-However, I intentionally break SOLID principles, also in support of reducing cognitive load, especially while doing game development.
-
-For game development, SOLID principles are more aspirational than necessary. Game development prioritizes rapid prototyping, user experience, runtime performance, in a typically financially under-resourced development environment.
-Game projects often suffer from poor engineering discipline as projects grow because of these other priorities. Game projects also often fail because those other priorities are not taken seriously.
-Understanding the nuanced value of software architecture is arguably more critical in game development, because of opportunity costs from the other priorities.
-
-As a general rule in my own programming, I don't apply "good architecture" design if it increases cognitive load without clearly helping code reuse.
+Following these constraints generally reduces cognitive load as the system grows in complexity, so I agree with SOLID principles in a broad sense. This is good programming discipline.
+However, I intentionally break SOLID principles, also in support of reducing cognitive load, especially while doing game development. This is worth explaining.
 
 ### scene
+a black screen with a gray block of text near the bottom. The text is "good programming discipline"
+two more gray boxes of black text appear on top of the initial box, labeled "rapid prototyping" and "user experience"
+the black background seems to shrink as a red border grows from the edges of the screen. the resulting black background focuses around "rapid prototyping" and "user experience", with just a little bit of "good programming discipline" in the black legible space, and the rest obscured by red.
+
+### voice
+During game development, SOLID principles, like most programming disciplines, are more aspirational than necessary.
+Game programming prioritizes rapid prototyping and user experience, while typically in a financially under-resourced environment.
+Unfortunately, game projects suffer and can fail from poor engineering discipline.
+And, game projects can also fail because the other priorities are not taken seriously.
+
+### scene
+"If a program is useful, it will have to be changed" -Edsger Dijkstra (1970s)
+"Good design is easy to change" -Kent Beck (1990s)
+
+### voice
+My opinion is that SOLID should be filtered through other simpler heuristics.
+
+Good code should be easy to change. Experience can teach you that following SOLID principles strictly can make code harder to change,
+
+Understanding the nuances of architecture decisions is arguably more important in game development, because opportunity costs take time away from good programming discipline.
+
+### scene
+show the SOLID screen again, the white text on black background defining each letter of the SOLID acronym.
 highlight 'S Single Responsibility'
 
 ### voice
-Each class should clearly do one thing, to clarify purpose and reduce mental burden. This is an extension of the simpler "functions should only do one thing" ethic, which is largely a good heuristic that reduces cognitive load.
+Each class should clearly do one thing, to clarify purpose and reduce mental burden. This principle also extends to one function doing one thing, and even one file doing one thing. This is a good heuristic that reduces cognitive load in general.
 
-At least one of my classes is already bending Single Responsibility by handling varied functionality.
+I am bending Single Responsibility by handling varied functionality in a few classes.
 `DrawBuffer` does more than simply manage a buffer.
 	It has a partial class extension where scaled vector graphics rendering code exists.
 	The partial class extension is my compromise on design quality. I feel pressure to release this tutorial soon.
-	But because I understand that it's bad to have a class responsible for many different problems, I separate these problem spaces with separate files.
+	But because I understand that it's confusing to have many different problems solved in the same place, I separate these problem spaces with separate files.
 `MobileCircle` will also be responsible for a lot. It will be used for asteroids and for ammo pickups, with no additional sub-classing.
 	You'll see how I do that with metadata and lambda expressions.
-The `PolicyDrivenObjectPool` class could've been 3 classes, but I put it into one class and one file, intentionally.
-`KeyInput` did break into multiple classes, because there are distinct conceptual units, and the `KeyDispatcher` part could enable more features in the future. Still, all of those related classes are in one file.
+The `PolicyDrivenObjectPool` class could've been 3 classes, but I put it all into one class and one file, intentionally.
+I did break `KeyInput` into multiple classes, because there are distinct conceptual units, and the `KeyDispatcher` part could enable more features in the future. Still, all of those related classes are in one file.
 
-Breaking the Single Responsibility Principle in this way keeps file and class count lower, so it's easier for me to read my code, and easier to think about my project.
+Breaking the Single Responsibility Principle in this way keeps file and class count lower, so it's easier for me to read my code, easier to think about my project, and easier for you to copy it in this tutorial.
 
 ### scene
 highlight 'O Open-Closed'
@@ -3742,30 +3766,27 @@ highlight 'O Open-Closed'
 ### voice
 My code also breaks Open-Closed in principle:
 I did create small classes, and extend them. However, I wrote these classes expecting you will refactor the code yourself.
-	I want you to modify the code, and make your own design changes. Then it will be your code. Your empowerment is a specific goal of mine.
+	I want you to modify the code, and make your own design changes. Then it will be your code.
 	I also want you to make mistakes by making your own changes. Making those mistakes is how you will learn the most.
 	Also, there is a lot of internal data and functionality that I want leave exposed, because that will enable more flexible prototyping, and more efficient data flows. This is especially true for data structures that impact gameplay and user interface.
 
 If I were more strict about Open-Closed, I would have turned all public members into properties, added the virtual keyword to many methods and properties, and maybe some XML documentation identifying what kind of extensions I expect. That isn't useful work for you, and it isn't useful for me either.
 
-Strict adherence to the Open-Closed principle also has subtle performance costs. At runtime, virtual functions are more expensive than normal methods. Get and Set functions can force pointless processing overhead, and cognitive load.
-And during development time, more written code in general is more cognitive load.
+Strict adherence to the Open-Closed principle also has subtle performance costs which can be quite noticeable at scale.
+	At runtime, virtual functions are more expensive than normal methods.
+	Get and Set functions can force pointless processing overhead, and cognitive load.
+	And during development time, more written code in general takes more time, and is more cognitive load.
 
-Personally, I think strict adherence to Open-Closed is better for mostly finished business software, after design decisions have almost all been made.
-Focus on Open-Closed if code libraries should be shared with partners who don't want to know implementation details, and performance loss is negligible because there isn't a real-time loop.
+Personally, I think strict adherence to Open-Closed is better for mostly finished business software, after design decisions have almost all been made, especially if there is no game or simulation loop to iterate.
 
 ### scene
 highlight 'L Liskov Substitution'
 
 ### voice
-My code will not strictly adhere to the Liskov Substitution Princicple:
-I want to take advantage of good polymorphism for conceptual clarity, but I also acknowledge that has downsides. There are subtle performance costs for virtual functions and reflection that are helpful to avoid in game development.
-Also, very strict adherence to Liskov Substitution requires type verification if you want to avoid bugs effectively, which can lead to real inefficiencies.
-Also, careless inheritance decisions can create security vulnerabilities, because virtual functions can allow new code to execute in an old system.
-	The `sealed` keyword exists specifically to prevent much of this kind of security vulnerability. And the `sealed` keyword also prevents code reuse.
-
-One approach to maintain Liskov Substitution is to minimize inheritance and Object Oriented Programming in general.
-	An old technique called a 'plex' has become more popular recently under the name 'fat struct', which defines large structures with an integer type ID and meta-data, changing functionality with switch statements or function pointers.
+# TODO
+The Liskov Substitution principle would be better titled "Predictable Inheritance with Polymorphism". My code does adhere to the Liskov Substitution Principle now, but may not in the future.
+Polymorphism is good for conceptual clarity, but the subtle performance costs of virtual functions are best to eliminate in game development, for performance reasons.
+An old programming style called a 'plex' which has become more popular recently under the name 'fat struct'. This style uses a common large struct type with an integer type ID and variable meta-data for different types. Functionality is different with switch statements or function pointers.
 	I will be doing this myself with `MobileObject`.
 Duck Typing is an object design pattern that Python, JavaScript, and Lua use, which adheres to Liskov Substitution on accident.
 	That pattern has scalability problems with performance and complexity, but it can be very useful when extremely dynamic programming is desired more than performant programming.
