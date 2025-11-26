@@ -21,14 +21,13 @@ namespace asteroids {
 		public bool IsActive { get => !Disabled; set => Disabled = !value; }
 		public bool IsVisible { get => IsActive; set => IsActive = value; }
 		public ConsoleColor Color { get => _color; set => _color = value; }
-		public Action<CommandLineCanvas> DrawSetup { get => null; set { } }
 		public byte TypeId { get; set; }
 		public Particle(ParticleSystem parent, Vec2 position, float size, Vec2 velocity, ConsoleColor color, float lifetime) {
 			_particleSystem = parent;
 			StartSize = size;
 			circle = new Circle(position, size);
-			_velocity = velocity;
-			_color = color;
+			Velocity = velocity;
+			Color = color;
 			Lifetime = lifetime;
 			CurrentLife = 0;
 			Disabled = false;

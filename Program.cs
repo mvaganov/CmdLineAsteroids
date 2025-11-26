@@ -48,7 +48,7 @@ namespace asteroids {
 			ControlledPolygon player = new ControlledPolygon(playerPoly);
 			player.Name = "player";
 			player.TypeId = (int)AsteroidType.Player;
-			player.DrawSetup = g => g.SetColor(ConsoleColor.Blue);
+			player.Color = ConsoleColor.Blue;
 			player.DirectionMatchesVelocity = true;
 			player.MaxSpeed = 15;
 			player.CollisionCircles = new Circle[] {
@@ -129,7 +129,7 @@ namespace asteroids {
 			projectilePool.Setup(() => {
 				MobilePolygon projectile = new MobilePolygon(projectilePoly);
 				projectile.TypeId = (int)AsteroidType.Projectile;
-				projectile.DrawSetup = DrawSetupProjectile;
+				projectile.Color = ConsoleColor.Red;
 				return projectile;
 			}, projectile => {
 				projectile.IsActive = true;
@@ -142,7 +142,7 @@ namespace asteroids {
 				collideList.Remove(projectile);
 				NameObjectsByIndex(projectilePool, "");
 			}, projectile => {
-				projectile.DrawSetup = null;
+				projectile.Color = ConsoleColor.Magenta;
 				projectile.TypeId = (int)AsteroidType.None;
 			});
 			void NameObjectsByIndex<T>(IList<T> objects, string prefix) where T : IGameObject {
@@ -151,7 +151,6 @@ namespace asteroids {
 					obj.Name = prefix + i;
 				}
 			}
-			void DrawSetupProjectile(CommandLineCanvas canvas) => canvas.SetColor(ConsoleColor.Red);
 			postUpdate.Add(AlwaysRotateAllProjectiles);
 			void AlwaysRotateAllProjectiles() {
 				for (int i = 0; i < projectilePool.Count; i++) {
@@ -163,7 +162,7 @@ namespace asteroids {
 			float asteroidStartRadius = 10;
 			ObjectPool<MobileCircle> asteroidPool = new ObjectPool<MobileCircle>();
 			asteroidPool.Setup(() => new MobileCircle(new Circle()), asteroid => {
-				asteroid.DrawSetup = AsteroidDrawSetup;
+				asteroid.Color = ConsoleColor.Gray;
 				asteroid.TypeId = (int)AsteroidType.Asteroid;
 				asteroid.Radius = asteroidStartRadius;
 				asteroid.IsActive = true;
@@ -176,7 +175,7 @@ namespace asteroids {
 				collideList.Remove(asteroid);
 				NameObjectsByIndex(asteroidPool, "a");
 			}, asteroid => {
-				asteroid.DrawSetup = null;
+				asteroid.Color = ConsoleColor.Magenta;
 				asteroid.TypeId = (int)AsteroidType.None;
 			});
 
@@ -198,9 +197,6 @@ namespace asteroids {
 					asteroidStartPosition *= 2;
 					activeAsteroidCount *= 2;
 				}
-			}
-			void AsteroidDrawSetup(CommandLineCanvas canvas) {
-				canvas.SetColor(ConsoleColor.Gray);
 			}
 			void BreakApartAsteroid(MobileCircle asteroid, MobileObject projectile, Vec2 collisionPosition) {
 				explosion.Emit((int)(asteroid.Radius * asteroid.Radius) + 1, asteroid.Position, ConsoleColor.Gray, (0, asteroid.Radius));
@@ -237,7 +233,7 @@ namespace asteroids {
 			ObjectPool<MobileCircle> powerupPool = new ObjectPool<MobileCircle>();
 			powerupPool.Setup(() => {
 				MobileCircle powerup = new MobileCircle(new Circle(Vec2.Zero, powerupRadius));
-				powerup.DrawSetup = PowerupDrawSetup;
+				powerup.Color = ConsoleColor.Cyan;
 				powerup.TypeId = (int)AsteroidType.Powerup;
 				return powerup;
 			}, powerup => {
@@ -252,11 +248,8 @@ namespace asteroids {
 				NameObjectsByIndex(powerupPool, ".");
 			}, powerup => {
 				powerup.TypeId = (int)AsteroidType.None;
-				powerup.DrawSetup = null;
+				powerup.Color = ConsoleColor.Magenta;
 			});
-			void PowerupDrawSetup(CommandLineCanvas canvas) {
-				canvas.SetColor(ConsoleColor.Cyan);
-			}
 			void CreatePowerup(MobileObject projectile, Vec2 position) {
 				MobileCircle powerup = powerupPool.Commission();
 				powerup.Position = position;
@@ -554,7 +547,7 @@ namespace asteroids {
 				preDraw.ForEach(a => a.Invoke());
 				if (visible) {
 					objects.ForEach(o => {
-						o.DrawSetup?.Invoke(graphics);
+						graphics.SetColor(o.Color);
 						o.Draw(graphics);
 					});
 				}

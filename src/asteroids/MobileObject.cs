@@ -8,14 +8,14 @@ namespace asteroids {
 		protected string _name;
 		protected bool _active = true;
 		protected Vec2 _velocity;
-		protected Action<CommandLineCanvas> _preDraw;
+		protected ConsoleColor _color;
 		public virtual string Name { get => _name; set => _name = value; }
 		public virtual Vec2 Velocity { get => _velocity; set => _velocity = value; }
 		public virtual bool IsActive { get => _active; set => _active = value; }
 		public virtual bool IsVisible { get => IsActive; set => IsActive = value; }
 		public abstract Vec2 Position { get; set; }
 		public abstract Vec2 Direction { get; set; }
-		public Action<CommandLineCanvas> DrawSetup { get => _preDraw; set => _preDraw = value; }
+		public ConsoleColor Color { get => _color; set => _color = value; }
 		public byte TypeId { get; set; }
 		public abstract void Draw(CommandLineCanvas canvas);
 		public virtual void Update() {
@@ -33,7 +33,7 @@ namespace asteroids {
 			TypeId = other.TypeId;
 			_active = other._active;
 			_velocity = other._velocity;
-			_preDraw = other._preDraw;
+			_color = other._color;
 		}
 	}
 }
