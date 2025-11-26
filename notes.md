@@ -75,8 +75,9 @@ white text on black background, list the following:
 ### voice
 I'll show all the code and give explanations, starting from an empty project for the Command Line Console.
 	This will include graphics, math, optimization, data structures, collision detection, and more.
-I'll also offer in-context advice and best practices from my decades of experience as a game developer and computer science instructor.
-	I want you to understand the bottom-up implementation of a game engine, which will improve your decision making in software development generally.
+I'll also offer opinionated advice and best practices from my decades of experience as a game developer and computer science instructor.
+	I want new developers to understand the bottom-up implementation of a game engine, and more experienced developers to hear another experienced perspective.
+ i want to improve your skills and experience as a software developer.
 And I'll give some of my own opinions about the Invisible Wizard Problems that emerge in modern computer programming, and game development especially.
 
 ### scene
