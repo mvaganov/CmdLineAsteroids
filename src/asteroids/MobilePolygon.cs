@@ -13,8 +13,8 @@ namespace asteroids {
 		public override Vec2 Position { get => polygon.Position; set => polygon.Position = value; }
 		public override Vec2 Direction { get => polygon.Direction; set => polygon.Direction = value; }
 		public Polygon Polygon { get => polygon; set => polygon = value; }
-		public float RotationDegrees { get => polygon.RotationDegrees; set => polygon.RotationDegrees = value; }
-		public float RotationRadians { get => polygon.RotationRadians; set => polygon.RotationRadians = value; }
+		public override float RotationDegrees { get => polygon.RotationDegrees; set => polygon.RotationDegrees = value; }
+		public override float RotationRadians { get => polygon.RotationRadians; set => polygon.RotationRadians = value; }
 		public Circle[] CollisionCircles { get => _detailedCollisionCirclesInLocalSpace; set => _detailedCollisionCirclesInLocalSpace = value; }
 		public MobilePolygon(Vec2[] playerPoly) {
 			polygon = new Polygon(playerPoly);

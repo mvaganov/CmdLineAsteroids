@@ -15,6 +15,14 @@ namespace asteroids {
 		public virtual bool IsVisible { get => IsActive; set => IsActive = value; }
 		public abstract Vec2 Position { get; set; }
 		public abstract Vec2 Direction { get; set; }
+		public virtual float RotationRadians {
+			get => Direction.NormalToRadians();
+			set { Direction = Vec2.NormalFromRadians(value); }
+		}
+		public virtual float RotationDegrees {
+			get => Direction.NormalToDegrees();
+			set { Direction = Vec2.NormalFromDegrees(value); }
+		}
 		public ConsoleColor Color { get => _color; set => _color = value; }
 		public byte TypeId { get; set; }
 		public abstract void Draw(CommandLineCanvas canvas);
@@ -23,17 +31,13 @@ namespace asteroids {
 				return;
 			}
 			Vec2 moveThisFrame = _velocity * Time.DeltaTimeSeconds;
-			float dx = _velocity.x * Time.DeltaTimeSeconds;
-			float dy = _velocity.y * Time.DeltaTimeSeconds;
-
-			moveThisFrame = new Vec2(dx, dy);
 			Position += moveThisFrame;
 		}
 		public virtual void Copy(MobileObject other) {
 			TypeId = other.TypeId;
-			_active = other._active;
-			_velocity = other._velocity;
-			_color = other._color;
+			IsActive = other._active;
+			Velocity = other._velocity;
+			Color = other._color;
 		}
 	}
 }

@@ -1,19 +1,25 @@
-﻿using MathMrV;
+﻿using ConsoleMrV;
+using MathMrV;
 using MrV;
 using System;
 
 namespace asteroids {
-	public class ControlledPolygon : MobilePolygon {
+	public class MobileObjectController : IGameObject {
+		private MobileObject _target;
+		private string _name;
 		private float _rotationRadiansPerSecond;
 		private float _thrustDuration = 0;
 		private float _maxSpeed = 1;
 		private float _acceleration = 10;
 		private float _targetDirection = float.NaN;
+		public bool _active;
 		private bool _directionMatchesVelocity;
 		private bool _autoStopWithoutThrust = false;
 		private bool _brake;
-		public ControlledPolygon(Vec2[] playerPoly) : base(playerPoly) { }
-		public float Speed { get => Velocity.Magnitude; set => Velocity = _directionMatchesVelocity ? Direction * value : Velocity.Normal; }
+		public float Speed {
+			get => _target.Velocity.Magnitude;
+			set => _target.Velocity = (_directionMatchesVelocity || _target.Velocity == Vec2.Zero ? _target.Direction : _target.Velocity.Normal) * value;
+		}
 		public float MaxSpeed { get => _maxSpeed; set => _maxSpeed = value; }
 		public float Acceleration { get => _acceleration; set => _acceleration = value; }
 		public float ThrustDuration { get => _thrustDuration; set => _thrustDuration = value; }
@@ -21,23 +27,34 @@ namespace asteroids {
 		public float RotationRadiansPerSecond { get => _rotationRadiansPerSecond; set => _rotationRadiansPerSecond = value; }
 		public bool DirectionMatchesVelocity { get => _directionMatchesVelocity; set => _directionMatchesVelocity = value; }
 		public bool AutoStopWithoutThrust { get => _autoStopWithoutThrust; set => _autoStopWithoutThrust = value; }
-		public override Vec2 Velocity {
-			get => base.Velocity;
+		public Vec2 Velocity {
+			get => _target.Velocity;
 			set {
-				base.Velocity = value;
+				_target.Velocity = value;
 				if (DirectionMatchesVelocity && value != Vec2.Zero) {
-					polygon.Direction = base.Velocity.Normal;
+					_target.Direction = _target.Velocity.Normal;
 				}
 			}
 		}
-		public override void Update() {
+		public MobileObject Target { get => _target; set => _target = value; }
+		public string Name { get => _name; set => _name = value; }
+		public Vec2 Position { get => _target.Position; set => _target.Position = value; }
+		public Vec2 Direction { get => _target.Direction; set => _target.Direction = value; }
+		public bool IsActive { get => _active; set => _active = value; }
+		public bool IsVisible { get => _target.IsVisible; set => _target.IsVisible = value; }
+		public ConsoleColor Color { get => _target.Color; set => _target.Color = value; }
+		public float RotationDegrees { get => _target.RotationDegrees; set => _target.RotationDegrees = value; }
+		public float RotationRadians { get => _target.RotationRadians; set => _target.RotationRadians = value; }
+
+		public MobileObjectController(MobileObject target) { _target = target; }
+		public void Update() {
 			if (_rotationRadiansPerSecond != 0) {
-				float currentRadians = Direction.NormalToRadians();
+				float currentRadians = _target.Direction.NormalToRadians();
 				float rotationThisMoment = _rotationRadiansPerSecond * Time.DeltaTimeSeconds;
 				if (!float.IsNaN(_targetDirection)) {
 					UpdateTargetRotationLogic(currentRadians, rotationThisMoment);
 				} else {
-					RotationRadians += rotationThisMoment;
+					_target.RotationRadians += rotationThisMoment;
 				}
 			}
 			bool slowDownToStop = _brake;
@@ -46,16 +63,12 @@ namespace asteroids {
 			if (_thrustDuration > 0) {
 				_thrustDuration -= Time.DeltaTimeSeconds;
 				float newSpeed = currentSpeed + acceleartionThisFrame;
-				if (currentSpeed > _maxSpeed) {
-					newSpeed = currentSpeed - acceleartionThisFrame;
-					if (newSpeed < _maxSpeed) {
-						newSpeed = _maxSpeed;
-					}
-				} else if (newSpeed > _maxSpeed) {
+				if (newSpeed > _maxSpeed) {
 					newSpeed = _maxSpeed;
 				}
-				Speed = newSpeed;
+				_target.Velocity = _target.Direction * newSpeed;
 			} else {
+				_thrustDuration = 0;
 				slowDownToStop |= _autoStopWithoutThrust;
 			}
 			if (slowDownToStop) {
@@ -66,16 +79,15 @@ namespace asteroids {
 					Speed = currentSpeed - acceleartionThisFrame;
 				}
 			}
-			base.Update();
 		}
 		private void UpdateTargetRotationLogic(float currentRadians, float rotationThisMoment) {
 			float deltaToTarget = GetRealDeltaRotationAccountingForWrap(_targetDirection, currentRadians);
 			if (MathF.Abs(rotationThisMoment) > MathF.Abs(deltaToTarget)) {
-				RotationRadians = _targetDirection;
+				_target.RotationRadians = _targetDirection;
 				_rotationRadiansPerSecond = 0;
 				return;
 			}
-			RotationRadians += rotationThisMoment;
+			_target.RotationRadians += rotationThisMoment;
 		}
 		private float GetRealDeltaRotationAccountingForWrap(float aRad, float bRad) {
 			aRad = Vec2.WrapRadian(aRad);
@@ -91,7 +103,7 @@ namespace asteroids {
 		}
 		public void SmoothRotateTarget(float targetRadians, float speed) {
 			_targetDirection = targetRadians;
-			float currentAngle = Direction.NormalToRadians();
+			float currentAngle = _target.Direction.NormalToRadians();
 			float deltaToTarget = GetRealDeltaRotationAccountingForWrap(_targetDirection, currentAngle);
 			_rotationRadiansPerSecond = (deltaToTarget < 0) ? -speed : speed;
 		}
@@ -103,5 +115,6 @@ namespace asteroids {
 			_thrustDuration = 0;
 			_brake = true;
 		}
+		public void Draw(CommandLineCanvas canvas) { }
 	}
 }

@@ -45,31 +45,33 @@ namespace asteroids {
 			int playerAmmo = 10;
 			float playerMaxHp = 10;
 			float playerHp = playerMaxHp;
-			ControlledPolygon player = new ControlledPolygon(playerPoly);
-			player.Name = "player";
-			player.TypeId = (int)AsteroidType.Player;
-			player.Color = ConsoleColor.Blue;
-			player.DirectionMatchesVelocity = true;
-			player.MaxSpeed = 15;
-			player.CollisionCircles = new Circle[] {
+			MobilePolygon playerCharacter = new MobilePolygon(playerPoly);
+			playerCharacter.Name = "player";
+			playerCharacter.TypeId = (int)AsteroidType.Player;
+			playerCharacter.Color = ConsoleColor.Blue;
+			playerCharacter.CollisionCircles = new Circle[] {
 				new Circle((1.25f, 0), 1.25f),
 				new Circle((-0.6875f,-1.4375f), 0.5f),
 				new Circle((-0.6875f, 1.4375f), 0.5f),
 				new Circle((3.625f,0), 0.5f),
 			};
+			MobileObjectController playerControl = new MobileObjectController(playerCharacter);
 			float playerAutoRotationSpeedRadianPerSecond = MathF.PI * 4;
 			float playerFreeRotationSpeedRadianPerSecond = MathF.PI * 2;
 			float playerMinThrustDuration = 1f / 2;
-			List<MobileObject> playerObjects = new List<MobileObject>() { player };
+			playerControl.MaxSpeed = 10;
+			playerControl.DirectionMatchesVelocity = true;
+			List<IGameObject> playerObjects = new List<IGameObject>() { playerCharacter };
 			objects.AddRange(playerObjects);
+			objects.Add(playerControl);
 			collideList.AddRange(playerObjects.ConvertAll(p => (ICollidable)p));
 			Action playerTriggerAfterDeath = null;
 			postUpdate.Add(PlayerDeathWatch);
 			void PlayerDeathWatch() {
-				if (playerHp <= 0 && player.IsActive) {
+				if (playerHp <= 0 && playerControl.Target.IsActive) {
 					playerHp = 0;
-					player.IsActive = false;
-					explosion.Emit(100, player.Position, ConsoleColor.Blue, (1, 4), (1, 2));
+					playerControl.Target.IsActive = false;
+					explosion.Emit(100, playerControl.Position, ConsoleColor.Blue, (1, 4), (1, 2));
 					ActionQueue.Instance.EnqueueDelayed(1, () => playerTriggerAfterDeath?.Invoke());
 				}
 			}
@@ -79,10 +81,11 @@ namespace asteroids {
 				playerMaxHp = 10;
 				playerHp = playerMaxHp;
 				playerShootCooldownMs = 50;
-				player.Position = Vec2.Zero;
-				player.Velocity = Vec2.Zero;
-				player.RotationRadians = 0;
-				player.IsActive = true;
+				playerControl.Position = Vec2.Zero;
+				playerControl.Velocity = Vec2.Zero;
+				playerControl.RotationRadians = 0;
+				playerControl.IsActive = true;
+				playerControl.Target.IsActive = true;
 			}
 
 			// camera
@@ -91,9 +94,9 @@ namespace asteroids {
 			preDraw.Add(CameraFollowsPlayer);
 			void CameraFollowsPlayer() {
 				Vec2 halfScreen = graphics.Size / 2;
-				Vec2 screenAnchor = player.Position - halfScreen.Scaled(graphics.Scale);
+				Vec2 screenAnchor = playerControl.Position - halfScreen.Scaled(graphics.Scale);
 				if (cameraLookAhead) {
-					Vec2 cameraTargetScreenOffset = screenAnchor + player.Velocity * (graphics.Scale.y / 2);
+					Vec2 cameraTargetScreenOffset = screenAnchor + playerControl.Velocity * (graphics.Scale.y / 2);
 					Vec2 delta = cameraTargetScreenOffset - graphics.Offset;
 					float dist = delta.Magnitude;
 					float cameraSpeed = 1;
@@ -294,16 +297,16 @@ namespace asteroids {
 			void ShowPlayerDirectionUnderlay() {
 				if (!visible) { return; }
 				graphics.SetColor(ConsoleColor.DarkGray);
-				Vec2 lineEnd = player.Position + player.Direction * (lineLength * graphics.Scale.y);
-				graphics.DrawLine(player.Position, lineEnd, lineWidth);
+				Vec2 lineEnd = playerControl.Position + playerControl.Direction * (lineLength * graphics.Scale.y);
+				graphics.DrawLine(playerControl.Position, lineEnd, lineWidth);
 			}
 
 			// additional labels, overlay GUI
 			postDraw.Add(DebugDraw);
 			postDraw.Add(DrawScore);
 			void DrawScore() {
-				graphics.WriteAt($"score: {playerScore}    DT:{Time.DeltaTimeMsAverage}   \n" +
-					$"ammo: {playerAmmo}\nhp: {playerHp}/{playerMaxHp}", 0, (int)graphics.Size.y - 3);
+				graphics.WriteAt(ConsoleGlyph.Convert($"score: {playerScore}    DT:{Time.DeltaTimeMsAverage}   \n" +
+					$"ammo: {playerAmmo}\nhp: {playerHp}/{playerMaxHp}  {playerControl.Speed}:{playerCharacter.Velocity.Magnitude}"), 0, (int)graphics.Size.y - 3, true);
 			}
 			void DebugDraw() {
 				LabelList(projectilePool, ConsoleColor.Magenta);
@@ -371,46 +374,55 @@ namespace asteroids {
 			keyInput.BindKey('7', k => playerMove(-3 / 4f));
 			keyInput.BindKey('8', k => playerMove(-2 / 4f));
 			keyInput.BindKey('9', k => playerMove(-1 / 4f));
-			keyInput.BindKey('i', k => player.Position += Vec2.DirectionMinY);
-			keyInput.BindKey('j', k => player.Position += Vec2.DirectionMinX);
-			keyInput.BindKey('k', k => player.Position += Vec2.DirectionMaxY);
-			keyInput.BindKey('l', k => player.Position += Vec2.DirectionMaxX);
-			keyInput.BindKey('I', k => playerHp = playerMaxHp = 100000);
+			keyInput.BindKey('b', testMove);
+			void testMove(KeyInput k) {
+				playerCharacter.Velocity = Vec2.DirectionMinX;
+				playerControl.Velocity = Vec2.DirectionMaxX;
+			}
+			keyInput.BindKey('I', k => playerControl.Position += Vec2.DirectionMinY);
+			keyInput.BindKey('J', k => playerControl.Position += Vec2.DirectionMinX);
+			keyInput.BindKey('K', k => playerControl.Position += Vec2.DirectionMaxY);
+			keyInput.BindKey('L', k => playerControl.Position += Vec2.DirectionMaxX);
+			keyInput.BindKey('i', k => playerControl.Velocity = Vec2.DirectionMinY * playerControl.MaxSpeed);
+			keyInput.BindKey('j', k => playerControl.Velocity = Vec2.DirectionMinX * playerControl.MaxSpeed);
+			keyInput.BindKey('k', k => playerControl.Velocity = Vec2.DirectionMaxY * playerControl.MaxSpeed);
+			keyInput.BindKey('l', k => playerControl.Velocity = Vec2.DirectionMaxX * playerControl.MaxSpeed);
+			keyInput.BindKey('O', k => playerHp = playerMaxHp = 100000);
 			void playerMove(float normalizedRadian) {
-				player.SmoothRotateTarget(MathF.PI * normalizedRadian, playerAutoRotationSpeedRadianPerSecond);
+				playerControl.SmoothRotateTarget(MathF.PI * normalizedRadian, playerAutoRotationSpeedRadianPerSecond);
 				Thrust();
-				player.AutoStopWithoutThrust = true;
+				playerControl.AutoStopWithoutThrust = true;
 			}
 			void Thrust() {
-				player.AutoStopWithoutThrust = false;
-				player.ThrustDuration = playerMinThrustDuration;
+				playerControl.AutoStopWithoutThrust = false;
+				playerControl.ThrustDuration = playerMinThrustDuration;
 			}
 			void playerForward(KeyInput ki) {
 				Thrust();
-				player.RotationRadiansPerSecond = 0;
+				playerControl.RotationRadiansPerSecond = 0;
 			}
 			void playerBrakes(KeyInput ki) {
-				player.Brakes();
-				player.RotationRadiansPerSecond = 0;
+				playerControl.Brakes();
+				playerControl.RotationRadiansPerSecond = 0;
 			}
-			void playerTurnLeft(KeyInput keyInput) { player.RotationDegrees -= playerRotationAngleDegrees; }
-			void playerTurnRight(KeyInput keyInput) { player.RotationDegrees += playerRotationAngleDegrees; }
+			void playerTurnLeft(KeyInput keyInput) { playerControl.RotationDegrees -= playerRotationAngleDegrees; }
+			void playerTurnRight(KeyInput keyInput) { playerControl.RotationDegrees += playerRotationAngleDegrees; }
 			void playerSpinLeft(KeyInput keyInput) {
-				player.ClearRotation();
-				player.RotationRadiansPerSecond = player.RotationRadiansPerSecond != 0 ? 0 : -playerFreeRotationSpeedRadianPerSecond;
+				playerControl.ClearRotation();
+				playerControl.RotationRadiansPerSecond = playerControl.RotationRadiansPerSecond != 0 ? 0 : -playerFreeRotationSpeedRadianPerSecond;
 			}
 			void playerSpinRight(KeyInput keyInput) {
-				player.ClearRotation();
-				player.RotationRadiansPerSecond = player.RotationRadiansPerSecond != 0 ? 0 : playerFreeRotationSpeedRadianPerSecond;
+				playerControl.ClearRotation();
+				playerControl.RotationRadiansPerSecond = playerControl.RotationRadiansPerSecond != 0 ? 0 : playerFreeRotationSpeedRadianPerSecond;
 			}
 			void playerShoot(KeyInput ki) {
 				if (playerAmmo <= 0 || Time.TimeMs < playerShootNextPossibleMs) {
 					return;
 				}
 				MobileObject projectile = projectilePool.Commission();
-				projectile.Position = player.Position + player.Direction * playerPoly[0].x;
-				projectile.Direction = player.Direction;
-				projectile.Velocity = player.Velocity + player.Direction * projectileSpeed;
+				projectile.Position = playerControl.Position + playerControl.Direction * playerPoly[0].x;
+				projectile.Direction = playerControl.Direction;
+				projectile.Velocity = playerControl.Velocity + playerControl.Direction * projectileSpeed;
 				playerShootNextPossibleMs = Time.TimeMs + playerShootCooldownMs;
 				--playerAmmo;
 			}
@@ -427,48 +439,56 @@ namespace asteroids {
 				},
 				[(typeof(MobilePolygon), typeof(MobileCircle))] = new List<CollisionLogic.Function>() {
 					(CollisionData collision) => {
-						collision.Get(out MobilePolygon projectile, out MobileCircle asteroid);
-						if (projectile.TypeId == (byte)AsteroidType.Projectile && asteroid.TypeId == (byte)AsteroidType.Asteroid) {
-							return () => {
-								BreakApartAsteroid(asteroid, projectile, projectile.Position);
-								asteroid.Name = "decomissioned by "+projectile.Name;
-								++playerScore;
-							};
-						}
-						return null;
-					}
-				},
-				[(typeof(ControlledPolygon), typeof(MobileCircle))] = new List<CollisionLogic.Function>() {
-					(CollisionData collision) => {
-						collision.Get(out ControlledPolygon player, out MobileCircle circle);
-						if (player.TypeId == (byte)AsteroidType.Player) {
+						collision.Get(out MobilePolygon polygon, out MobileCircle circle);
+						switch (polygon.TypeId) {
+						case (byte)AsteroidType.Projectile:
+							switch (circle.TypeId) {
+								case (byte)AsteroidType.Asteroid:
+									return CollideProjectileAndAsteroid(polygon, circle);
+							}
+							break;
+						case (byte)AsteroidType.Player:
 							switch(circle.TypeId) {
 								case (byte)AsteroidType.Asteroid:
-									return () => {
-										float hpLost = circle.Radius;
-										explosion.Emit((int)hpLost*2+1, collision.point, ConsoleColor.Magenta, 2, 1);
-										player.ClearRotation();
-										BreakApartAsteroid(circle, null, collision.point);
-										circle.Name = "decomissioned by Player";
-										Action moveAsteroid = MoveAsteroidOutOf(circle, collision.point);
-										Action movePlayer = MoveMobilePolygoneOutOf(player, collision);
-										moveAsteroid?.Invoke();
-										movePlayer?.Invoke();
-										playerHp -= hpLost;
-									};
+									return CollidePlayerAndAsteroid(collision, polygon, circle);
 								case (byte)AsteroidType.Powerup:
-									return () => {
-										powerupPool.DecommissionDelayed(circle);
-										circle.Name = "Absorbed by Player";
-										playerAmmo += 5;
-										if (++playerHp > playerMaxHp) { playerHp = playerMaxHp; }
-									};
+									return CollidePlayerAndPowerup(polygon, circle);
 							}
+							break;
 						}
 						return null;
 					}
 				}
 			};
+			Action CollideProjectileAndAsteroid(MobilePolygon projectile, MobileCircle asteroid) {
+				return () => {
+					BreakApartAsteroid(asteroid, projectile, projectile.Position);
+					asteroid.Name = "decomissioned by " + projectile.Name;
+					++playerScore;
+				};
+			}
+			Action CollidePlayerAndAsteroid(CollisionData collision, MobilePolygon player, MobileCircle asteroid) {
+				return () => {
+					float hpLost = asteroid.Radius;
+					explosion.Emit((int)hpLost * 2 + 1, collision.point, ConsoleColor.Magenta, 2, 1);
+					playerControl.ClearRotation();
+					BreakApartAsteroid(asteroid, null, collision.point);
+					asteroid.Name = "decomissioned by Player";
+					Action moveAsteroid = MoveAsteroidOutOf(asteroid, collision.point);
+					Action movePlayer = MoveMobilePolygoneOutOf(player, collision);
+					moveAsteroid?.Invoke();
+					movePlayer?.Invoke();
+					playerHp -= hpLost;
+				};
+			}
+			Action CollidePlayerAndPowerup(MobilePolygon player, MobileCircle circle) {
+				return () => {
+					powerupPool.DecommissionDelayed(circle);
+					circle.Name = "Absorbed by Player";
+					playerAmmo += 5;
+					if (++playerHp > playerMaxHp) { playerHp = playerMaxHp; }
+				};
+			}
 			Action MoveMobilePolygoneOutOf(MobilePolygon poly, CollisionData collision) {
 				int index = collision.self == poly ? collision.colliderIndexSelf :
 				            collision.other == poly ? collision.colliderIndexOther : -1;
@@ -506,10 +526,6 @@ namespace asteroids {
 
 			SpacePartition<ICollidable> spacePartition = new SpacePartition<ICollidable>(WorldMin, WorldMax, 3, 3, 3, GetCircle);
 			Circle GetCircle(ICollidable collidable) => collidable.GetCollisionBoundingCircle();
-			void DrawFunctionCollidable(CommandLineCanvas canvas, SpacePartitionCell<ICollidable> spacePartition, ICollidable obj) {
-				Circle c = obj.GetCollisionBoundingCircle();
-				canvas.DrawLine(spacePartition.Position, c.Position);
-			}
 			CollisionDatabase collisionDatabase = new CollisionDatabase();
 
 			while (running) {
@@ -556,6 +572,11 @@ namespace asteroids {
 				graphics.PrintModifiedCharactersOnly();
 				graphics.FinishedRender();
 				Console.SetCursorPosition(0, (int)graphics.Size.y);
+			}
+
+			void DrawFunctionCollidable(CommandLineCanvas canvas, SpacePartitionCell<ICollidable> spacePartition, ICollidable obj) {
+				Circle c = obj.GetCollisionBoundingCircle();
+				canvas.DrawLine(spacePartition.Position, c.Position);
 			}
 		}
 	}
