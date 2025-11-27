@@ -7,7 +7,7 @@ namespace asteroids {
 	public class MobileCircle : MobileObject, ICollidable {
 		private Circle circle;
 		public override Vec2 Position { get => circle.Position; set => circle.Position = value; }
-		public override Vec2 Direction { get => Velocity.Normal; set => throw new NotImplementedException(); }
+		public override Vec2 Direction { get => Velocity.Normal; set { } }
 		public float Radius { get => circle.Radius; set => circle.Radius = value; }
 		public Circle Circle {  get => circle; set => circle = value; }
 		public static bool DebugShowVelocity = false;

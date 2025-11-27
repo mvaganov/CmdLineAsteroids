@@ -32,7 +32,9 @@ namespace MathMrV {
 		public override int GetHashCode() => x.GetHashCode() ^ y.GetHashCode();
 		public override string ToString() => $"({x},{y})";
 		public float Distance(Vec2 other) => (this - other).Magnitude;
+		public float DistanceSquared(Vec2 other) => (this - other).MagnitudeSqr;
 		internal static float Distance(Vec2 a, Vec2 b) => a.Distance(b);
+		internal static float DistanceSquared(Vec2 a, Vec2 b) => a.DistanceSquared(b);
 		public Vec2 Scaled(Vec2 scale) => new Vec2(x * scale.x, y * scale.y);
 		public Vec2 InverseScaled(Vec2 scale) => new Vec2(x / scale.x, y / scale.y);
 		public void Scale(Vec2 scale) { x *= scale.x; y *= scale.y; }
@@ -40,6 +42,7 @@ namespace MathMrV {
 		public void Floor() { x = MathF.Floor(x); y = MathF.Floor(y); }
 		public void Ceil() { x = MathF.Ceiling(x); y = MathF.Ceiling(y); }
 		public static float DegreesToRadians(float degrees) => degrees * MathF.PI / 180;
+		public void Normalize() { float mag = Magnitude; x /= mag; y /= mag; }
 		public static Vec2 NormalFromRadians(float radians) => new Vec2(MathF.Cos(radians), MathF.Sin(radians));
 		public static Vec2 NormalFromDegrees(float degrees) => NormalFromRadians(DegreesToRadians(degrees));
 		public float NormalToRadians() => WrapRadian(MathF.Atan2(y, x));
