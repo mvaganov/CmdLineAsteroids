@@ -4,6 +4,7 @@ using MathMrV;
 using MrV;
 using System;
 using System.Collections.Generic;
+using static MrV.collision.Collision;
 
 namespace asteroids {
 	public class Program {
@@ -36,8 +37,18 @@ namespace asteroids {
 				ParticleSystem.Kind.None, ConsoleColor.Magenta, 0, null);
 			List<ParticleSystem> particleSystems = new List<ParticleSystem>() { marker, explosion };
 
+			// test polygon
+			Vec2[] testPoly = new Vec2[] { (5, 0), (4,2), (0, 3), (-1, 0), (0, -3) };
 			// initialize player
 			Vec2[] playerPoly = new Vec2[] { (5, 0), (-3, 3), (0, 0), (-3, -3) };
+
+			Console.WriteLine("TestPoly");
+			MrV.collision.Collision.Polygon testConcaveObj = new MrV.collision.Collision.Polygon(testPoly);
+			Console.WriteLine("PlayerPoly");
+			MrV.collision.Collision.Polygon playerConcaveObj = new MrV.collision.Collision.Polygon(playerPoly);
+			Console.ReadLine();
+
+			//Vec2[] playerPoly = new Vec2[] { (5, 0), (0, 3), (-1, 0), (0, -3) };
 			float playerRotationAngleDegrees = 5;
 			long playerShootCooldownMs = 50;
 			long playerShootNextPossibleMs = Time.TimeMs + playerShootCooldownMs;
@@ -45,7 +56,7 @@ namespace asteroids {
 			int playerAmmo = 10;
 			float playerMaxHp = 10;
 			float playerHp = playerMaxHp;
-			MobilePolygon playerCharacter = new MobilePolygon(playerPoly);
+			MobilePolygon playerCharacter = new MobilePolygon(testPoly);// playerPoly);
 			playerCharacter.Name = "player";
 			playerCharacter.TypeId = (int)AsteroidType.Player;
 			playerCharacter.Color = ConsoleColor.Blue;
@@ -185,7 +196,7 @@ namespace asteroids {
 			float asteroidMinimumRadiusThatDivides = 3;
 			int asteroidBreakupCount = 3;
 			void StartAsteroids() {
-				int activeAsteroidCount = 10;
+				int activeAsteroidCount = 0;// 10;
 				Vec2 asteroidStartPosition = new Vec2(40, 0);
 				void MakeAsteroidRing() {
 					for (int i = 0; i < activeAsteroidCount; i++) {
