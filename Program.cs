@@ -43,9 +43,9 @@ namespace asteroids {
 			Vec2[] playerPoly = new Vec2[] { (5, 0), (-3, 3), (0, 0), (-3, -3) };
 
 			Console.WriteLine("TestPoly");
-			MrV.collision.Collision.Polygon testConcaveObj = new MrV.collision.Collision.Polygon(testPoly);
+			MrV.collision.Collision.ConvexConcavePolygon testConcaveObj = new MrV.collision.Collision.ConvexConcavePolygon(testPoly);
 			Console.WriteLine("PlayerPoly");
-			MrV.collision.Collision.Polygon playerConcaveObj = new MrV.collision.Collision.Polygon(playerPoly);
+			MrV.collision.Collision.ConvexConcavePolygon playerConcaveObj = new MrV.collision.Collision.ConvexConcavePolygon(playerPoly);
 			Console.ReadLine();
 
 			//Vec2[] playerPoly = new Vec2[] { (5, 0), (0, 3), (-1, 0), (0, -3) };

@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 
 namespace MrV.collision {
 
@@ -151,11 +150,13 @@ namespace MrV.collision {
 			public List<Vec2> Vertices { get; set; } = new List<Vec2>();
 		}
 
-		public class Polygon {
+		public class ConvexConcavePolygon {
 			public Vec2 Position { get; set; }
 			public ConvexHull[] Hulls { get; set; }
+			public Vec2[] vertList;
+			public int[][] hullIndexList;
 
-			public Polygon(Vec2[] verts) {
+			public ConvexConcavePolygon(Vec2[] verts) {
 				int[][] triangles = DecomposePolygon(verts);
 				for (int i = 0; i < triangles.Length; i++) {
 					Console.WriteLine($"triange {i}: [" + string.Join(",", triangles[i]) + "]");
@@ -165,13 +166,13 @@ namespace MrV.collision {
 					Console.WriteLine($"Hull {i}: [" + string.Join(",", Hulls[i].Vertices) + "]");
 				}
 
-				int[][] hulls = ConvertTriangleListIntoConvexHulls(triangles, verts);
-				for (int i = 0; i < hulls.Length; ++i) {
-					Console.WriteLine($"hull {i}: [" + string.Join(",", hulls[i]) + "]");
+				hullIndexList = ConvertTriangleListIntoConvexHulls(triangles, verts);
+				for (int i = 0; i < hullIndexList.Length; ++i) {
+					Console.WriteLine($"hull {i}: [" + string.Join(",", hullIndexList[i]) + "]");
 				}
 			}
 
-			public static CollisionManifold ConcavePolyPoly(Polygon objA, Polygon objB) {
+			public static CollisionManifold ConcavePolyPoly(ConvexConcavePolygon objA, ConvexConcavePolygon objB) {
 				CollisionManifold finalManifold = new CollisionManifold {
 					IsColliding = false,
 					Depth = float.MaxValue
@@ -488,7 +489,7 @@ namespace MrV.collision {
 
 		private static int[] TryMergeConvexHulls(Vec2[] vertList, int[] indexListHullA, int[] indexListHullB) {
 			if (TryGetSharedEdgeIndices(indexListHullA, indexListHullB, out int hullAIndex, out int hullBIndex)) {
-				int[] mergedHull = SpliceHull(indexListHullA, indexListHullB, hullAIndex, hullBIndex);
+				int[] mergedHull = SpliceHullIndexList(indexListHullA, indexListHullB, hullAIndex, hullBIndex);
 				if (IsHullConvex(vertList, mergedHull)) { // only give back convex shape
 					return mergedHull;
 				}
@@ -509,14 +510,14 @@ namespace MrV.collision {
 				hullBIndex = -1;
 				return false;
 			}
-			int[] SpliceHull(int[] indexListHullA, int[] indexListHullB, int hullASharedEdgeIndex, int hullBSharedEdgeIndex) {
+			int[] SpliceHullIndexList(int[] hullA, int[] hullB, int hullASharedEdgeIndex, int hullBSharedEdgeIndex) {
 				List<int> newVertices = new List<int>();
-				newVertices.AddRange(indexListHullA);
+				newVertices.AddRange(hullA);
 				List<int> hullBsegment = new List<int>();
-				int currIndex = (hullBSharedEdgeIndex + 2) % indexListHullB.Length;
+				int currIndex = (hullBSharedEdgeIndex + 2) % hullB.Length;
 				while (currIndex != hullBSharedEdgeIndex) {
-					hullBsegment.Add(indexListHullB[currIndex]);
-					currIndex = (currIndex + 1) % indexListHullB.Length;
+					hullBsegment.Add(hullB[currIndex]);
+					currIndex = (currIndex + 1) % hullB.Length;
 				}
 				newVertices.InsertRange(hullASharedEdgeIndex + 1, hullBsegment);
 				return newVertices.ToArray();

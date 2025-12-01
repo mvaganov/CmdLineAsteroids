@@ -2,7 +2,7 @@
 using System;
 
 namespace MathMrV {
-	public struct Polygon {
+	public partial struct Polygon {
 		public PolygonShape original;
 		private Vec2 directionUnitVector;
 		private Vec2 position;
@@ -25,6 +25,8 @@ namespace MathMrV {
 			cachedBoundBoxMax = cachedBoundBoxMin = position = Vec2.Zero;
 			cacheValid = false;
 			cachedPoints = null;
+			convexHullIndexLists = null;
+			UpdateConvexHullIndexLists();
 		}
 		public void SetDirty() => cacheValid = false;
 		public Vec2 GetPoint(int index) {
