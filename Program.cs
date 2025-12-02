@@ -43,9 +43,10 @@ namespace asteroids {
 			Vec2[] playerPoly = new Vec2[] { (5, 0), (-3, 3), (0, 0), (-3, -3) };
 
 			Console.WriteLine("TestPoly");
-			MrV.collision.Collision.ConvexConcavePolygon testConcaveObj = new MrV.collision.Collision.ConvexConcavePolygon(testPoly);
+			Polygon testConcaveObj = new Polygon(testPoly);
+			testConcaveObj.Position = (10, 3);
 			Console.WriteLine("PlayerPoly");
-			MrV.collision.Collision.ConvexConcavePolygon playerConcaveObj = new MrV.collision.Collision.ConvexConcavePolygon(playerPoly);
+			Polygon playerConcaveObj = new Polygon(playerPoly);
 			Console.ReadLine();
 
 			//Vec2[] playerPoly = new Vec2[] { (5, 0), (0, 3), (-1, 0), (0, -3) };
@@ -56,7 +57,7 @@ namespace asteroids {
 			int playerAmmo = 10;
 			float playerMaxHp = 10;
 			float playerHp = playerMaxHp;
-			MobilePolygon playerCharacter = new MobilePolygon(testPoly);// playerPoly);
+			MobilePolygon playerCharacter = new MobilePolygon(playerPoly);
 			playerCharacter.Name = "player";
 			playerCharacter.TypeId = (int)AsteroidType.Player;
 			playerCharacter.Color = ConsoleColor.Blue;
@@ -325,6 +326,20 @@ namespace asteroids {
 				//graphics.WriteAt(ConsoleGlyph.Convert("player", ConsoleColor.Green), player.Position);
 				LabelList(asteroidPool, ConsoleColor.DarkYellow);
 				LabelList(powerupPool, ConsoleColor.Green);
+				Polygon.CollisionManifold collision = testConcaveObj.PolyCollision(playerCharacter.Polygon);
+				if (collision.IsColliding) {
+					graphics.SetColor(ConsoleColor.White);
+					//playerCharacter.Position += collision.Normal * collision.Depth;
+					for(int i = 0; i < collision.hits.Count; ++i) {
+						graphics.SetColor(ConsoleColor.Red);
+						var hit = collision.hits[i];
+						hit.polygon.DrawConvex(graphics, hit.convexIndex);
+					}
+					//graphics.DrawLine(collision.)
+				} else {
+					graphics.SetColor(ConsoleColor.DarkGray);
+				}
+				testConcaveObj.Draw(graphics);
 			}
 			void LabelList<T>(IList<T> objects, ConsoleColor textColor) where T : IGameObject {
 				for (int i = 0; i < objects.Count; i++) {

@@ -1,13 +1,28 @@
-﻿using System;
+﻿using ConsoleMrV;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace MathMrV {
 	public partial struct Polygon {
 		private int[][] convexHullIndexLists;
+		public void DrawConvex(CommandLineCanvas canvas, int convexIndex) {
+			UpdateCacheAsNeeded();
+			List<Vec2> verts = GetConvexVerts(convexIndex);
+			canvas.DrawSupersampledShape(IsInsidePolygon, cachedBoundBoxMin, cachedBoundBoxMax);
+			bool IsInsidePolygon(Vec2 point) => PolygonShape.IsInPolygon(verts, point);
+		}
 		public void UpdateConvexHullIndexLists() {
 			int[][] triangles = DecomposePolygonIntoTriangles_HertelMehlhorn(original.Points);
 			convexHullIndexLists = ConvertTriangleListIntoConvexHulls(triangles, original.Points);
+		}
+		public List<Vec2> GetConvexVerts(int convexIndex) {
+			int[] indexes = convexHullIndexLists[convexIndex];
+			List<Vec2> verts = new List<Vec2>();
+			for (int i = 0; i < indexes.Length; i++) {
+				verts.Add(GetPoint(indexes[i]));
+			}
+			return verts;
 		}
 
 		public static int[][] DecomposePolygonIntoTriangles_HertelMehlhorn(Vec2[] vertices) {
@@ -171,7 +186,7 @@ namespace MathMrV {
 			closestPoint = Vec2.NaN;
 			pointDistanceSq = float.MaxValue;
 			for (int i = 0; i < poly.Length; i++) {
-				int indexA = poly[i], indexB = poly[i + 1] % poly.Length;
+				int indexA = poly[i], indexB = poly[(i + 1) % poly.Length];
 				bool segmentABIsOnEdgeOfMainPolygon = IsIndexPairConsecutive(indexA, indexB);
 				if (!segmentABIsOnEdgeOfMainPolygon) { continue; }
 				Vec2 vecA = cachedPoints[indexA], vecB = cachedPoints[indexB];
@@ -201,12 +216,27 @@ namespace MathMrV {
 			public bool IsColliding;
 			public Vec2 Normal; // The direction to push B out of A
 			public float Depth;    // How far to push
+			public class PolygonConvexHit {
+				public Polygon polygon;
+				public int convexIndex;
+				public PolygonConvexHit(Polygon polygon, int convexIndex) {
+					this.polygon = polygon;
+					this.convexIndex = convexIndex;
+				}
+			}
+			public List<PolygonConvexHit> hits;
+			public void AddPolygonHit(Polygon polygon, int convexIndex) {
+				if (hits == null) { hits = new List<PolygonConvexHit>(); }
+				hits.Add(new PolygonConvexHit(polygon, convexIndex));
+			}
 		}
 		public CollisionManifold PolyCollision(Polygon other) {
 			CollisionManifold result = new CollisionManifold();
 			result.IsColliding = false;
 			result.Depth = float.MaxValue;
 			result.Normal = Vec2.Zero;
+			UpdateCacheAsNeeded();
+			other.UpdateCacheAsNeeded();
 			if (!FindMinSeparation(this, other, ref result)) { return result; }
 			if (!FindMinSeparation(other, this, ref result)) { return result; }
 			Vec2 direction = other.position - this.position;
@@ -221,7 +251,7 @@ namespace MathMrV {
 			bool foundCollision = false;
 			for (int mainConvex = 0; mainConvex < mainPoly.convexHullIndexLists.Length; mainConvex++) {
 				for (int otherConvex = 0; otherConvex < otherPoly.convexHullIndexLists.Length; otherConvex++) {
-					foundCollision = FindMinSeparation(mainPoly, otherPoly, mainConvex, otherConvex, ref result);
+					foundCollision |= FindMinSeparation(mainPoly, otherPoly, mainConvex, otherConvex, ref result);
 				}
 			}
 			return foundCollision;
@@ -230,9 +260,9 @@ namespace MathMrV {
 		// Updates the 'result' struct if a smaller overlap is found
 		private static bool FindMinSeparation(Polygon mainPoly, Polygon otherPoly, int mainConvex, int otherConvex, ref CollisionManifold result) {
 			int[] mainIndexList = mainPoly.convexHullIndexLists[mainConvex];
-			int[] otherIndexList = otherPoly.convexHullIndexLists[otherConvex];
+			//int[] otherIndexList = otherPoly.convexHullIndexLists[otherConvex];
 			for (int i = 0; i < mainIndexList.Length; i++) {
-				int indexA = mainIndexList[i], indexB = mainIndexList[i + 1] % mainIndexList.Length;
+				int indexA = mainIndexList[i], indexB = mainIndexList[(i + 1) % mainIndexList.Length];
 				bool segmentABIsOnEdgeOfMainPolygon = mainPoly.IsIndexPairConsecutive(indexA, indexB);
 				if (!segmentABIsOnEdgeOfMainPolygon) { continue; }
 				Vec2 p1 = mainPoly.GetPoint(mainIndexList[i]);
@@ -250,6 +280,8 @@ namespace MathMrV {
 				if (axisDepth < result.Depth) {
 					result.Depth = axisDepth;
 					result.Normal = axis;
+					result.AddPolygonHit(mainPoly, mainConvex);
+					result.AddPolygonHit(otherPoly, otherConvex);
 				}
 			}
 			return true;
