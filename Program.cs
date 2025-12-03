@@ -4,7 +4,6 @@ using MathMrV;
 using MrV;
 using System;
 using System.Collections.Generic;
-using static MrV.collision.Collision;
 
 namespace asteroids {
 	public class Program {
@@ -38,9 +37,9 @@ namespace asteroids {
 			List<ParticleSystem> particleSystems = new List<ParticleSystem>() { marker, explosion };
 
 			// test polygon
-			Vec2[] testPoly = new Vec2[] { (5, 0), (4,2), (0, 3), (-1, 0), (0, -3) };
+			Vec2[] testPoly = new Vec2[] { (5, 0), (-3, 3), (0, 0), (-3, -3) };// (5, 0), (4,2), (0, 3), (-1, 0), (0, -3) };//(5,0),(0,3),(0,-3) };//
 			// initialize player
-			Vec2[] playerPoly = new Vec2[] { (5, 0), (-3, 3), (0, 0), (-3, -3) };
+			Vec2[] playerPoly = new Vec2[] { (5, 0), (-3, 3), (0, 0), (-3, -3) };//(5, 0), (0, 3), (0, -3) };//
 
 			Console.WriteLine("TestPoly");
 			Polygon testConcaveObj = new Polygon(testPoly);
@@ -326,20 +325,24 @@ namespace asteroids {
 				//graphics.WriteAt(ConsoleGlyph.Convert("player", ConsoleColor.Green), player.Position);
 				LabelList(asteroidPool, ConsoleColor.DarkYellow);
 				LabelList(powerupPool, ConsoleColor.Green);
-				Polygon.CollisionManifold collision = testConcaveObj.PolyCollision(playerCharacter.Polygon);
-				if (collision.IsColliding) {
+				List<Polygon.CollisionData> collisionDatas = null;
+				bool isColliding = testConcaveObj.TryGetPolyCollision(playerCharacter.Polygon, ref collisionDatas);
+				if (isColliding) {
 					graphics.SetColor(ConsoleColor.White);
+					testConcaveObj.Draw(graphics);
+					Vec2 collisionAdjustment = Vec2.Zero;
 					//playerCharacter.Position += collision.Normal * collision.Depth;
-					for(int i = 0; i < collision.hits.Count; ++i) {
-						graphics.SetColor(ConsoleColor.Red);
-						var hit = collision.hits[i];
-						hit.polygon.DrawConvex(graphics, hit.convexIndex);
+					for(int i = 0; i < collisionDatas.Count; ++i) {
+						collisionAdjustment += collisionDatas[i].Normal * collisionDatas[i].Depth;
+						collisionDatas[i].Draw(graphics);
 					}
-					//graphics.DrawLine(collision.)
+					collisionAdjustment /= collisionDatas.Count;
+					playerCharacter.Position += collisionAdjustment;
+					//playerCharacter.Position += collisionDatas[0].Normal * collisionDatas[0].Depth;
 				} else {
 					graphics.SetColor(ConsoleColor.DarkGray);
+					testConcaveObj.Draw(graphics);
 				}
-				testConcaveObj.Draw(graphics);
 			}
 			void LabelList<T>(IList<T> objects, ConsoleColor textColor) where T : IGameObject {
 				for (int i = 0; i < objects.Count; i++) {

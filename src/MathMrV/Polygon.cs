@@ -2,7 +2,7 @@
 using System;
 
 namespace MathMrV {
-	public partial struct Polygon {
+	public partial class Polygon {
 		public PolygonShape original;
 		private Vec2 directionUnitVector;
 		private Vec2 position;
@@ -48,6 +48,9 @@ namespace MathMrV {
 			if (cacheValid) {
 				return;
 			}
+			ForceUpdateCache();
+		}
+		private void ForceUpdateCache() {
 			if (cachedPoints == null || cachedPoints.Length != original.Points.Length) {
 				cachedPoints = new Vec2[original.Points.Length];
 			}
