@@ -232,50 +232,50 @@ namespace MathMrV {
 				Vec2 p1 = polygonA.GetPoint(vertIndex1);
 				canvas.SetColor(ConsoleColor.Green);
 				canvas.DrawLine(p0, p1, 1);
-				if (hits != null) {
-					for (int i = 0; i < hits.Count; ++i) {
-						hits[i].Draw(canvas);
-					}
-				}
+				//if (hits != null) {
+				//	for (int i = 0; i < hits.Count; ++i) {
+				//		hits[i].Draw(canvas);
+				//	}
+				//}
 				//canvas.SetColor(ConsoleColor.Magenta);
 				//Vec2 center = (p0 + p1) / 2;
 				//canvas.DrawLine(center, center + Normal);
 				//canvas.DrawLine(polygonA.position, polygonA.position + Normal);
 			}
-			public class PolygonConvexHit {
-				public Polygon polygon;
-				public int convexIndex;
-				public float minA, maxA, minB, maxB;
-				public Vec2 center, normal, p0, p1;
-				public PolygonConvexHit(Polygon polygon, int convexIndex, Vec2 p0, Vec2 p1, Vec2 center, Vec2 normal, float minA, float maxA, float minB, float maxB) {
-					this.polygon = polygon; this.convexIndex = convexIndex;
-					this.p0 = p0; this.p1 = p1; this.center = center; this.normal = normal;
-					this.minA = minA; this.maxA = maxA; this.minB = minB; this.maxB = maxB;
-				}
-				public void Draw(CommandLineCanvas canvas) {
-					Vec2 perp = normal.Perpendicular();
-					Vec2 centerA = center + perp;
-					Vec2 centerB = center - perp;
-					Vec2 startA = centerA + normal * minA;
-					Vec2 endA = centerA + normal * maxA;
-					Vec2 startB = centerB + normal * minB;
-					Vec2 endB = centerB + normal * maxB;
-					Vec2 delta = center - startA;
-					startA += delta;
-					endA += delta;
-					startB += delta;
-					endB += delta;
-					canvas.SetColor(ConsoleColor.Red);
-					canvas.DrawLine(startA, endA);
-					canvas.SetColor(ConsoleColor.Blue);
-					canvas.DrawLine(startB, endB);
-				}
-			}
-			public List<PolygonConvexHit> hits;
-			public void AddPolygonHit(Polygon polygon, int convexIndex, Vec2 p0, Vec2 p1, Vec2 center, Vec2 normal, float minA, float maxA, float minB, float maxB) {
-				if (hits == null) { hits = new List<PolygonConvexHit>(); }
-				hits.Add(new PolygonConvexHit(polygon, convexIndex, p0, p1, center, normal, minA, maxA, minB, maxB));
-			}
+			//public class PolygonConvexHit {
+			//	public Polygon polygon;
+			//	public int convexIndex;
+			//	public float minA, maxA, minB, maxB;
+			//	public Vec2 center, normal, p0, p1;
+			//	public PolygonConvexHit(Polygon polygon, int convexIndex, Vec2 p0, Vec2 p1, Vec2 center, Vec2 normal, float minA, float maxA, float minB, float maxB) {
+			//		this.polygon = polygon; this.convexIndex = convexIndex;
+			//		this.p0 = p0; this.p1 = p1; this.center = center; this.normal = normal;
+			//		this.minA = minA; this.maxA = maxA; this.minB = minB; this.maxB = maxB;
+			//	}
+			//	public void Draw(CommandLineCanvas canvas) {
+			//		Vec2 perp = normal.Perpendicular();
+			//		Vec2 centerA = center + perp;
+			//		Vec2 centerB = center - perp;
+			//		Vec2 startA = centerA + normal * minA;
+			//		Vec2 endA = centerA + normal * maxA;
+			//		Vec2 startB = centerB + normal * minB;
+			//		Vec2 endB = centerB + normal * maxB;
+			//		Vec2 delta = center - startA;
+			//		startA += delta;
+			//		endA += delta;
+			//		startB += delta;
+			//		endB += delta;
+			//		canvas.SetColor(ConsoleColor.Red);
+			//		canvas.DrawLine(startA, endA);
+			//		canvas.SetColor(ConsoleColor.Blue);
+			//		canvas.DrawLine(startB, endB);
+			//	}
+			//}
+			//public List<PolygonConvexHit> hits;
+			//public void AddPolygonHit(Polygon polygon, int convexIndex, Vec2 p0, Vec2 p1, Vec2 center, Vec2 normal, float minA, float maxA, float minB, float maxB) {
+			//	if (hits == null) { hits = new List<PolygonConvexHit>(); }
+			//	hits.Add(new PolygonConvexHit(polygon, convexIndex, p0, p1, center, normal, minA, maxA, minB, maxB));
+			//}
 		}
 		public bool TryGetPolyCollision(Polygon other, ref List<CollisionData> collisionDatas) {
 			UpdateCacheAsNeeded();

@@ -4,6 +4,11 @@ using System.Collections.Generic;
 namespace MathMrV {
 	public static class Welzl {
 		public static Circle GetMinimumCircle(IList<Vec2> points) {
+			List<Vec2> shuffled = GetShuffled(points);
+			return Calculate(shuffled, new List<Vec2>(), shuffled.Count);
+		}
+
+		public static List<Vec2> GetShuffled(IList<Vec2> points) {
 			List<Vec2> shuffled = new List<Vec2>(points);
 			Random rand = new Random();
 			for (int i = shuffled.Count - 1; i > 0; i--) {
@@ -12,7 +17,7 @@ namespace MathMrV {
 				shuffled[i] = shuffled[j];
 				shuffled[j] = temp;
 			}
-			return Calculate(shuffled, new List<Vec2>(), shuffled.Count);
+			return shuffled;
 		}
 
 		private static Circle Calculate(IList<Vec2> allPoints, List<Vec2> pointsUsedForCircle, int pointsToConsider) {

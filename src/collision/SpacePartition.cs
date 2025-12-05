@@ -33,7 +33,7 @@ namespace collision {
 			root.Populate(collideList, mem);
 			EnsureTrueParent();
 		}
-		public void DoCollisionLogicAndResolve(Dictionary<CollisionPair, List<CollisionLogic.Function>> collisionRules, CollisionDatabase collisionDatabase) {
+		public void DoCollisionLogicAndResolve(Dictionary<(byte, byte), List<CollisionLogic.Function>> collisionRules, CollisionDatabase collisionDatabase) {
 			root.DoCollisionLogicAndResolve(collisionRules, collisionDatabase);
 		}
 		private void EnsureTrueParent() {
@@ -311,7 +311,7 @@ namespace collision {
 			Insert(elementList, mem);
 		}
 
-		public void FindCollisions(Dictionary<CollisionPair, List<CollisionLogic.Function>> rules, 
+		public void FindCollisions(Dictionary<(byte,byte), List<CollisionLogic.Function>> rules, 
 			IList<CollisionData> collisionData) {
 			if (elements != null) {
 				CollisionLogic.CalculateCollisions(elements as IList<ICollidable>, rules, collisionData);
@@ -327,7 +327,7 @@ namespace collision {
 			}
 		}
 
-		public void FindCollisions(Dictionary<CollisionPair, List<CollisionLogic.Function>> rules,
+		public void FindCollisions(Dictionary<(byte,byte), List<CollisionLogic.Function>> rules,
 	CollisionDatabase collisionDatabase) {
 			if (elements != null) {
 				CollisionLogic.CalculateCollisions(elements as IList<ICollidable>, rules, collisionDatabase);
@@ -343,7 +343,7 @@ namespace collision {
 			}
 		}
 
-		public List<CollisionLogic.ToResolve> DoCollisionLogic(Dictionary<CollisionPair, List<CollisionLogic.Function>> rules,
+		public List<CollisionLogic.ToResolve> DoCollisionLogic(Dictionary<(byte,byte), List<CollisionLogic.Function>> rules,
 			CollisionDatabase collisionDatabase) {
 			IList<CollisionData> collisionData;
 			if (false) {
@@ -364,7 +364,7 @@ namespace collision {
 			CollisionLogic.CalculateCollisionResolution(collisionData, collisionResolutions);
 			return collisionResolutions;
 		}
-		public void DoCollisionLogicAndResolve(Dictionary<CollisionPair, List<CollisionLogic.Function>> rules, CollisionDatabase collisionDatabase) {
+		public void DoCollisionLogicAndResolve(Dictionary<(byte, byte), List<CollisionLogic.Function>> rules, CollisionDatabase collisionDatabase) {
 			List<CollisionLogic.ToResolve> collisionsToResolve = DoCollisionLogic(rules, collisionDatabase);
 			if (collisionsToResolve == null) {
 				return;

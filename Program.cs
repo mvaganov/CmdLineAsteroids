@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace asteroids {
 	public class Program {
-		enum AsteroidType { None, Player, Asteroid, Projectile, Powerup }
+		enum AsteroidType { None, Player, Asteroid, Projectile, Powerup, Test }
 		static void Main(string[] args) {
 			// initialize system
 			Random random = new Random();
@@ -41,13 +41,6 @@ namespace asteroids {
 			// initialize player
 			Vec2[] playerPoly = new Vec2[] { (5, 0), (-3, 3), (0, 0), (-3, -3) };//(5, 0), (0, 3), (0, -3) };//
 
-			Console.WriteLine("TestPoly");
-			Polygon testConcaveObj = new Polygon(testPoly);
-			testConcaveObj.Position = (10, 3);
-			Console.WriteLine("PlayerPoly");
-			Polygon playerConcaveObj = new Polygon(playerPoly);
-			Console.ReadLine();
-
 			//Vec2[] playerPoly = new Vec2[] { (5, 0), (0, 3), (-1, 0), (0, -3) };
 			float playerRotationAngleDegrees = 5;
 			long playerShootCooldownMs = 50;
@@ -56,6 +49,11 @@ namespace asteroids {
 			int playerAmmo = 10;
 			float playerMaxHp = 10;
 			float playerHp = playerMaxHp;
+			MobilePolygon testCharacter = new MobilePolygon(testPoly);
+			testCharacter.Name = "test";
+			testCharacter.TypeId = (int)AsteroidType.Test;
+			testCharacter.Color = ConsoleColor.DarkGray;
+			testCharacter.Position = (10, 3);
 			MobilePolygon playerCharacter = new MobilePolygon(playerPoly);
 			playerCharacter.Name = "player";
 			playerCharacter.TypeId = (int)AsteroidType.Player;
@@ -72,7 +70,7 @@ namespace asteroids {
 			float playerMinThrustDuration = 1f / 2;
 			playerControl.MaxSpeed = 10;
 			playerControl.DirectionMatchesVelocity = true;
-			List<IGameObject> playerObjects = new List<IGameObject>() { playerCharacter };
+			List<IGameObject> playerObjects = new List<IGameObject>() { playerCharacter, testCharacter };
 			objects.AddRange(playerObjects);
 			objects.Add(playerControl);
 			collideList.AddRange(playerObjects.ConvertAll(p => (ICollidable)p));
@@ -196,7 +194,7 @@ namespace asteroids {
 			float asteroidMinimumRadiusThatDivides = 3;
 			int asteroidBreakupCount = 3;
 			void StartAsteroids() {
-				int activeAsteroidCount = 0;// 10;
+				int activeAsteroidCount = 10;//0;// 
 				Vec2 asteroidStartPosition = new Vec2(40, 0);
 				void MakeAsteroidRing() {
 					for (int i = 0; i < activeAsteroidCount; i++) {
@@ -325,31 +323,92 @@ namespace asteroids {
 				//graphics.WriteAt(ConsoleGlyph.Convert("player", ConsoleColor.Green), player.Position);
 				LabelList(asteroidPool, ConsoleColor.DarkYellow);
 				LabelList(powerupPool, ConsoleColor.Green);
-				List<Polygon.CollisionData> collisionDatas = null;
-				bool isColliding = testConcaveObj.TryGetPolyCollision(playerCharacter.Polygon, ref collisionDatas);
+				List<Polygon.CollisionData> collisions = null;
+				bool isColliding = testCharacter.Polygon.TryGetPolyCollision(playerCharacter.Polygon, ref collisions);
 				if (isColliding) {
-					graphics.SetColor(ConsoleColor.White);
-					testConcaveObj.Draw(graphics);
+					//graphics.SetColor(ConsoleColor.White);
+					//testCharacter.Draw(graphics);
 					Vec2 collisionAdjustment = Vec2.Zero;
-					//playerCharacter.Position += collision.Normal * collision.Depth;
-					for(int i = 0; i < collisionDatas.Count; ++i) {
-						collisionAdjustment += collisionDatas[i].Normal * collisionDatas[i].Depth;
-						collisionDatas[i].Draw(graphics);
+					for(int i = 0; i < collisions.Count; ++i) {
+						collisionAdjustment += collisions[i].Normal * collisions[i].Depth;
+						collisions[i].Draw(graphics);
 					}
-					collisionAdjustment /= collisionDatas.Count;
 					playerCharacter.Position += collisionAdjustment;
-					//playerCharacter.Position += collisionDatas[0].Normal * collisionDatas[0].Depth;
+
+					// TODO Resolve Velocity (Bounce)
+					Vec2 bounceNormal = collisionAdjustment.Normal;
+					Vec2 testObjectVelocity = Vec2.Zero;//-bounceNormal;// 
+					Vec2 relativeVelocity = playerControl.Velocity - testObjectVelocity;
+					float velAlongNormal = Vec2.Dot(relativeVelocity, bounceNormal);
+					bool velocitiesAreOpposed = velAlongNormal < 0;
+					if (velocitiesAreOpposed) {
+						float restitution = 0.8f; // Bounciness (0 = rock, 1 = super ball)
+						// Simple impulse scalar
+						float j = -(1 + restitution) * velAlongNormal;
+						// If objects have mass, divide j by (1/MassA + 1/MassB) here
+						Vec2 impulse = bounceNormal * j;
+						testObjectVelocity -= impulse; // Add to B
+						playerControl.Velocity += impulse;     // Subtract from A
+
+						//// 2. Approximate Point of Contact (for simplicity, using A's center and Normal/Depth)
+						//// More accurate: find the closest vertex of B to A, or midpoint of deepest edge.
+						//// For this example, let's use the object centers, which is less accurate but simpler:
+						//Vector2 contactPoint = playerCharacter.Polygon + bounceNormal * (collisionAdjustment.Depth / 2f);
+
+						//// 3. Calculate Radius Vectors
+						//Vec2 rA = contactPoint - playerCharacter.Polygon;
+						//Vec2 rB = contactPoint - asteroidPos;
+
+						//// 4. Calculate relative velocity, including rotation component
+						//// v_rel = (vB + (wB x rB)) - (vA + (wA x rA))
+						//// Cross product (w x r) in 2D is: (-w*ry, w*rx)
+						//Vector2 vA_rot = new Vector2(-ship.AngularVelocity * rA.Y, ship.AngularVelocity * rA.X);
+						//Vector2 vB_rot = new Vector2(-asteroid.AngularVelocity * rB.Y, asteroid.AngularVelocity * rB.X);
+
+						//Vector2 relativeVelocity = (asteroid.Velocity + vB_rot) - (ship.Velocity + vA_rot);
+						////float velAlongNormal = Vector2.Dot(relativeVelocity, manifold.Normal);
+
+						//// Only resolve if closing
+						//if (velAlongNormal >= 0) return;
+
+						//// 5. Calculate 2D Cross Products (r x n)
+						//// This is the scalar component of torque
+						//float rACrossN = (rA.X * manifold.Normal.Y) - (rA.Y * manifold.Normal.X);
+						//float rBCrossN = (rB.X * manifold.Normal.Y) - (rB.Y * manifold.Normal.X);
+
+						//// 6. Calculate the Full Impulse Denominator
+						//float denominator =
+						//		(1f / ship.Mass) + (1f / asteroid.Mass) +
+						//		(rACrossN * rACrossN / ship.Inertia) +
+						//		(rBCrossN * rBCrossN / asteroid.Inertia);
+
+						//// 7. Calculate the final scalar impulse magnitude (j)
+						//float j = -(1f + restitution) * velAlongNormal / denominator;
+
+						//// 8. Apply Linear and Angular Impulse
+						//Vector2 impulse = manifold.Normal * j;
+
+						//// Linear Application
+						//ship.Velocity -= impulse * (1f / ship.Mass);
+						//asteroid.Velocity += impulse * (1f / asteroid.Mass);
+
+						//// Angular Application (This creates the spin!)
+						//ship.AngularVelocity -= (rACrossN * j) / ship.Inertia;
+						//asteroid.AngularVelocity += (rBCrossN * j) / asteroid.Inertia;
+					}
+
 				} else {
-					graphics.SetColor(ConsoleColor.DarkGray);
-					testConcaveObj.Draw(graphics);
+					//graphics.SetColor(ConsoleColor.DarkGray);
+					//testConcaveObj.Draw(graphics);
 				}
 			}
 			void LabelList<T>(IList<T> objects, ConsoleColor textColor) where T : IGameObject {
+				string name;
 				for (int i = 0; i < objects.Count; i++) {
-					if (!objects[i].IsActive) {
+					if (!objects[i].IsActive || (name = objects[i].Name) == null) {
 						continue;
 					}
-					graphics.WriteAt(ConsoleGlyph.Convert(objects[i].Name, textColor), objects[i].Position);
+					graphics.WriteAt(ConsoleGlyph.Convert(name, textColor), objects[i].Position);
 				}
 			}
 
@@ -456,39 +515,33 @@ namespace asteroids {
 				--playerAmmo;
 			}
 
-			var collisionRules = new Dictionary<CollisionPair, List<CollisionLogic.Function>>() {
-				[(typeof(MobileCircle), typeof(MobileCircle))] = new List<CollisionLogic.Function>() {
+			var collisionRules = new Dictionary<(byte, byte), List<CollisionLogic.Function>>() {
+				[((byte)AsteroidType.Asteroid, (byte)AsteroidType.Asteroid)] = new List<CollisionLogic.Function>() {
 					(CollisionData collision) => {
 						collision.Get(out MobileCircle astA, out MobileCircle astB);
-						if (astA.TypeId == (byte)AsteroidType.Asteroid && astB.TypeId == (byte)AsteroidType.Asteroid) {
-							return MoveAsteroidOutOf(astB, collision.point);
-						}
-						return null;
+						return MoveAsteroidOutOf(astB, collision.point);
 					}
 				},
-				[(typeof(MobilePolygon), typeof(MobileCircle))] = new List<CollisionLogic.Function>() {
+				[((byte)AsteroidType.Projectile, (byte)AsteroidType.Asteroid)] = new List<CollisionLogic.Function>() {
+					(CollisionData collision) => {
+						collision.Get(out MobilePolygon projectile, out MobileCircle asteroid);
+						return CollideProjectileAndAsteroid(projectile, asteroid);
+					}
+				},
+				[((byte)AsteroidType.Player, (byte)AsteroidType.Asteroid)] = new List<CollisionLogic.Function>() {
 					(CollisionData collision) => {
 						collision.Get(out MobilePolygon polygon, out MobileCircle circle);
-						switch (polygon.TypeId) {
-						case (byte)AsteroidType.Projectile:
-							switch (circle.TypeId) {
-								case (byte)AsteroidType.Asteroid:
-									return CollideProjectileAndAsteroid(polygon, circle);
-							}
-							break;
-						case (byte)AsteroidType.Player:
-							switch(circle.TypeId) {
-								case (byte)AsteroidType.Asteroid:
-									return CollidePlayerAndAsteroid(collision, polygon, circle);
-								case (byte)AsteroidType.Powerup:
-									return CollidePlayerAndPowerup(polygon, circle);
-							}
-							break;
-						}
-						return null;
+						return CollidePlayerAndAsteroid(collision, polygon, circle);
 					}
-				}
+				},
+				[((byte)AsteroidType.Player, (byte)AsteroidType.Powerup)] = new List<CollisionLogic.Function>() {
+					(CollisionData collision) => {
+						collision.Get(out MobilePolygon player, out MobileCircle powerup);
+						return CollidePlayerAndPowerup(player, powerup);
+					}
+				},
 			};
+
 			Action CollideProjectileAndAsteroid(MobilePolygon projectile, MobileCircle asteroid) {
 				return () => {
 					BreakApartAsteroid(asteroid, projectile, projectile.Position);

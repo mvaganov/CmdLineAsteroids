@@ -51,23 +51,6 @@ namespace collision {
 			}
 		}
 	}
-	public struct CollisionPair {
-		public Type a, b;
-		public CollisionPair(ICollidable a, ICollidable b) : this(a.GetType(), b.GetType()) { }
-		public CollisionPair(Type a, Type b) {
-			Type collideType = typeof(ICollidable);
-			bool validPair = collideType.IsAssignableFrom(a) && collideType.IsAssignableFrom(b);
-			if (!validPair) {
-				throw new Exception("invalid pair, both must be collidable");
-			}
-			this.a = a;
-			this.b = b;
-		}
-		public override int GetHashCode() { return a.GetHashCode() ^ b.GetHashCode(); }
-		public override bool Equals(object obj) => obj is CollisionPair other && Equals(other);
-		public bool Equals(CollisionPair other) => a == other.a && b == other.b;
-		public static implicit operator CollisionPair((Type a, Type b) tuple) => new CollisionPair(tuple.a, tuple.b);
-	}
 
 	public static class CollisionLogic {
 		/// <returns>collision resolution function, null if no collision happened or collision was trivial</returns>
@@ -85,16 +68,8 @@ namespace collision {
 			public override bool Equals(object obj) => obj is ToResolve other && Equals(other);
 			public bool Equals(ToResolve other) => collision.Equals(other.collision);
 		}
-		//public static List<ToResolve> DoCollisionLogic<T>(IList<T> collidables,
-		//	Dictionary<CollisionPair, List<Function>> rules) where T : ICollidable {
-		//	List<CollisionData> collisionData = new List<CollisionData>();
-		//	FindCollisions(collidables, rules, collisionData);
-		//	List<ToResolve> collisionResolutions = new List<ToResolve>();
-		//	CalculateCollisionResolution(collisionData, collisionResolutions);
-		//	return collisionResolutions;
-		//}
 		public static void CalculateCollisions<T>(IList<T> collidables,
-			Dictionary<CollisionPair, List<Function>> rules, IList<CollisionData> out_collisionData) where T : ICollidable {
+			Dictionary<(byte,byte), List<Function>> rules, IList<CollisionData> out_collisionData) where T : ICollidable {
 			for (int i = 0; i < collidables.Count; i++) {
 				ICollidable ci = collidables[i];
 				for (int j = i + 1; j < collidables.Count; j++) {
@@ -107,8 +82,8 @@ namespace collision {
 			}
 		}
 		public static CollisionData DoCollisionLogicOnPair(ICollidable a, ICollidable b,
-			Dictionary<CollisionPair, List<Function>> rules) {
-			if (!rules.TryGetValue(new CollisionPair(a, b), out List<Function> collisionFunctions)) {
+			Dictionary<(byte,byte), List<Function>> rules) {
+			if (!rules.TryGetValue((a.TypeId, b.TypeId), out List<Function> collisionFunctions)) {
 				return null;
 			}
 			CollisionData collision = a.IsColliding(b);
@@ -127,7 +102,7 @@ namespace collision {
 		}
 
 		public static void DoCollisionLogicAndResolve<T>(IList<T> collidables,
-			Dictionary<CollisionPair, List<Function>> rules) where T : ICollidable {
+			Dictionary<(byte,byte), List<Function>> rules) where T : ICollidable {
 			//List<ToResolve> collisionResolutions = DoCollisionLogic<T>(collidables, rules);
 			List<CollisionData> collisionData = new List<CollisionData>();
 			CalculateCollisions(collidables, rules, collisionData);
