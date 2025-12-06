@@ -33,8 +33,8 @@ namespace collision {
 			root.Populate(collideList, mem);
 			EnsureTrueParent();
 		}
-		public void DoCollisionLogicAndResolve(Dictionary<(byte, byte), List<CollisionLogic.Function>> collisionRules, CollisionDatabase collisionDatabase) {
-			root.DoCollisionLogicAndResolve(collisionRules, collisionDatabase);
+		public void CalculateCollisionsAndResolve(Dictionary<(byte, byte), List<CollisionLogic.Function>> collisionRules, CollisionDatabase collisionDatabase) {
+			root.CalculateCollisionsAndResolve(collisionRules, collisionDatabase);
 		}
 		private void EnsureTrueParent() {
 			while(root.Parent != null) {
@@ -343,7 +343,7 @@ namespace collision {
 			}
 		}
 
-		public List<CollisionLogic.ToResolve> DoCollisionLogic(Dictionary<(byte,byte), List<CollisionLogic.Function>> rules,
+		public List<CollisionLogic.ToResolve> CalculateCollisionResolutions(Dictionary<(byte,byte), List<CollisionLogic.Function>> rules,
 			CollisionDatabase collisionDatabase) {
 			IList<CollisionData> collisionData;
 			if (false) {
@@ -364,8 +364,8 @@ namespace collision {
 			CollisionLogic.CalculateCollisionResolution(collisionData, collisionResolutions);
 			return collisionResolutions;
 		}
-		public void DoCollisionLogicAndResolve(Dictionary<(byte, byte), List<CollisionLogic.Function>> rules, CollisionDatabase collisionDatabase) {
-			List<CollisionLogic.ToResolve> collisionsToResolve = DoCollisionLogic(rules, collisionDatabase);
+		public void CalculateCollisionsAndResolve(Dictionary<(byte, byte), List<CollisionLogic.Function>> rules, CollisionDatabase collisionDatabase) {
+			List<CollisionLogic.ToResolve> collisionsToResolve = CalculateCollisionResolutions(rules, collisionDatabase);
 			if (collisionsToResolve == null) {
 				return;
 			}

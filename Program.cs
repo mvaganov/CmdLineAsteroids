@@ -626,7 +626,7 @@ namespace asteroids {
 				if (updating) {
 					//spacePartition.DoCollisionLogicAndResolve(collideList, collisionRules);
 					spacePartition.Populate(collideList);
-					spacePartition.DoCollisionLogicAndResolve(collisionRules, recycleCollisionDatabse?collisionDatabase:null);
+					spacePartition.CalculateCollisionsAndResolve(collisionRules, recycleCollisionDatabse?collisionDatabase:null);
 					//CollisionLogic.DoCollisionLogicAndResolve(collideList, collisionRules);
 					objects.ForEach(o => o.Update());
 					postUpdate.ForEach(a => a.Invoke());
