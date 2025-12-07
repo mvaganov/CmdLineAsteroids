@@ -41,7 +41,6 @@ namespace asteroids {
 			// initialize player
 			Vec2[] playerPoly = new Vec2[] { (5, 0), (-3, 3), (0, 0), (-3, -3) };//(5, 0), (0, 3), (0, -3) };//
 
-			//Vec2[] playerPoly = new Vec2[] { (5, 0), (0, 3), (-1, 0), (0, -3) };
 			float playerRotationAngleDegrees = 5;
 			long playerShootCooldownMs = 50;
 			long playerShootNextPossibleMs = Time.TimeMs + playerShootCooldownMs;
@@ -496,11 +495,11 @@ namespace asteroids {
 			void playerTurnLeft(KeyInput keyInput) { playerControl.RotationDegrees -= playerRotationAngleDegrees; }
 			void playerTurnRight(KeyInput keyInput) { playerControl.RotationDegrees += playerRotationAngleDegrees; }
 			void playerSpinLeft(KeyInput keyInput) {
-				playerControl.ClearRotation();
+				playerControl.ClearRotationTarget();
 				playerControl.RotationRadiansPerSecond = playerControl.RotationRadiansPerSecond != 0 ? 0 : -playerFreeRotationSpeedRadianPerSecond;
 			}
 			void playerSpinRight(KeyInput keyInput) {
-				playerControl.ClearRotation();
+				playerControl.ClearRotationTarget();
 				playerControl.RotationRadiansPerSecond = playerControl.RotationRadiansPerSecond != 0 ? 0 : playerFreeRotationSpeedRadianPerSecond;
 			}
 			void playerShoot(KeyInput ki) {
@@ -515,72 +514,63 @@ namespace asteroids {
 				--playerAmmo;
 			}
 
+			(byte, byte) Rule(AsteroidType a, AsteroidType b) => ((byte)a, (byte)b);
 			var collisionRules = new Dictionary<(byte, byte), List<CollisionLogic.Function>>() {
-				[((byte)AsteroidType.Asteroid, (byte)AsteroidType.Asteroid)] = new List<CollisionLogic.Function>() {
-					(CollisionData collision) => {
-						collision.Get(out MobileCircle astA, out MobileCircle astB);
-						return MoveAsteroidOutOf(astB, collision.point);
-					}
+				[Rule(AsteroidType.Asteroid, AsteroidType.Asteroid)] = new List<CollisionLogic.Function>() {
+					MoveMobileObjectOutOfCollision
 				},
-				[((byte)AsteroidType.Projectile, (byte)AsteroidType.Asteroid)] = new List<CollisionLogic.Function>() {
-					(CollisionData collision) => {
-						collision.Get(out MobilePolygon projectile, out MobileCircle asteroid);
-						return CollideProjectileAndAsteroid(projectile, asteroid);
-					}
+				[Rule(AsteroidType.Projectile, AsteroidType.Asteroid)] = new List<CollisionLogic.Function>() {
+					CollideProjectileAndAsteroid
 				},
-				[((byte)AsteroidType.Player, (byte)AsteroidType.Asteroid)] = new List<CollisionLogic.Function>() {
-					(CollisionData collision) => {
-						collision.Get(out MobilePolygon polygon, out MobileCircle circle);
-						return CollidePlayerAndAsteroid(collision, polygon, circle);
-					}
+				[Rule(AsteroidType.Player, AsteroidType.Asteroid)] = new List<CollisionLogic.Function>() {
+					CollidePlayerAndAsteroid
 				},
-				[((byte)AsteroidType.Player, (byte)AsteroidType.Powerup)] = new List<CollisionLogic.Function>() {
-					(CollisionData collision) => {
-						collision.Get(out MobilePolygon player, out MobileCircle powerup);
-						return CollidePlayerAndPowerup(player, powerup);
-					}
+				[Rule(AsteroidType.Player, AsteroidType.Powerup)] = new List<CollisionLogic.Function>() {
+					CollidePlayerAndPowerup
 				},
 			};
 
-			Action CollideProjectileAndAsteroid(MobilePolygon projectile, MobileCircle asteroid) {
+			Action MoveMobileObjectOutOfCollision(CollisionData collision) {
+				collision.Get(out MobileCircle moving, out MobileCircle notMoving);
+				return MoveObjectOutOf(moving, moving.Circle, collision.point, 0.5f);
+			}
+			Action CollideProjectileAndAsteroid(CollisionData collision) {
+				collision.Get(out MobilePolygon projectile, out MobileCircle asteroid);
 				return () => {
 					BreakApartAsteroid(asteroid, projectile, projectile.Position);
-					asteroid.Name = "decomissioned by " + projectile.Name;
 					++playerScore;
 				};
 			}
-			Action CollidePlayerAndAsteroid(CollisionData collision, MobilePolygon player, MobileCircle asteroid) {
+			Action CollidePlayerAndAsteroid(CollisionData collision) {
+				collision.Get(out MobilePolygon player, out MobileCircle asteroid);
 				return () => {
 					float hpLost = asteroid.Radius;
 					explosion.Emit((int)hpLost * 2 + 1, collision.point, ConsoleColor.Magenta, 2, 1);
-					playerControl.ClearRotation();
+					playerControl.ClearRotationTarget();
 					BreakApartAsteroid(asteroid, null, collision.point);
-					asteroid.Name = "decomissioned by Player";
-					Action moveAsteroid = MoveAsteroidOutOf(asteroid, collision.point);
+					Action moveAsteroid = MoveObjectOutOf(asteroid, asteroid.Circle, collision.point, 0.5f);
 					Action movePlayer = MoveMobilePolygoneOutOf(player, collision);
 					moveAsteroid?.Invoke();
 					movePlayer?.Invoke();
 					playerHp -= hpLost;
 				};
 			}
-			Action CollidePlayerAndPowerup(MobilePolygon player, MobileCircle circle) {
+			Action CollidePlayerAndPowerup(CollisionData collision) {
+				collision.Get(out MobilePolygon player, out MobileCircle powerup);
 				return () => {
-					powerupPool.DecommissionDelayed(circle);
-					circle.Name = "Absorbed by Player";
+					powerupPool.DecommissionDelayed(powerup);
 					playerAmmo += 5;
 					if (++playerHp > playerMaxHp) { playerHp = playerMaxHp; }
 				};
 			}
+
 			Action MoveMobilePolygoneOutOf(MobilePolygon poly, CollisionData collision) {
 				int index = collision.self == poly ? collision.colliderIndexSelf :
 				            collision.other == poly ? collision.colliderIndexOther : -1;
 				Circle collidingSubCircle = poly.GetCollisionCircle(index);
-				return MoveObjectOutOf(poly, collidingSubCircle, collision.point);
+				return MoveObjectOutOf(poly, collidingSubCircle, collision.point, 0.5f);
 			}
-			Action MoveAsteroidOutOf(MobileCircle asteroid, Vec2 point) {
-				return MoveObjectOutOf(asteroid, asteroid.Circle, point);
-			}
-			Action MoveObjectOutOf(MobileObject obj, Circle collisionCircle, Vec2 point) {
+			Action MoveObjectOutOf(MobileObject obj, Circle collisionCircle, Vec2 point, float depthPercentageToMove) {
 				Vec2 delta = point - collisionCircle.Position;
 				float distance = delta.Magnitude;
 				if (distance > collisionCircle.Radius) {
@@ -588,12 +578,12 @@ namespace asteroids {
 				}
 				Vec2 dir = delta / distance;
 				float overlap = collisionCircle.Radius - distance;
-				Vec2 bumpMove = dir * overlap / 2;
-				Action postCollisionReflection = () => {
+				Vec2 bumpMove = dir * overlap * depthPercentageToMove;
+				Action postCollisionMoveAndReflection = () => {
 					obj.Velocity = Vec2.Reflect(obj.Velocity, dir);
 					obj.Position -= bumpMove;
 				};
-				return postCollisionReflection;
+				return postCollisionMoveAndReflection;
 			}
 
 			void RestartGame() {

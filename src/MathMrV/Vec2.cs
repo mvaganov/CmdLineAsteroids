@@ -73,8 +73,8 @@ namespace MathMrV {
 		public static float Dot(Vec2 a, Vec2 b) {
 			return a.x * b.x + a.y * b.y;
 		}
-		public static Vec2 Reflect(Vec2 incomingVector, Vec2 normalVector) {
-			return incomingVector - (normalVector * 2 * Vec2.Dot(incomingVector, normalVector));
+		public static Vec2 Reflect(Vec2 incomingVector, Vec2 surfaceNormal) {
+			return incomingVector - (surfaceNormal * 2 * Vec2.Dot(incomingVector, surfaceNormal));
 		}
 
 		public static Vec2 Zero = (0, 0);

@@ -2,17 +2,19 @@
 using MathMrV;
 using System;
 using System.Collections.Generic;
+using ColliderID = System.Byte;
 
 namespace collision {
 	/// <summary>
 	/// Breaks up the world into chunks, like a quad tree or octree.
-	/// Can break up space into column*row branches, creating a more shallow tree for less recursion costs.
+	/// Can break up space into column*row branches, creating a more shallow tree for less recursive search.
 	/// </summary>
-	/// <typeparam name="T"></typeparam>
+	/// <typeparam name="T">base type of object being located by the space partition tree</typeparam>
+	/// <typeparam name="ID">primitive type used for colliding object type IDs</typeparam>
 	public class SpacePartition<T> {
 		protected SpacePartitionCell<T> root;
-		protected Mem mem = new Mem();
-		public class Mem {
+		protected ObjectPools mem = new ObjectPools();
+		public class ObjectPools {
 			public ObjectPool<SpacePartitionCell<T>> cellPool = new ObjectPool<SpacePartitionCell<T>>();
 			public ObjectPool<List<T>> elementListPool = new ObjectPool<List<T>>();
 			public ObjectPool<SpacePartitionCell<T>[,]> branchPool = new ObjectPool<SpacePartitionCell<T>[,]>();
@@ -31,13 +33,13 @@ namespace collision {
 		public Vec2 Position => root.Position;
 		public void Populate(IEnumerable<T> collideList) {
 			root.Populate(collideList, mem);
-			EnsureTrueParent();
+			EnsureTrueParentIfCellsGrowOut();
 		}
-		public void CalculateCollisionsAndResolve(Dictionary<(byte, byte), List<CollisionLogic.Function>> collisionRules, CollisionDatabase collisionDatabase) {
+		public void CalculateCollisionsAndResolve(Dictionary<(ColliderID,ColliderID), List<CollisionLogic.Function>> collisionRules, CollisionDatabase collisionDatabase) {
 			root.CalculateCollisionsAndResolve(collisionRules, collisionDatabase);
 		}
-		private void EnsureTrueParent() {
-			while(root.Parent != null) {
+		private void EnsureTrueParentIfCellsGrowOut() {
+			while (root.Parent != null) {
 				root = root.Parent;
 			}
 		}
@@ -99,7 +101,7 @@ namespace collision {
 			this.parent = parent;
 		}
 
-		private void Split(SpacePartition<T>.Mem mem, Func<int,int,SpacePartitionCell<T>> getExistingCellAtColumnRow = null) {
+		private void Split(SpacePartition<T>.ObjectPools mem, Func<int,int,SpacePartitionCell<T>> getExistingCellAtColumnRow = null) {
 			if (availableDepth == 0) {
 				throw new Exception("cannot split, already at zero available depth");
 			}
@@ -136,19 +138,19 @@ namespace collision {
 			}
 		}
 
-		public bool Insert(IEnumerable<T> elements, SpacePartition<T>.Mem mem) {
+		public bool Insert(IEnumerable<T> elements, SpacePartition<T>.ObjectPools mem) {
 			bool inserted = false;
 			foreach (T element in elements) {
 				inserted |= Insert(element, mem);
 			}
 			return inserted;
 		}
-		public bool Insert(T element, SpacePartition<T>.Mem mem) {
+		public bool Insert(T element, SpacePartition<T>.ObjectPools mem) {
 			Circle circle = convertElementToCircle(element);
 			return Insert(circle, element, mem);
 		}
 
-		private bool Insert(Circle circle, T element, SpacePartition<T>.Mem mem) {
+		private bool Insert(Circle circle, T element, SpacePartition<T>.ObjectPools mem) {
 			if (!CircleGoesHere(circle)) {
 				if (parent == null) {
 					InsertIntoNewParent(circle, element, mem);
@@ -168,7 +170,7 @@ namespace collision {
 			}
 			return true;
 		}
-		private void InsertIntoNewParent(Circle circle, T element, SpacePartition<T>.Mem mem) {
+		private void InsertIntoNewParent(Circle circle, T element, SpacePartition<T>.ObjectPools mem) {
 			Vec2 parentCellSize = aabb.Size;
 			Vec2 parentFullSize = parentCellSize.Scaled(new Vec2(columns, rows));
 			Vec2 center = (circle.center + Position) / 2;
@@ -190,7 +192,7 @@ namespace collision {
 			parent.Split(mem, (c, r) => (c == col && r == row) ? this : null);
 			parent.Insert(circle, element, mem);
 		}
-		private bool InsertIntoSubPartitions(Circle circle, T element, SpacePartition<T>.Mem mem) {
+		private bool InsertIntoSubPartitions(Circle circle, T element, SpacePartition<T>.ObjectPools mem) {
 			bool inserted = false;
 			for (int r = 0; r < rows; ++r) {
 				for (int c = 0; c < columns; ++c) {
@@ -288,7 +290,7 @@ namespace collision {
 			return totalFoundPartitions;
 		}
 
-		public void Clear(SpacePartition<T>.Mem mem) {
+		public void Clear(SpacePartition<T>.ObjectPools mem) {
 			if (elements != null) {
 				elements.Clear();
 				mem.elementListPool.Decommission(elements);
@@ -306,12 +308,12 @@ namespace collision {
 			}
 		}
 
-		public void Populate(IEnumerable<T> elementList, SpacePartition<T>.Mem mem) {
+		public void Populate(IEnumerable<T> elementList, SpacePartition<T>.ObjectPools mem) {
 			Clear(mem);
 			Insert(elementList, mem);
 		}
 
-		public void FindCollisions(Dictionary<(byte,byte), List<CollisionLogic.Function>> rules, 
+		public void FindCollisions(Dictionary<(ColliderID,ColliderID), List<CollisionLogic.Function>> rules, 
 			IList<CollisionData> collisionData) {
 			if (elements != null) {
 				CollisionLogic.CalculateCollisions(elements as IList<ICollidable>, rules, collisionData);
@@ -327,7 +329,7 @@ namespace collision {
 			}
 		}
 
-		public void FindCollisions(Dictionary<(byte,byte), List<CollisionLogic.Function>> rules,
+		public void FindCollisions(Dictionary<(ColliderID,ColliderID), List<CollisionLogic.Function>> rules,
 	CollisionDatabase collisionDatabase) {
 			if (elements != null) {
 				CollisionLogic.CalculateCollisions(elements as IList<ICollidable>, rules, collisionDatabase);
@@ -343,8 +345,8 @@ namespace collision {
 			}
 		}
 
-		public List<CollisionLogic.ToResolve> CalculateCollisionResolutions(Dictionary<(byte,byte), List<CollisionLogic.Function>> rules,
-			CollisionDatabase collisionDatabase) {
+		public List<CollisionLogic.ToResolve> CalculateCollisionResolutions(Dictionary<(ColliderID,ColliderID),
+		List<CollisionLogic.Function>> rules, CollisionDatabase collisionDatabase) {
 			IList<CollisionData> collisionData;
 			if (false) {
 				List<CollisionData> collisionDataList = new List<CollisionData>();
@@ -364,7 +366,7 @@ namespace collision {
 			CollisionLogic.CalculateCollisionResolution(collisionData, collisionResolutions);
 			return collisionResolutions;
 		}
-		public void CalculateCollisionsAndResolve(Dictionary<(byte, byte), List<CollisionLogic.Function>> rules, CollisionDatabase collisionDatabase) {
+		public void CalculateCollisionsAndResolve(Dictionary<(ColliderID,ColliderID), List<CollisionLogic.Function>> rules, CollisionDatabase collisionDatabase) {
 			List<CollisionLogic.ToResolve> collisionsToResolve = CalculateCollisionResolutions(rules, collisionDatabase);
 			if (collisionsToResolve == null) {
 				return;

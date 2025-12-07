@@ -107,7 +107,7 @@ namespace asteroids {
 			float deltaToTarget = GetRealDeltaRotationAccountingForWrap(_targetDirection, currentAngle);
 			_rotationRadiansPerSecond = (deltaToTarget < 0) ? -speed : speed;
 		}
-		public void ClearRotation() {
+		public void ClearRotationTarget() {
 			_targetDirection = float.NaN;
 			_rotationRadiansPerSecond = 0;
 		}

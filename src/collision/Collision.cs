@@ -2,6 +2,7 @@
 using MathMrV;
 using System;
 using System.Collections.Generic;
+using ColliderID = System.Byte;
 
 namespace collision {
 	public class CollisionData {
@@ -68,7 +69,7 @@ namespace collision {
 			public bool Equals(ToResolve other) => collision.Equals(other.collision);
 		}
 		public static void CalculateCollisions<T>(IList<T> collidables,
-			Dictionary<(byte,byte), List<Function>> rules, IList<CollisionData> out_collisionData) where T : ICollidable {
+			Dictionary<(ColliderID,ColliderID), List<Function>> rules, IList<CollisionData> out_collisionData) where T : ICollidable {
 			for (int objectAIndex = 0; objectAIndex < collidables.Count; objectAIndex++) {
 				ICollidable objectA = collidables[objectAIndex];
 				for (int objectBIndex = objectAIndex + 1; objectBIndex < collidables.Count; objectBIndex++) {
@@ -81,7 +82,7 @@ namespace collision {
 			}
 		}
 		public static CollisionData DetermineCollisionLogicForPair(ICollidable a, ICollidable b,
-			Dictionary<(byte,byte), List<Function>> rules) {
+			Dictionary<(ColliderID,ColliderID), List<Function>> rules) {
 			if (!rules.TryGetValue((a.TypeId, b.TypeId), out List<Function> collisionFunctions)) {
 				return null;
 			}
@@ -100,7 +101,7 @@ namespace collision {
 		}
 
 		public static void DoCollisionLogicAndResolve<T>(IList<T> collidables,
-			Dictionary<(byte,byte), List<Function>> rules) where T : ICollidable {
+			Dictionary<(ColliderID,ColliderID), List<Function>> rules) where T : ICollidable {
 			List<CollisionData> collisionData = new List<CollisionData>();
 			CalculateCollisions(collidables, rules, collisionData);
 			List<ToResolve> collisionResolutions = new List<ToResolve>();
