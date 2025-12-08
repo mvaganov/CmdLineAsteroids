@@ -26,18 +26,18 @@ namespace MathMrV {
 			cacheValid = false;
 			cachedPoints = null;
 			convexHullIndexLists = null;
-			UpdateConvexHullIndexLists();
 		}
 		public void SetDirty() => cacheValid = false;
 		public Vec2 GetPoint(int index) {
 			UpdateCacheAsNeeded();
 			return cachedPoints[index];
 		}
-		public void SetPoint(int index, Vec2 point) {
+		public void SetPointGlobalSpace(int index, Vec2 point) {
 			cachedPoints[index] = point;
-			float ca = directionUnitVector.x;
-			float sa = directionUnitVector.y;
-			original.Points[index] = new Vec2(ca * point.x - sa * point.y, sa * point.x + ca * point.y);
+			float cos = directionUnitVector.x, sin = -directionUnitVector.y;
+			point -= position;
+			original.Points[index] = new Vec2(cos * point.x - sin * point.y, sin * point.x + cos * point.y);
+			cacheValid = false;
 		}
 		public void Draw(CommandLineCanvas canvas) {
 			UpdateCacheAsNeeded();
@@ -45,26 +45,24 @@ namespace MathMrV {
 		}
 		public bool IsInsidePolygon(Vec2 point) => PolygonShape.IsInPolygon(cachedPoints, point);
 		private void UpdateCacheAsNeeded() {
-			if (cacheValid) {
-				return;
-			}
+			if (cacheValid) { return; }
 			ForceUpdateCache();
 		}
 		private void ForceUpdateCache() {
 			if (cachedPoints == null || cachedPoints.Length != original.Points.Length) {
 				cachedPoints = new Vec2[original.Points.Length];
 			}
-			float ca = directionUnitVector.x;
-			float sa = directionUnitVector.y;
+			float cos = directionUnitVector.x, sin = directionUnitVector.y;
 			for (int i = 0; i < original.Points.Length; i++) {
 				Vec2 v = original.Points[i];
-				cachedPoints[i] = new Vec2(ca * v.x - sa * v.y + position.x, sa * v.x + ca * v.y + position.y);
+				cachedPoints[i] = new Vec2(cos * v.x - sin * v.y + position.x, sin * v.x + cos * v.y + position.y);
 			}
 			if (!PolygonShape.TryGetAABB(cachedPoints, out cachedBoundBoxMin, out cachedBoundBoxMax)) {
 				throw new Exception("failed to calculate bounding box for polygon");
 			}
-			cachedBoundBoxMin.Floor();
-			cachedBoundBoxMax.Ceil();
+			//cachedBoundBoxMin.Floor();
+			//cachedBoundBoxMax.Ceil();
+			UpdateConvexHullIndexLists();
 			cacheValid = true;
 		}
 	}

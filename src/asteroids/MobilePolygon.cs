@@ -2,6 +2,7 @@
 using ConsoleMrV;
 using MathMrV;
 using MrV;
+using System;
 
 namespace asteroids {
 	public class MobilePolygon : MobileObject, ICollidable {
@@ -65,10 +66,13 @@ namespace asteroids {
 			if (!GetCollisionBoundingCircle().IsColliding(circle)) {
 				return null;
 			}
-			if (_detailedCollisionCirclesInLocalSpace == null) {
-				return CollisionData.ForCircles(GetCollisionBoundingCircle(), circle);
+			if (polygon.TryGetCircleCollision(circle.Position, circle.radius,
+			out Vec2 closestPoint, out Vec2 circleToPointDelta, out float closestDistanceSq)) {
+				float depthOfCircleOverlap = circle.radius - MathF.Sqrt(closestDistanceSq);
+				Vec2 normal = circleToPointDelta.Normal;
+				return new CollisionData(this, null, closestPoint, normal, depthOfCircleOverlap);
 			}
-			return GetCollisionInternal(circle);
+			return null;
 		}
 		private CollisionData GetCollisionInternal(Circle otherCircle) {
 			for (int i = 0; i < _detailedCollisionCirclesInLocalSpace.Length; ++i) {

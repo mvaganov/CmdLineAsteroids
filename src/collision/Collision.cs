@@ -9,8 +9,8 @@ namespace collision {
 		public ICollidable self;
 		public ICollidable other;
 		public Vec2 point;
-		public Vec2 pointSelf;
-		public Vec2 pointOther;
+		public Vec2 normal;
+		public float depth;
 		public int colliderIndexSelf = -1;
 		public int colliderIndexOther = -1;
 		public List<CollisionLogic.Function> collisionFunctions;
@@ -19,17 +19,22 @@ namespace collision {
 			self = (TypeA)this.self;
 			other = (TypeB)this.other;
 		}
-		public CollisionData(ICollidable self, ICollidable other, Vec2 point, Vec2 pointSelf, Vec2 pointOther) {
+		public CollisionData(ICollidable self, ICollidable other, Vec2 point, Vec2 normal, float depth) {
 			this.self = self;
 			this.other = other;
 			this.point = point;
-			this.pointSelf = pointSelf;
-			this.pointOther = pointOther;
+			this.normal = normal;
+			if (normal.Magnitude > 1.1f || normal.Magnitude < 0.9f) {
+				throw new Exception("bad normal");
+			}
+			this.depth = depth;
 		}
 		public void SetParticipants(ICollidable self, ICollidable other) { this.self = self; this.other = other; }
 		public static CollisionData ForCircles(Circle a, Circle b) {
-			if (Circle.TryGetCircleCollisionPoints(a, b, out Vec2 pa, out Vec2 pb)) {
-				return new CollisionData(null, null, (pa + pb) / 2, pa, pb);
+			if (Circle.TryGetCircleCollision(a, b, out Vec2 delta, out float depth)) {
+				Vec2 normal = -delta.Normal;
+				Vec2 centerOfCollision = a.center + normal * (a.radius - depth / 2);
+				return new CollisionData(null, null, centerOfCollision, normal, depth);
 			}
 			return null;
 		}

@@ -25,19 +25,12 @@ namespace MathMrV {
 		}
 		public bool IsColliding(Circle other) => IsColliding(center, radius, other.center, other.radius);
 		public bool TryGetAABB(out Vec2 min, out Vec2 max) => TryGetAABB(center, radius, out min, out max);
-		public static bool TryGetCircleCollisionPoints(Circle a, Circle b, out Vec2 pointA, out Vec2 pointB) {
-			Vec2 delta = b.center - a.center;
+		public static bool TryGetCircleCollision(Circle a, Circle b, out Vec2 delta, out float depth) {
+			delta = b.center - a.center;
 			float dist = delta.Magnitude;
 			float totalRad = a.radius + b.radius;
-			if (dist > totalRad) {
-				pointA = a.center;
-				pointB = b.center;
-				return false;
-			}
-			Vec2 dir = delta / dist;
-			pointA = a.center + dir * a.radius;
-			pointB = b.center - dir * b.radius;
-			return true;
+			depth = totalRad - dist;
+			return depth > 0;
 		}
 		public static bool IsColliding(Vec2 centerA, float radiusA, Vec2 centerB, float radiusB) {
 			float dx = centerA.x - centerB.x;

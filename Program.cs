@@ -4,10 +4,12 @@ using MathMrV;
 using MrV;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Numerics;
 
 namespace asteroids {
 	public class Program {
-		enum AsteroidType { None, Player, Asteroid, Projectile, Powerup, Test }
+		enum AsteroidType : byte { None, Player, Asteroid, Projectile, Powerup, Test }
 		static void Main(string[] args) {
 			// initialize system
 			Random random = new Random();
@@ -139,7 +141,7 @@ namespace asteroids {
 			ObjectPool<MobilePolygon> projectilePool = new ObjectPool<MobilePolygon>();
 			projectilePool.Setup(() => {
 				MobilePolygon projectile = new MobilePolygon(projectilePoly);
-				projectile.TypeId = (int)AsteroidType.Projectile;
+				projectile.TypeId = (byte)AsteroidType.Projectile;
 				projectile.Color = ConsoleColor.Red;
 				return projectile;
 			}, projectile => {
@@ -154,7 +156,7 @@ namespace asteroids {
 				NameObjectsByIndex(projectilePool, "");
 			}, projectile => {
 				projectile.Color = ConsoleColor.Magenta;
-				projectile.TypeId = (int)AsteroidType.None;
+				projectile.TypeId = (byte)AsteroidType.None;
 			});
 			void NameObjectsByIndex<T>(IList<T> objects, string prefix) where T : IGameObject {
 				for(int i = 0; i < objects.Count; ++i) {
@@ -174,7 +176,7 @@ namespace asteroids {
 			ObjectPool<MobileCircle> asteroidPool = new ObjectPool<MobileCircle>();
 			asteroidPool.Setup(() => new MobileCircle(new Circle()), asteroid => {
 				asteroid.Color = ConsoleColor.Gray;
-				asteroid.TypeId = (int)AsteroidType.Asteroid;
+				asteroid.TypeId = (byte)AsteroidType.Asteroid;
 				asteroid.Radius = asteroidStartRadius;
 				asteroid.IsActive = true;
 				objects.Add(asteroid);
@@ -187,13 +189,13 @@ namespace asteroids {
 				NameObjectsByIndex(asteroidPool, "a");
 			}, asteroid => {
 				asteroid.Color = ConsoleColor.Magenta;
-				asteroid.TypeId = (int)AsteroidType.None;
+				asteroid.TypeId = (byte)AsteroidType.None;
 			});
 
 			float asteroidMinimumRadiusThatDivides = 3;
 			int asteroidBreakupCount = 3;
 			void StartAsteroids() {
-				int activeAsteroidCount = 10;//0;// 
+				int activeAsteroidCount = 8;//0;// 
 				Vec2 asteroidStartPosition = new Vec2(40, 0);
 				void MakeAsteroidRing() {
 					for (int i = 0; i < activeAsteroidCount; i++) {
@@ -203,40 +205,32 @@ namespace asteroids {
 						asteroid.Velocity = Vec2.NormalFromDegrees(Rand.Number * 360);
 					}
 				}
-				for (int layers = 0; layers < 3; ++layers) {
+				for (int layers = 0; layers < 2; ++layers) {
 					MakeAsteroidRing();
 					asteroidStartPosition *= 2;
 					activeAsteroidCount *= 2;
 				}
 			}
-			void BreakApartAsteroid(MobileCircle asteroid, MobileObject projectile, Vec2 collisionPosition) {
+			bool BreakApartAsteroid(MobileCircle asteroid, Vec2 collisionPosition) {
 				explosion.Emit((int)(asteroid.Radius * asteroid.Radius) + 1, asteroid.Position, ConsoleColor.Gray, (0, asteroid.Radius));
-				if (asteroid.Radius <= asteroidMinimumRadiusThatDivides) {
-					asteroidPool.DecommissionDelayed(asteroid);
-					CreatePowerup(projectile, collisionPosition);
-					explosion.Emit(10, collisionPosition, ConsoleColor.Cyan, 0);
-				} else {
-					if (projectile != null) {
-						explosion.Emit(10, collisionPosition, ConsoleColor.Red, 0);
-					}
-					Vec2 deltaFromCenter = collisionPosition - asteroid.Position;
-					Vec2 direction = deltaFromCenter.Normal;
-					float degreesSeperatingFragments = 360f / asteroidBreakupCount;
-					Vec2 positionRadius = direction * (asteroid.Radius / 2);
-					positionRadius.RotateDegrees(degreesSeperatingFragments/2);
-					Vec2[] points = PolygonShape.CreateRegular(asteroidBreakupCount, positionRadius);
-					float subAsteroidRadius = points[0].Distance(points[1]) / 2;
-					for(int i = 0; i < points.Length; ++i) {
-						MobileCircle newAsteroid = asteroidPool.Commission();
-						newAsteroid.Radius = subAsteroidRadius;
-						newAsteroid.Position = asteroid.Position + points[i];
-						newAsteroid.Velocity = asteroid.Velocity + points[i];
-					}
-					asteroidPool.DecommissionDelayed(asteroid);
+				asteroidPool.DecommissionDelayed(asteroid);
+				if (asteroid.Radius < asteroidMinimumRadiusThatDivides) {
+					return false;
 				}
-				if (projectile != null && projectile.IsActive) {
-					projectilePool.DecommissionDelayed(projectile as MobilePolygon);
+				Vec2 deltaFromCenter = collisionPosition - asteroid.Position;
+				Vec2 direction = deltaFromCenter.Normal;
+				float degreesSeperatingFragments = 360f / asteroidBreakupCount;
+				Vec2 positionRadius = direction * (asteroid.Radius / 2);
+				positionRadius.RotateDegrees(degreesSeperatingFragments/2);
+				Vec2[] points = PolygonShape.CreateRegular(asteroidBreakupCount, positionRadius);
+				float subAsteroidRadius = points[0].Distance(points[1]) / 2;
+				for(int i = 0; i < points.Length; ++i) {
+					MobileCircle newAsteroid = asteroidPool.Commission();
+					newAsteroid.Radius = subAsteroidRadius;
+					newAsteroid.Position = asteroid.Position + points[i];
+					newAsteroid.Velocity = asteroid.Velocity + points[i];
 				}
+				return true;
 			}
 
 			// initialize powerups
@@ -517,7 +511,7 @@ namespace asteroids {
 			(byte, byte) Rule(AsteroidType a, AsteroidType b) => ((byte)a, (byte)b);
 			var collisionRules = new Dictionary<(byte, byte), List<CollisionLogic.Function>>() {
 				[Rule(AsteroidType.Asteroid, AsteroidType.Asteroid)] = new List<CollisionLogic.Function>() {
-					MoveMobileObjectOutOfCollision
+					CollideAsteroids
 				},
 				[Rule(AsteroidType.Projectile, AsteroidType.Asteroid)] = new List<CollisionLogic.Function>() {
 					CollideProjectileAndAsteroid
@@ -530,14 +524,26 @@ namespace asteroids {
 				},
 			};
 
-			Action MoveMobileObjectOutOfCollision(CollisionData collision) {
-				collision.Get(out MobileCircle moving, out MobileCircle notMoving);
-				return MoveObjectOutOf(moving, moving.Circle, collision.point, 0.5f);
+			Action CollideAsteroids(CollisionData collision) {
+				return () => {
+					collision.Get(out MobileCircle objA, out MobileCircle objB);
+					float objAMass = objA.Radius * objA.Radius;
+					float objBMass = objB.Radius * objB.Radius;
+					float massAPercentage = objAMass / (objAMass + objBMass);
+					MobileObject.SeparateObjects(objA, objB, collision.normal, collision.depth, massAPercentage);
+					MobileObject.BounceVelocities(objA, objB, objAMass, objBMass, collision.normal);
+				};
 			}
 			Action CollideProjectileAndAsteroid(CollisionData collision) {
 				collision.Get(out MobilePolygon projectile, out MobileCircle asteroid);
 				return () => {
-					BreakApartAsteroid(asteroid, projectile, projectile.Position);
+					explosion.Emit(10, projectile.Position, projectile.Color, 0);
+					if (!BreakApartAsteroid(asteroid, projectile.Position)) {
+						CreatePowerup(projectile, projectile.Position);
+					}
+					if (projectile.IsActive) {
+						projectilePool.DecommissionDelayed(projectile);
+					}
 					++playerScore;
 				};
 			}
@@ -546,13 +552,17 @@ namespace asteroids {
 				return () => {
 					float hpLost = asteroid.Radius;
 					explosion.Emit((int)hpLost * 2 + 1, collision.point, ConsoleColor.Magenta, 2, 1);
-					playerControl.ClearRotationTarget();
-					BreakApartAsteroid(asteroid, null, collision.point);
-					Action moveAsteroid = MoveObjectOutOf(asteroid, asteroid.Circle, collision.point, 0.5f);
-					Action movePlayer = MoveMobilePolygoneOutOf(player, collision);
-					moveAsteroid?.Invoke();
-					movePlayer?.Invoke();
+					bool asteroidDestroyed = asteroid.Radius < playerHp;
 					playerHp -= hpLost;
+					playerControl.ClearRotationTarget();
+					float playerMass = player.BoundingCircleInLocalSpace.radius * player.BoundingCircleInLocalSpace.radius;
+					float asteroidMass = asteroid.Radius * asteroid.Radius;
+					float playerMassPercentage = playerMass / (playerMass + asteroidMass);
+					MobileObject.SeparateObjects(player, asteroid, collision.normal, collision.depth, playerMassPercentage);
+					MobileObject.BounceVelocities(player, asteroid, asteroidMass, playerMass, collision.normal);
+					if (asteroidDestroyed) {
+						BreakApartAsteroid(asteroid, collision.point);
+					}
 				};
 			}
 			Action CollidePlayerAndPowerup(CollisionData collision) {
@@ -562,28 +572,6 @@ namespace asteroids {
 					playerAmmo += 5;
 					if (++playerHp > playerMaxHp) { playerHp = playerMaxHp; }
 				};
-			}
-
-			Action MoveMobilePolygoneOutOf(MobilePolygon poly, CollisionData collision) {
-				int index = collision.self == poly ? collision.colliderIndexSelf :
-				            collision.other == poly ? collision.colliderIndexOther : -1;
-				Circle collidingSubCircle = poly.GetCollisionCircle(index);
-				return MoveObjectOutOf(poly, collidingSubCircle, collision.point, 0.5f);
-			}
-			Action MoveObjectOutOf(MobileObject obj, Circle collisionCircle, Vec2 point, float depthPercentageToMove) {
-				Vec2 delta = point - collisionCircle.Position;
-				float distance = delta.Magnitude;
-				if (distance > collisionCircle.Radius) {
-					return null;
-				}
-				Vec2 dir = delta / distance;
-				float overlap = collisionCircle.Radius - distance;
-				Vec2 bumpMove = dir * overlap * depthPercentageToMove;
-				Action postCollisionMoveAndReflection = () => {
-					obj.Velocity = Vec2.Reflect(obj.Velocity, dir);
-					obj.Position -= bumpMove;
-				};
-				return postCollisionMoveAndReflection;
 			}
 
 			void RestartGame() {

@@ -2,6 +2,7 @@
 using MathMrV;
 using MrV;
 using System;
+using ColliderID = System.Byte;
 
 namespace asteroids {
 	public abstract class MobileObject : IGameObject {
@@ -24,7 +25,7 @@ namespace asteroids {
 			set { Direction = Vec2.NormalFromDegrees(value); }
 		}
 		public ConsoleColor Color { get => _color; set => _color = value; }
-		public byte TypeId { get; set; }
+		public ColliderID TypeId { get; set; }
 		public abstract void Draw(CommandLineCanvas canvas);
 		public virtual void Update() {
 			if (!_active) {
@@ -38,6 +39,27 @@ namespace asteroids {
 			IsActive = other._active;
 			Velocity = other._velocity;
 			Color = other._color;
+		}
+
+		public static void SeparateObjects(MobileObject mobA, MobileObject mobB, Vec2 normal, float depth, float massAPercentage) {
+			Vec2 bump = normal * depth;
+			mobA.Position += bump * massAPercentage;
+			mobB.Position -= bump * (1 - massAPercentage);
+		}
+		public static void BounceVelocities(MobileObject mobA, MobileObject mobB, float massA, float massB, Vec2 collisionNormal) {
+			Vec2 relativeVelocity = mobA.Velocity - mobB.Velocity;
+			float velAlongNormal = Vec2.Dot(relativeVelocity, collisionNormal);
+			bool velocitiesAreAligned = velAlongNormal > 0;
+			if (velocitiesAreAligned) { return; }
+			float restitution = 0.8f; // Bounciness (0 = rock, 1 = super ball)
+			float invMassA = 1.0f / massA;
+			float invMassB = 1.0f / massB;
+			float numerator = -(1 + restitution) * velAlongNormal;
+			float denominator = invMassA + invMassB;
+			float impulseScalar = numerator / denominator;
+			Vec2 impulse = collisionNormal * impulseScalar;
+			mobA.Velocity += impulse * invMassA;
+			mobB.Velocity -= impulse * invMassB;
 		}
 	}
 }
