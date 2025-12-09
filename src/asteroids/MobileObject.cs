@@ -61,5 +61,60 @@ namespace asteroids {
 			mobA.Velocity += impulse * invMassA;
 			mobB.Velocity -= impulse * invMassB;
 		}
+		public static void CollisionTorque(MobileObject ship, MobileObject asteroid, Vec2 contactPoint,
+			float shipMass, float asteroidMass, ref float shipAngularVelocity, ref float asteroidAngularVelocity, Vec2 collisionNormal) {
+			// 2. Approximate Point of Contact (for simplicity, using A's center and Normal/Depth)
+			// More accurate: find the closest vertex of B to A, or midpoint of deepest edge.
+			// For this example, let's use the object centers, which is less accurate but simpler:
+			//Vec2 contactPoint = playerCharacter.Polygon + bounceNormal * (collisionAdjustment.Depth / 2f);
+
+			// 3. Calculate Radius Vectors
+			Vec2 rA = contactPoint - ship.Position;
+			Vec2 rB = contactPoint - asteroid.Position;
+
+			// 4. Calculate relative velocity, including rotation component
+			// v_rel = (vB + (wB x rB)) - (vA + (wA x rA))
+			// Cross product (w x r) in 2D is: (-w*ry, w*rx)
+			Vec2 vA_rot = new Vec2(-shipAngularVelocity * rA.Y, shipAngularVelocity * rA.X);
+			Vec2 vB_rot = new Vec2(-asteroidAngularVelocity * rB.Y, asteroidAngularVelocity * rB.X);
+
+			Vec2 relativeVelocity = (asteroid.Velocity + vB_rot) - (ship.Velocity + vA_rot);
+			//float velAlongNormal = Vec2.Dot(relativeVelocity, manifold.Normal);
+
+			float velAlongNormal = Vec2.Dot(relativeVelocity, collisionNormal);
+			// Only resolve if closing
+			if (velAlongNormal >= 0) return;
+
+			// 5. Calculate 2D Cross Products (r x n)
+			// This is the scalar component of torque
+			float rACrossN = (rA.X * collisionNormal.y) - (rA.Y * collisionNormal.x);
+			float rBCrossN = (rB.X * collisionNormal.y) - (rB.Y * collisionNormal.x);
+
+			float restitution = 0.8f; // Bounciness (0 = rock, 1 = super ball)
+			float numerator = -(1f + restitution) * velAlongNormal;
+			// 6. Calculate the Full Impulse Denominator
+			// TODO
+			float shipInertia = 1;
+			float asteroidInertia = 1;
+
+			float denominator =
+					(1f / shipMass) + (1f / asteroidMass) +
+					(rACrossN * rACrossN / shipInertia) +
+					(rBCrossN * rBCrossN / asteroidInertia);
+
+			// 7. Calculate the final scalar impulse magnitude (j)
+			float j = numerator / denominator;
+
+			// 8. Apply Linear and Angular Impulse
+			Vec2 impulse = collisionNormal * j;
+
+			// Linear Application
+			ship.Velocity -= impulse * (1f / shipMass);
+			asteroid.Velocity += impulse * (1f / asteroidMass);
+
+			// Angular Application (This creates the spin!)
+			shipAngularVelocity -= (rACrossN * j) / shipInertia;
+			asteroidAngularVelocity += (rBCrossN * j) / asteroidInertia;
+		}
 	}
 }

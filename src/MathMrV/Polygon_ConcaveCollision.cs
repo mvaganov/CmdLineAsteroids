@@ -6,6 +6,7 @@ using System.Linq;
 namespace MathMrV {
 	public partial class Polygon {
 		private int[][] convexHullIndexLists;
+		private float Area, Inertia;
 		public void DrawConvex(CommandLineCanvas canvas, int convexIndex) {
 			UpdateCacheAsNeeded();
 			List<Vec2> verts = GetConvexVerts(convexIndex);
@@ -13,8 +14,10 @@ namespace MathMrV {
 			bool IsInsidePolygon(Vec2 point) => PolygonShape.IsInPolygon(verts, point);
 		}
 		public void UpdateConvexHullIndexLists() {
-			int[][] triangles = DecomposePolygonIntoTriangles_HertelMehlhorn(original.Points);
-			convexHullIndexLists = ConvertTriangleListIntoConvexHulls(triangles, original.Points);
+			if (convexHullIndexLists != null) { return; }
+			int[][] triangleIndexes = DecomposePolygonIntoTriangles_HertelMehlhorn(original.Points);
+			MrV.Physics.InertiaCalculator.CalculatePolygonAreaAndInertia(original.Points, out Area, out Inertia);
+			convexHullIndexLists = ConvertTriangleListIntoConvexHulls(triangleIndexes, original.Points);
 		}
 		public List<Vec2> GetConvexVerts(int convexIndex) {
 			int[] indexes = convexHullIndexLists[convexIndex];
@@ -72,9 +75,9 @@ namespace MathMrV {
 			return signA == signB && signB == signC;
 		}
 
-		public static int[][] ConvertTriangleListIntoConvexHulls(int[][] triangleIndices, Vec2[] originalVertices) {
-			if (triangleIndices.Length == 0) { return null; }
-			List<int[]> hulls = new List<int[]>(triangleIndices);
+		public static int[][] ConvertTriangleListIntoConvexHulls(int[][] triangleIndexes, Vec2[] originalVertices) {
+			if (triangleIndexes.Length == 0) { return null; }
+			List<int[]> hulls = new List<int[]>(triangleIndexes);
 			while (MergeHulls()) { }
 			bool MergeHulls() {
 				for (int a = 0; a < hulls.Count; a++) {

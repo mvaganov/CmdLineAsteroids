@@ -39,7 +39,7 @@ namespace asteroids {
 			List<ParticleSystem> particleSystems = new List<ParticleSystem>() { marker, explosion };
 
 			// test polygon
-			Vec2[] testPoly = new Vec2[] { (5, 0), (-3, 3), (0, 0), (-3, -3) };// (5, 0), (4,2), (0, 3), (-1, 0), (0, -3) };//(5,0),(0,3),(0,-3) };//
+			Vec2[] testPoly = new Vec2[] {  (5, 0), (6,2), (7,5), (2,5), (3,1), (0, 3), (-1, 0), (0, -3) };//(5, 0), (-3, 3), (0, 0), (-3, -3) };//(5,0),(0,3),(0,-3) };//
 			// initialize player
 			Vec2[] playerPoly = new Vec2[] { (5, 0), (-3, 3), (0, 0), (-3, -3) };//(5, 0), (0, 3), (0, -3) };//
 
