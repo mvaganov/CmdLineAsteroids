@@ -480,21 +480,21 @@ namespace asteroids {
 			}
 			void playerForward(KeyInput ki) {
 				Thrust();
-				playerControl.RotationRadiansPerSecond = 0;
+				playerControl.AngularVelocity = 0;
 			}
 			void playerBrakes(KeyInput ki) {
 				playerControl.Brakes();
-				playerControl.RotationRadiansPerSecond = 0;
+				playerControl.AngularVelocity = 0;
 			}
 			void playerTurnLeft(KeyInput keyInput) { playerControl.RotationDegrees -= playerRotationAngleDegrees; }
 			void playerTurnRight(KeyInput keyInput) { playerControl.RotationDegrees += playerRotationAngleDegrees; }
 			void playerSpinLeft(KeyInput keyInput) {
 				playerControl.ClearRotationTarget();
-				playerControl.RotationRadiansPerSecond = playerControl.RotationRadiansPerSecond != 0 ? 0 : -playerFreeRotationSpeedRadianPerSecond;
+				playerControl.AngularVelocity = playerControl.AngularVelocity != 0 ? 0 : -playerFreeRotationSpeedRadianPerSecond;
 			}
 			void playerSpinRight(KeyInput keyInput) {
 				playerControl.ClearRotationTarget();
-				playerControl.RotationRadiansPerSecond = playerControl.RotationRadiansPerSecond != 0 ? 0 : playerFreeRotationSpeedRadianPerSecond;
+				playerControl.AngularVelocity = playerControl.AngularVelocity != 0 ? 0 : playerFreeRotationSpeedRadianPerSecond;
 			}
 			void playerShoot(KeyInput ki) {
 				if (playerAmmo <= 0 || Time.TimeMs < playerShootNextPossibleMs) {
@@ -555,19 +555,18 @@ namespace asteroids {
 					bool asteroidDestroyed = asteroid.Radius < playerHp;
 					playerHp -= hpLost;
 					playerControl.ClearRotationTarget();
-					float playerMass = player.Polygon.Area;
-					float asteroidMass = asteroid.Circle.Area;
+					float playerMass = player.Area;// Polygon.Area;
+					float asteroidMass = asteroid.Area;// Circle.Area;
 					float playerMassPercentage = playerMass / (playerMass + asteroidMass);
 					MobileObject.SeparateObjects(player, asteroid, collision.normal, collision.depth, playerMassPercentage);
 					MobileObject.BounceVelocities(player, asteroid, asteroidMass, playerMass, collision.normal);
-					float playerAngularVelocity = playerControl.RotationRadiansPerSecond;
+					float playerAngularVelocity = playerControl.AngularVelocity;
 					float asteroidAngularVelocity = 0;
 					float asteroidInertiaWithoutDensity = 0.5f * asteroidMass * asteroid.Radius * asteroid.Radius; // TODO get Intertial value from mobile object
 
-					MobileObject.CollisionTorque(player, asteroid, player.Polygon.Inertia, asteroidInertiaWithoutDensity,
-						collision.point, playerMass, asteroidMass, 
+					MobileObject.CollisionTorque(player, asteroid, collision.point, playerMass, asteroidMass, 
 						ref playerAngularVelocity, ref asteroidAngularVelocity, collision.normal);
-					playerControl.RotationRadiansPerSecond = playerAngularVelocity;
+					playerControl.AngularVelocity = playerAngularVelocity;
 					if (asteroidDestroyed) {
 						BreakApartAsteroid(asteroid, collision.point);
 					}

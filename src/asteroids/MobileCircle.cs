@@ -8,6 +8,9 @@ namespace asteroids {
 		private Circle circle;
 		public override Vec2 Position { get => circle.Position; set => circle.Position = value; }
 		public override Vec2 Direction { get => Velocity.Normal; set { } }
+		public override float Area => circle.Area;
+		public override float Inertia => circle.InertiaWithoutDensity * Density;
+		public override float AngularVelocity { get => 0; set { } }
 		public float Radius { get => circle.Radius; set => circle.Radius = value; }
 		public Circle Circle {  get => circle; set => circle = value; }
 		public static bool DebugShowVelocity = false;

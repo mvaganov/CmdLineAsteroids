@@ -7,7 +7,7 @@ namespace asteroids {
 	public class MobileObjectController : IGameObject {
 		private MobileObject _target;
 		private string _name;
-		private float _rotationRadiansPerSecond;
+		//private float _rotationRadiansPerSecond;
 		private float _thrustDuration = 0;
 		private float _maxSpeed = 1;
 		private float _acceleration = 10;
@@ -24,7 +24,7 @@ namespace asteroids {
 		public float Acceleration { get => _acceleration; set => _acceleration = value; }
 		public float ThrustDuration { get => _thrustDuration; set => _thrustDuration = value; }
 		public float TargetRotation { get => _targetDirection; set => _targetDirection = value; }
-		public float RotationRadiansPerSecond { get => _rotationRadiansPerSecond; set => _rotationRadiansPerSecond = value; }
+		public float AngularVelocity { get => _target.AngularVelocity; set => _target.AngularVelocity = value; }
 		public bool DirectionMatchesVelocity { get => _directionMatchesVelocity; set => _directionMatchesVelocity = value; }
 		public bool AutoStopWithoutThrust { get => _autoStopWithoutThrust; set => _autoStopWithoutThrust = value; }
 		public Vec2 Velocity {
@@ -48,13 +48,11 @@ namespace asteroids {
 
 		public MobileObjectController(MobileObject target) { _target = target; }
 		public void Update() {
-			if (_rotationRadiansPerSecond != 0) {
+			if (AngularVelocity != 0) {
 				float currentRadians = _target.Direction.NormalToRadians();
-				float rotationThisMoment = _rotationRadiansPerSecond * Time.DeltaTimeSeconds;
+				float rotationThisMoment = AngularVelocity * Time.DeltaTimeSeconds;
 				if (!float.IsNaN(_targetDirection)) {
 					UpdateTargetRotationLogic(currentRadians, rotationThisMoment);
-				} else {
-					_target.RotationRadians += rotationThisMoment;
 				}
 			}
 			bool slowDownToStop = _brake;
@@ -84,7 +82,7 @@ namespace asteroids {
 			float deltaToTarget = GetRealDeltaRotationAccountingForWrap(_targetDirection, currentRadians);
 			if (MathF.Abs(rotationThisMoment) > MathF.Abs(deltaToTarget)) {
 				_target.RotationRadians = _targetDirection;
-				_rotationRadiansPerSecond = 0;
+				AngularVelocity = 0;
 				return;
 			}
 			_target.RotationRadians += rotationThisMoment;
@@ -105,11 +103,11 @@ namespace asteroids {
 			_targetDirection = targetRadians;
 			float currentAngle = _target.Direction.NormalToRadians();
 			float deltaToTarget = GetRealDeltaRotationAccountingForWrap(_targetDirection, currentAngle);
-			_rotationRadiansPerSecond = (deltaToTarget < 0) ? -speed : speed;
+			AngularVelocity = (deltaToTarget < 0) ? -speed : speed;
 		}
 		public void ClearRotationTarget() {
 			_targetDirection = float.NaN;
-			_rotationRadiansPerSecond = 0;
+			AngularVelocity = 0;
 		}
 		internal void Brakes() {
 			_thrustDuration = 0;

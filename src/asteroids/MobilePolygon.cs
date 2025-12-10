@@ -9,14 +9,18 @@ namespace asteroids {
 		public static bool ShowCollisionCircles = false;
 		protected Polygon polygon;
 		public Circle BoundingCircleInLocalSpace;
-		protected Circle[] _detailedCollisionCirclesInLocalSpace;
-
+		protected Circle[] _detailedCollisionCirclesInLocalSpace;// TODO remove these
+		private float _angularVelocity;
 		public override Vec2 Position { get => polygon.Position; set => polygon.Position = value; }
 		public override Vec2 Direction { get => polygon.Direction; set => polygon.Direction = value; }
 		public Polygon Polygon { get => polygon; set => polygon = value; }
 		public override float RotationDegrees { get => polygon.RotationDegrees; set => polygon.RotationDegrees = value; }
 		public override float RotationRadians { get => polygon.RotationRadians; set => polygon.RotationRadians = value; }
+		public override float Area => polygon.Area;
+		public override float Inertia => polygon.InertiaWithoutDensity * Density;
 		public Circle[] CollisionCircles { get => _detailedCollisionCirclesInLocalSpace; set => _detailedCollisionCirclesInLocalSpace = value; }
+		public override float AngularVelocity { get => _angularVelocity; set => _angularVelocity = value; }
+
 		public MobilePolygon(Vec2[] playerPoly) {
 			polygon = new Polygon(playerPoly);
 			BoundingCircleInLocalSpace = Welzl.GetMinimumCircle(playerPoly);

@@ -6,7 +6,7 @@ using System.Linq;
 namespace MathMrV {
 	public partial class Polygon {
 		private int[][] convexHullIndexLists;
-		public float Area, Inertia;
+		public float Area, InertiaWithoutDensity;
 		public void DrawConvex(CommandLineCanvas canvas, int convexIndex) {
 			UpdateCacheAsNeeded();
 			List<Vec2> verts = GetConvexVerts(convexIndex);
@@ -16,7 +16,7 @@ namespace MathMrV {
 		public void UpdateConvexHullIndexLists() {
 			if (convexHullIndexLists != null) { return; }
 			int[][] triangleIndexes = DecomposePolygonIntoTriangles_HertelMehlhorn(original.Points);
-			MrV.Physics.InertiaCalculator.CalculatePolygonAreaAndInertia(original.Points, out Area, out Inertia);
+			MrV.Physics.InertiaCalculator.CalculatePolygonAreaAndInertia(original.Points, out Area, out InertiaWithoutDensity);
 			convexHullIndexLists = ConvertTriangleListIntoConvexHulls(triangleIndexes, original.Points);
 		}
 		public List<Vec2> GetConvexVerts(int convexIndex) {

@@ -60,8 +60,6 @@ namespace MathMrV {
 			if (!PolygonShape.TryGetAABB(cachedPoints, out cachedBoundBoxMin, out cachedBoundBoxMax)) {
 				throw new Exception("failed to calculate bounding box for polygon");
 			}
-			//cachedBoundBoxMin.Floor();
-			//cachedBoundBoxMax.Ceil();
 			UpdateConvexHullIndexLists();
 			cacheValid = true;
 		}

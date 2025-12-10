@@ -16,6 +16,14 @@ namespace asteroids {
 		public virtual bool IsVisible { get => IsActive; set => IsActive = value; }
 		public abstract Vec2 Position { get; set; }
 		public abstract Vec2 Direction { get; set; }
+		public abstract float AngularVelocity { get; set; }
+		public abstract float Area { get; }
+		public virtual float Density { get => 1; set => throw new NotImplementedException(); }
+		public virtual float Mass {
+			get => Density * Area;
+			set => Density = value / Area;
+		}
+		public virtual float Inertia { get; }
 		public virtual float RotationRadians {
 			get => Direction.NormalToRadians();
 			set { Direction = Vec2.NormalFromRadians(value); }
@@ -28,11 +36,15 @@ namespace asteroids {
 		public ColliderID TypeId { get; set; }
 		public abstract void Draw(CommandLineCanvas canvas);
 		public virtual void Update() {
-			if (!_active) {
-				return;
-			}
-			Vec2 moveThisFrame = _velocity * Time.DeltaTimeSeconds;
+			if (!_active) { return; }
+			float t = Time.DeltaTimeSeconds;
+			Vec2 moveThisFrame = _velocity * t;
 			Position += moveThisFrame;
+			if (AngularVelocity != 0) {
+				float angleRadians = Direction.NormalToRadians();
+				angleRadians += AngularVelocity * t;
+				Direction = Vec2.NormalFromRadians(angleRadians);
+			}
 		}
 		public virtual void Copy(MobileObject other) {
 			TypeId = other.TypeId;
@@ -61,7 +73,7 @@ namespace asteroids {
 			mobA.Velocity += impulse * invMassA;
 			mobB.Velocity -= impulse * invMassB;
 		}
-		public static void CollisionTorque(MobileObject ship, MobileObject asteroid, float shipInertia, float asteroidInertia, Vec2 contactPoint,
+		public static void CollisionTorque(MobileObject ship, MobileObject asteroid, Vec2 contactPoint,
 			float shipMass, float asteroidMass, ref float shipAngularVelocity, ref float asteroidAngularVelocity, Vec2 collisionNormal) {
 			// 2. Approximate Point of Contact (for simplicity, using A's center and Normal/Depth)
 			// More accurate: find the closest vertex of B to A, or midpoint of deepest edge.
@@ -99,8 +111,8 @@ namespace asteroids {
 
 			float denominator =
 					(1f / shipMass) + (1f / asteroidMass) +
-					(rACrossN * rACrossN / shipInertia) +
-					(rBCrossN * rBCrossN / asteroidInertia);
+					(rACrossN * rACrossN / ship.Inertia) +
+					(rBCrossN * rBCrossN / asteroid.Inertia);
 
 			// 7. Calculate the final scalar impulse magnitude (j)
 			float j = numerator / denominator;
@@ -113,8 +125,8 @@ namespace asteroids {
 			//asteroid.Velocity += impulse * (1f / asteroidMass);
 
 			// Angular Application (This creates the spin!)
-			shipAngularVelocity += (rACrossN * j) / shipInertia;
-			asteroidAngularVelocity -= (rBCrossN * j) / asteroidInertia;
+			shipAngularVelocity += (rACrossN * j) / ship.Inertia;
+			asteroidAngularVelocity -= (rBCrossN * j) / asteroid.Inertia;
 		}
 	}
 }

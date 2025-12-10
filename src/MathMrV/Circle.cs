@@ -7,7 +7,9 @@ namespace MathMrV {
 		public float radius;
 		public Vec2 Position { get => center; set => center = value; }
 		public float Radius { get => radius; set => radius = value; }
-		public float Area { get => radius * radius * MathF.PI; }
+		public float Area => radius * radius * MathF.PI;
+		public float InertiaWithoutDensity => 0.5f * Area * radius * radius;
+
 		public static Circle NaN = new Circle(Vec2.NaN, float.NaN);
 
 		public Circle(Vec2 position, float radius) { this.center = position; this.radius = radius; }

@@ -93,6 +93,8 @@ namespace ConsoleMrV {
 		}
 
 		public void DrawSupersampledShape(Func<Vec2, bool> isInsideShape, Vec2 aabbMin, Vec2 aabbMax) {
+			aabbMin.Floor();
+			aabbMax.Ceil();
 			Vec2 renderMin = aabbMin - _originOffsetULCorner;
 			Vec2 renderMax = aabbMax - _originOffsetULCorner;
 			renderMin.InverseScale(_scale);
