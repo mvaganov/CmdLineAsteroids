@@ -61,7 +61,7 @@ namespace asteroids {
 			mobA.Velocity += impulse * invMassA;
 			mobB.Velocity -= impulse * invMassB;
 		}
-		public static void CollisionTorque(MobileObject ship, MobileObject asteroid, Vec2 contactPoint,
+		public static void CollisionTorque(MobileObject ship, MobileObject asteroid, float shipInertia, float asteroidInertia, Vec2 contactPoint,
 			float shipMass, float asteroidMass, ref float shipAngularVelocity, ref float asteroidAngularVelocity, Vec2 collisionNormal) {
 			// 2. Approximate Point of Contact (for simplicity, using A's center and Normal/Depth)
 			// More accurate: find the closest vertex of B to A, or midpoint of deepest edge.
@@ -94,8 +94,8 @@ namespace asteroids {
 			float numerator = -(1f + restitution) * velAlongNormal;
 			// 6. Calculate the Full Impulse Denominator
 			// TODO
-			float shipInertia = 1;
-			float asteroidInertia = 1;
+			//float shipInertia = 1;
+			//float asteroidInertia = 1;
 
 			float denominator =
 					(1f / shipMass) + (1f / asteroidMass) +
@@ -106,15 +106,15 @@ namespace asteroids {
 			float j = numerator / denominator;
 
 			// 8. Apply Linear and Angular Impulse
-			Vec2 impulse = collisionNormal * j;
+			//Vec2 impulse = collisionNormal * j;
 
-			// Linear Application
-			ship.Velocity -= impulse * (1f / shipMass);
-			asteroid.Velocity += impulse * (1f / asteroidMass);
+			//// Linear Application
+			//ship.Velocity -= impulse * (1f / shipMass);
+			//asteroid.Velocity += impulse * (1f / asteroidMass);
 
 			// Angular Application (This creates the spin!)
-			shipAngularVelocity -= (rACrossN * j) / shipInertia;
-			asteroidAngularVelocity += (rBCrossN * j) / asteroidInertia;
+			shipAngularVelocity += (rACrossN * j) / shipInertia;
+			asteroidAngularVelocity -= (rBCrossN * j) / asteroidInertia;
 		}
 	}
 }

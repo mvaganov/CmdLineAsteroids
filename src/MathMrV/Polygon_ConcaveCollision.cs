@@ -6,7 +6,7 @@ using System.Linq;
 namespace MathMrV {
 	public partial class Polygon {
 		private int[][] convexHullIndexLists;
-		private float Area, Inertia;
+		public float Area, Inertia;
 		public void DrawConvex(CommandLineCanvas canvas, int convexIndex) {
 			UpdateCacheAsNeeded();
 			List<Vec2> verts = GetConvexVerts(convexIndex);
