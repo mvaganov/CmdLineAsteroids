@@ -4,8 +4,6 @@ using MathMrV;
 using MrV;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Numerics;
 
 namespace asteroids {
 	public class Program {
