@@ -394,8 +394,8 @@ namespace collision {
 							collisions = new List<CollisionData>();
 						}
 						CollisionData collision = CollisionData.ForCircles(circle, otherCircle);
-						collision.self = collidable as ICollidable;
-						collision.other = element as ICollidable;
+						collision.Self = collidable as ICollidable;
+						collision.Other = element as ICollidable;
 						collisions.Add(collision);
 					}
 				}

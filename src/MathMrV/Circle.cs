@@ -28,6 +28,8 @@ namespace MathMrV {
 			bool IsInsideCircle(Vec2 point) => Circle.IsInsideCircle(pos, radius, point);
 		}
 		public bool IsColliding(Circle other) => IsColliding(center, radius, other.center, other.radius);
+		public bool IsColliding(Vec2 otherCenter, float otherRadius) =>
+			IsColliding(center, radius, otherCenter, otherRadius);
 		public bool TryGetAABB(out Vec2 min, out Vec2 max) => TryGetAABB(center, radius, out min, out max);
 		public static bool TryGetCircleCollision(Circle a, Circle b, out Vec2 delta, out float depth) {
 			delta = b.center - a.center;
@@ -35,6 +37,12 @@ namespace MathMrV {
 			float totalRad = a.radius + b.radius;
 			depth = totalRad - dist;
 			return depth > 0;
+		}
+		public static bool TryGetCircleCollision(Circle a, Circle b, out Vec2 overlapCenter) {
+			bool collision = TryGetCircleCollision(a, b, out Vec2 delta, out float depth);
+			Vec2 dir = delta.Normal;
+			overlapCenter = a.center + dir * (a.radius - (depth/2));
+			return collision;
 		}
 		public static bool IsColliding(Vec2 centerA, float radiusA, Vec2 centerB, float radiusB) {
 			float dx = centerA.x - centerB.x;

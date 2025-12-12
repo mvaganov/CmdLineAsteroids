@@ -33,12 +33,12 @@ namespace collision {
 		private static void DestroyCollisionList(List<CollisionData> list) { }
 		public void Clear() { database.Clear(); collisionLists.Clear(); collisionListPool.Clear(); }
 		public void AddCollision(CollisionData data) {
-			if (!database.TryGetValue(data.self, out List<CollisionData> collisions)) {
-				database[data.self] = collisions = collisionListPool.Commission();
+			if (!database.TryGetValue(data.Self, out List<CollisionData> collisions)) {
+				database[data.Self] = collisions = collisionListPool.Commission();
 				collisionLists.Add(collisions);
 			}
 			for (int i = 0; i < collisions.Count; ++i) {
-				if (collisions[i].other == data.other) {
+				if (collisions[i].Other == data.Other) {
 #if !RELEASE
 					//if (collisions[i].Equals(data)) {
 					//	Log.d($"duplicate collision discovered: {data.Name}");

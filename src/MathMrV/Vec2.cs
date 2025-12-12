@@ -10,7 +10,7 @@ namespace MathMrV {
 		public float MagnitudeSqr => x * x + y * y;
 		public Vec2 Normal {
 			get {
-				if (x == 0 && y == 0) return DirectionMaxX;
+				if (x == 0 && y == 0) { return DirectionMaxX; }
 				float mag = Magnitude;
 				return new Vec2(x / mag, y / mag);
 			}
@@ -89,5 +89,7 @@ namespace MathMrV {
 		public static Vec2 NaN = (float.NaN, float.NaN);
 		public bool IsNaN() => IsNaN(this);
 		public static bool IsNaN(Vec2 vec) => float.IsNaN(vec.x) || float.IsNaN(vec.y);
+		public bool IsZero() => IsZero(this);
+		public static bool IsZero(Vec2 vec) => vec.x == 0 && vec.y == 0;
 	}
 }

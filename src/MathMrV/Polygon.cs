@@ -9,6 +9,7 @@ namespace MathMrV {
 		private Vec2[] cachedPoints;
 		private bool cacheValid;
 		private Vec2 cachedBoundBoxMin, cachedBoundBoxMax;
+		public Circle BoundingCircleInLocalSpace;
 		public Vec2 Position { get => position; set { position = value; SetDirty(); } }
 		public Vec2 Direction { get => directionUnitVector; set { directionUnitVector = value; SetDirty(); } }
 		public float RotationRadians {
@@ -25,7 +26,8 @@ namespace MathMrV {
 			cachedBoundBoxMax = cachedBoundBoxMin = position = Vec2.Zero;
 			cacheValid = false;
 			cachedPoints = null;
-			convexHullIndexLists = null;
+			ConvexHullIndexLists = null;
+			BoundingCircleInLocalSpace = Welzl.GetMinimumCircle(points);
 		}
 		public void SetDirty() => cacheValid = false;
 		public Vec2 GetPoint(int index) {
@@ -39,6 +41,12 @@ namespace MathMrV {
 			original.Points[index] = new Vec2(cos * point.x - sin * point.y, sin * point.x + cos * point.y);
 			cacheValid = false;
 		}
+		public Circle GetCollisionBoundingCircle() {
+			Circle circle = BoundingCircleInLocalSpace;
+			circle.Position = Position + circle.center.RotatedRadians(RotationRadians);
+			return circle;
+		}
+
 		public void Draw(CommandLineCanvas canvas) {
 			UpdateCacheAsNeeded();
 			canvas.DrawSupersampledShape(IsInsidePolygon, cachedBoundBoxMin, cachedBoundBoxMax);

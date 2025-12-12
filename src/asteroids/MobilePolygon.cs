@@ -3,12 +3,12 @@ using ConsoleMrV;
 using MathMrV;
 using MrV;
 using System;
+using System.Collections.Generic;
 
 namespace asteroids {
 	public class MobilePolygon : MobileObject, ICollidable {
 		public static bool ShowCollisionCircles = false;
 		protected Polygon polygon;
-		public Circle BoundingCircleInLocalSpace;
 		protected Circle[] _detailedCollisionCirclesInLocalSpace;// TODO remove these
 		private float _angularVelocity;
 		public override Vec2 Position { get => polygon.Position; set => polygon.Position = value; }
@@ -23,7 +23,6 @@ namespace asteroids {
 
 		public MobilePolygon(Vec2[] playerPoly) {
 			polygon = new Polygon(playerPoly);
-			BoundingCircleInLocalSpace = Welzl.GetMinimumCircle(playerPoly);
 		}
 		public override void Draw(CommandLineCanvas canvas) {
 			if (!_active) {
@@ -51,11 +50,7 @@ namespace asteroids {
 			circle.Position = Position + circle.center.RotatedRadians(RotationRadians);
 			return circle;
 		}
-		public Circle GetCollisionBoundingCircle() {
-			Circle circle = BoundingCircleInLocalSpace;
-			circle.Position = Position + circle.center.RotatedRadians(RotationRadians);
-			return circle;
-		}
+		public Circle GetCollisionBoundingCircle() => Polygon.GetCollisionBoundingCircle();
 
 		public virtual CollisionData IsColliding(ICollidable collidable) {
 			switch (collidable) {
@@ -83,8 +78,8 @@ namespace asteroids {
 				Circle selfCircle = GetCollisionCircle(i);
 				if (otherCircle.IsColliding(selfCircle)) {
 					CollisionData data = CollisionData.ForCircles(selfCircle, otherCircle);
-					data.colliderIndexSelf = i;
-					data.self = this;
+					data.ColliderIndexSelf = i;
+					data.Self = this;
 					return data;
 				}
 			}
@@ -94,28 +89,35 @@ namespace asteroids {
 			if (!GetCollisionBoundingCircle().IsColliding(other.GetCollisionBoundingCircle())) {
 				return null;
 			}
-			if (_detailedCollisionCirclesInLocalSpace == null && other._detailedCollisionCirclesInLocalSpace == null) {
-				return MyCollisionWith(other, GetCollisionBoundingCircle(), other.GetCollisionBoundingCircle());
-			}
-			if (_detailedCollisionCirclesInLocalSpace == null && other._detailedCollisionCirclesInLocalSpace != null) {
-				return MyCollisionWith(other, other.GetCollisionInternal(GetCollisionBoundingCircle()));
-			}
-			if (_detailedCollisionCirclesInLocalSpace != null && other._detailedCollisionCirclesInLocalSpace == null) {
-				return MyCollisionWith(other, GetCollisionInternal(other.GetCollisionBoundingCircle()));
-			}
-			for (int c = 0; c < other._detailedCollisionCirclesInLocalSpace.Length; ++c) {
-				for (int i = 0; i < _detailedCollisionCirclesInLocalSpace.Length; ++i) {
-					Circle selfCircle = GetCollisionCircle(i);
-					Circle otherCircle = other.GetCollisionCircle(i);
-					if (selfCircle.IsColliding(otherCircle)) {
-						CollisionData data = MyCollisionWith(other, selfCircle, otherCircle);
-						data.self = this;
-						data.colliderIndexSelf = i;
-						data.other = other;
-						data.colliderIndexOther = c;
-						return data;
-					}
+			List<Polygon.CollisionData> collisions = null;
+			bool isColliding = other.Polygon.TryGetPolyCollision(Polygon, ref collisions);
+			if (isColliding) {
+				Vec2 point = Vec2.Zero;
+				Vec2 normal = Vec2.Zero;
+				float depth = 0;
+				for (int i = 0; i < collisions.Count; ++i) {
+					Polygon.CollisionData data = collisions[i];
+					Polygon a = data.objectA;
+					Polygon b = data.objectB;
+					Circle circleA = a.ConvexHullCircles[data.ObjectAConvexIndex];
+					Circle circleB = b.ConvexHullCircles[data.ObjectBConvexIndex];
+					Circle.TryGetCircleCollision(circleA, circleB, out Vec2 estimatedCollisionPoint);
+					//b.TryGetCircleCollisionConvex(data.ObjectBConvexIndex, circleA.center, 0,
+					//	out Vec2 closestPointOnB, out _, out _);
+					//a.TryGetCircleCollisionConvex(data.ObjectAConvexIndex, circleB.center, 0,
+					//	out Vec2 closestPointOnA, out _, out _);
+					//Vec2 estimatedCollisionPoint = (closestPointOnA + closestPointOnB) / 2;
+					point += estimatedCollisionPoint;
+					depth += data.Depth;
+					normal += data.Normal;
 				}
+				if (collisions.Count > 1) {
+					point /= collisions.Count;
+					normal /= collisions.Count;
+					normal.Normalize();
+					depth /= collisions.Count;
+				}
+				return new CollisionData(this, other, point, normal, depth);
 			}
 			return null;
 		}

@@ -6,46 +6,46 @@ using ColliderID = System.Byte;
 
 namespace collision {
 	public class CollisionData {
-		public ICollidable self;
-		public ICollidable other;
-		public Vec2 point;
-		public Vec2 normal;
-		public float depth;
-		public int colliderIndexSelf = -1;
-		public int colliderIndexOther = -1;
+		public ICollidable Self;
+		public ICollidable Other;
+		public Vec2 Point;
+		public Vec2 Normal;
+		public float Depth;
+		public int ColliderIndexSelf = -1;
+		public int ColliderIndexOther = -1;
 		public List<CollisionLogic.Function> collisionFunctions;
-		public string Name => (self is IGameObject a ? a.Name : "?") + "." + (other is IGameObject b ? b.Name : "?");
+		public string Name => (Self is IGameObject a ? a.Name : "?") + "." + (Other is IGameObject b ? b.Name : "?");
 		public void Get<TypeA, TypeB>(out TypeA self, out TypeB other) {
-			self = (TypeA)this.self;
-			other = (TypeB)this.other;
+			self = (TypeA)this.Self;
+			other = (TypeB)this.Other;
 		}
 		public CollisionData(ICollidable self, ICollidable other, Vec2 point, Vec2 normal, float depth) {
-			this.self = self;
-			this.other = other;
-			this.point = point;
-			this.normal = normal;
-			if (normal.Magnitude > 1.1f || normal.Magnitude < 0.9f) {
+			this.Self = self;
+			this.Other = other;
+			this.Point = point;
+			this.Normal = normal;
+			if (Vec2.IsNaN(normal) || normal.Magnitude > 1.1f || normal.Magnitude < 0.9f) {
 				throw new Exception("bad normal");
 			}
-			this.depth = depth;
+			this.Depth = depth;
 		}
-		public void SetParticipants(ICollidable self, ICollidable other) { this.self = self; this.other = other; }
+		public void SetParticipants(ICollidable self, ICollidable other) { this.Self = self; this.Other = other; }
 		public static CollisionData ForCircles(Circle a, Circle b) {
 			if (Circle.TryGetCircleCollision(a, b, out Vec2 delta, out float depth)) {
-				Vec2 normal = -delta.Normal;
+				Vec2 normal = delta.Normal;
 				Vec2 centerOfCollision = a.center + normal * (a.radius - depth / 2);
-				return new CollisionData(null, null, centerOfCollision, normal, depth);
+				return new CollisionData(null, null, centerOfCollision, -normal, depth);
 			}
 			return null;
 		}
 		public override int GetHashCode() {
 			int hash = 0;
-			if (self != null) { hash ^= self.GetHashCode(); }
-			if (other != null) { hash ^= other.GetHashCode(); }
+			if (Self != null) { hash ^= Self.GetHashCode(); }
+			if (Other != null) { hash ^= Other.GetHashCode(); }
 			return hash;
 		}
 		public override bool Equals(object obj) => obj is CollisionData cd && Equals(cd);
-		public bool Equals(CollisionData other) => this.self == other.self && this.other == other.other && this.point == other.point;
+		public bool Equals(CollisionData other) => this.Self == other.Self && this.Other == other.Other && this.Point == other.Point;
 		public void CalculateCollisionResults(List<CollisionLogic.ToResolve> out_collisionResolutions) {
 			for (int i = 0; i < collisionFunctions.Count; i++) {
 				CollisionLogic.Function f = collisionFunctions[i];

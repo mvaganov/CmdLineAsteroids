@@ -1,31 +1,39 @@
 ﻿using ConsoleMrV;
+using MrV;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace MathMrV {
 	public partial class Polygon {
-		private int[][] convexHullIndexLists;
+		public int[][] ConvexHullIndexLists;
+		public Circle[] ConvexHullCircles;
 		public float Area, InertiaWithoutDensity;
+
 		public void DrawConvex(CommandLineCanvas canvas, int convexIndex) {
 			UpdateCacheAsNeeded();
-			List<Vec2> verts = GetConvexVerts(convexIndex);
+			IList<Vec2> verts = new VectorListFromIndexList(cachedPoints, ConvexHullIndexLists[convexIndex]);
+				//GetConvexVerts(convexIndex);
 			canvas.DrawSupersampledShape(IsInsidePolygon, cachedBoundBoxMin, cachedBoundBoxMax);
 			bool IsInsidePolygon(Vec2 point) => PolygonShape.IsInPolygon(verts, point);
 		}
+
 		public void UpdateConvexHullIndexLists() {
-			if (convexHullIndexLists != null) { return; }
+			if (ConvexHullIndexLists != null) { return; }
 			int[][] triangleIndexes = DecomposePolygonIntoTriangles_HertelMehlhorn(original.Points);
 			MrV.Physics.InertiaCalculator.CalculatePolygonAreaAndInertia(original.Points, out Area, out InertiaWithoutDensity);
-			convexHullIndexLists = ConvertTriangleListIntoConvexHulls(triangleIndexes, original.Points);
-		}
-		public List<Vec2> GetConvexVerts(int convexIndex) {
-			int[] indexes = convexHullIndexLists[convexIndex];
-			List<Vec2> verts = new List<Vec2>();
-			for (int i = 0; i < indexes.Length; i++) {
-				verts.Add(GetPoint(indexes[i]));
+			ConvexHullIndexLists = ConvertTriangleListIntoConvexHulls(triangleIndexes, original.Points);
+			ConvexHullCircles = new Circle[ConvexHullIndexLists.Length];
+			for (int i = 0; i < ConvexHullCircles.Length; ++i) {
+				ConvexHullCircles[i] = Welzl.GetMinimumCircle(original.Points, triangleIndexes[i]);
 			}
-			return verts;
+		}
+
+		public Circle GetCollisionBoundingCircle(int convexHullIndex) {
+			Circle circle = ConvexHullCircles[convexHullIndex];
+			circle.Position.Rotate(Direction);
+			circle.Position += Position;
+			return circle;
 		}
 
 		public static int[][] DecomposePolygonIntoTriangles_HertelMehlhorn(Vec2[] vertices) {
@@ -148,13 +156,16 @@ namespace MathMrV {
 		}
 
 		public bool IsPointInPolygon(Vec2 point) {
-			for (int i = 0; i < convexHullIndexLists.Length; ++i) {
+			for (int i = 0; i < ConvexHullIndexLists.Length; ++i) {
 				if (IsPointInConvexPolygon(point, i)) { return true; }
 			}
 			return false;
 		}
 		private bool IsPointInConvexPolygon(Vec2 point, int convexPolygon) {
-			int[] poly = convexHullIndexLists[convexPolygon];
+			if (!GetCollisionBoundingCircle(convexPolygon).Contains(point)) {
+				return false;
+			}
+			int[] poly = ConvexHullIndexLists[convexPolygon];
 			for (int i = 0; i < poly.Length; i++) {
 				Vec2 a = cachedPoints[poly[i]], b = cachedPoints[poly[(i + 1) % poly.Length]];
 				Vec2 edgeDelta = b - a;
@@ -171,10 +182,10 @@ namespace MathMrV {
 			distanceSq = float.MaxValue;
 			float closeDistSq;
 			Vec2 closePoint, circle2PointDelta;
-			if (convexHullIndexLists == null) {
+			if (ConvexHullIndexLists == null) {
 				UpdateConvexHullIndexLists();
 			}
-			for (int i = 0; i < convexHullIndexLists.Length; i++) {
+			for (int i = 0; i < ConvexHullIndexLists.Length; i++) {
 				if (TryGetCircleCollisionConvex(i, center, radius, out closePoint, out circle2PointDelta, out closeDistSq)) {
 					if (closeDistSq < distanceSq) {
 						distanceSq = closeDistSq;
@@ -186,11 +197,14 @@ namespace MathMrV {
 			float radiusSq = radius * radius;
 			return distanceSq <= radiusSq;
 		}
-		private bool TryGetCircleCollisionConvex(int convexPolygonId, Vec2 circleCenter, float radius, out Vec2 closestPoint, out Vec2 circlePointDelta, out float circlePointDistanceSq) {
-			int[] poly = convexHullIndexLists[convexPolygonId];
-			float radiusSq = radius * radius;
+		public bool TryGetCircleCollisionConvex(int convexPolygonId, Vec2 circleCenter, float radius, out Vec2 closestPoint, out Vec2 circlePointDelta, out float circlePointDistanceSq) {
 			closestPoint = circlePointDelta = Vec2.NaN;
 			circlePointDistanceSq = float.MaxValue;
+			if (!GetCollisionBoundingCircle(convexPolygonId).IsColliding(circleCenter, radius)) {
+				return false;
+			}
+			int[] poly = ConvexHullIndexLists[convexPolygonId];
+			float radiusSq = radius * radius;
 			for (int i = 0; i < poly.Length; i++) {
 				int indexA = poly[i], indexB = poly[(i + 1) % poly.Length];
 				bool segmentABIsOnEdgeOfMainPolygon = IsIndexPairConsecutive(indexA, indexB);
@@ -205,7 +219,9 @@ namespace MathMrV {
 					circlePointDelta = delta;
 				}
 			}
-			if (circlePointDistanceSq <= radiusSq) { return true; }
+			if (circlePointDistanceSq <= radiusSq) {
+				return true;
+			}
 			if (IsPointInConvexPolygon(circleCenter, convexPolygonId)) { return true; }
 			return false;
 		}
@@ -221,30 +237,34 @@ namespace MathMrV {
 		}
 
 		public struct CollisionData {
-			public object objectA, objectB;
+			public Polygon objectA, objectB;
 			public bool IsColliding;
 			public Vec2 Normal; // The direction to push B out of A
+			public int ObjectAConvexIndex;
+			public int ObjectBConvexIndex;
 			public float Depth; // How far to push
-			public int VertIndex0, VertIndex1; // polygonA segment
+			//public int objectAVertIndex0, objectAVertIndex1; // polygonA segment
 			public void Init() {
 				IsColliding = false;
 				Depth = float.MaxValue;
 				Normal = Vec2.Zero;
 			}
-			public void Draw(CommandLineCanvas canvas) {
-				if (!(objectA is Polygon)) {
-					return;
-				}
-				Polygon polygon = (Polygon)objectA;
-				if (polygon.cachedPoints == null) {
-					polygon.ForceUpdateCache();
-				}
-				polygon.UpdateCacheAsNeeded();
-				Vec2 p0 = polygon.GetPoint(VertIndex0);
-				Vec2 p1 = polygon.GetPoint(VertIndex1);
-				canvas.SetColor(ConsoleColor.Green);
-				canvas.DrawLine(p0, p1, 1);
-			}
+			//public Vec2 Vertex0 => objectA.GetPoint(objectAVertIndex0);
+			//public Vec2 Vertex1 => objectA.GetPoint(objectAVertIndex1);
+			//public void Draw(CommandLineCanvas canvas) {
+			//	if (!(objectA is Polygon)) {
+			//		return;
+			//	}
+			//	Polygon polygon = (Polygon)objectA;
+			//	if (polygon.cachedPoints == null) {
+			//		polygon.ForceUpdateCache();
+			//	}
+			//	polygon.UpdateCacheAsNeeded();
+			//	Vec2 p0 = polygon.GetPoint(objectAVertIndex0);
+			//	Vec2 p1 = polygon.GetPoint(objectAVertIndex1);
+			//	canvas.SetColor(ConsoleColor.Green);
+			//	canvas.DrawLine(p0, p1, 1);
+			//}
 		}
 		public bool TryGetPolyCollision(Polygon other, ref List<CollisionData> collisionDatas) {
 			UpdateCacheAsNeeded();
@@ -254,8 +274,8 @@ namespace MathMrV {
 
 		private static bool TryGetPolygonCollision(Polygon mainPoly, Polygon otherPoly, ref List<CollisionData> collisionDatas) {
 			bool foundCollision = false;
-			for (int mainConvex = 0; mainConvex < mainPoly.convexHullIndexLists.Length; mainConvex++) {
-				for (int otherConvex = 0; otherConvex < otherPoly.convexHullIndexLists.Length; otherConvex++) {
+			for (int mainConvex = 0; mainConvex < mainPoly.ConvexHullIndexLists.Length; mainConvex++) {
+				for (int otherConvex = 0; otherConvex < otherPoly.ConvexHullIndexLists.Length; otherConvex++) {
 					CollisionData result = new CollisionData();
 					result.Init();
 					bool collisionJustHappened = CheckCollisionOfSubMeshes(mainPoly, otherPoly, mainConvex, otherConvex, ref result)
@@ -276,7 +296,7 @@ namespace MathMrV {
 		}
 
 		private static bool CheckCollisionOfSubMeshes(Polygon mainPoly, Polygon otherPoly, int mainConvex, int otherConvex, ref CollisionData result) {
-			int[] mainIndexList = mainPoly.convexHullIndexLists[mainConvex];
+			int[] mainIndexList = mainPoly.ConvexHullIndexLists[mainConvex];
 			for (int i = 0; i < mainIndexList.Length; i++) {
 				int index0 = mainIndexList[i], index1 = mainIndexList[(i + 1) % mainIndexList.Length];
 				Vec2 p0 = mainPoly.GetPoint(index0), p1 = mainPoly.GetPoint(index1);
@@ -285,24 +305,25 @@ namespace MathMrV {
 				edgeNormal.Normalize(); // normalize for accurate depth measurement
 				mainPoly.ProjectPolygon(edgeNormal, mainConvex, out float minA, out float maxA);
 				otherPoly.ProjectPolygon(edgeNormal, otherConvex, out float minB, out float maxB);
-				if (minA >= maxB || minB >= maxA) {
-					return false; // Gap found, collision impossible
-				}
-				float axisDepth = Math.Min(maxB - minA, maxA - minB);
-				if (mainPoly.IsIndexPairConsecutive(index0, index1) && axisDepth < result.Depth) {
-					result.Depth = axisDepth;
+				bool noOverlapCollisionImpossible = minA >= maxB || minB >= maxA;
+				if (noOverlapCollisionImpossible) { return false; }
+				float collisionDepthOnAxis = Math.Min(maxB - minA, maxA - minB);
+				bool foundBestCollisionOptionSoFar = collisionDepthOnAxis < result.Depth;
+				if (foundBestCollisionOptionSoFar && mainPoly.IsIndexPairConsecutive(index0, index1)) {
+					result.Depth = collisionDepthOnAxis;
 					result.Normal = edgeNormal;
-					result.VertIndex0 = index0;
-					result.VertIndex1 = index1;
 					result.objectA = mainPoly;
 					result.objectB = otherPoly;
+					// specific contact points can be calculated later with relevant convex polygon IDs
+					result.ObjectAConvexIndex = mainConvex;
+					result.ObjectBConvexIndex = otherConvex;
 				}
 			}
 			return true;
 		}
 		public void ProjectPolygon(Vec2 axis, int convexIndex, out float min, out float max) {
 			min = float.MaxValue; max = float.MinValue;
-			int[] indexList = convexHullIndexLists[convexIndex];
+			int[] indexList = ConvexHullIndexLists[convexIndex];
 			for (int i = 0; i < indexList.Length; i++) {
 				float projection = Vec2.Dot(GetPoint(indexList[i]), axis);
 				if (projection < min) { min = projection; }

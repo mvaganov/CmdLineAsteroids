@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MrV;
+using System;
 using System.Collections.Generic;
 
 namespace MathMrV {
@@ -75,6 +76,11 @@ namespace MathMrV {
 			           (c.x * c.x + c.y * c.y) * (b.x - a.x)) / determinant;
 			Vec2 center = new Vec2(x, y);
 			return new Circle(center, center.Distance(a));
+		}
+
+		public static Circle GetMinimumCircle(IList<Vec2> points, int[] indexList) {
+			VectorListFromIndexList vecList = new VectorListFromIndexList(points, indexList);
+			return GetMinimumCircle(vecList);
 		}
 	}
 }

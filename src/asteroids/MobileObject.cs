@@ -53,19 +53,20 @@ namespace asteroids {
 			Color = other._color;
 		}
 
-		public static void SeparateObjects(MobileObject mobA, MobileObject mobB, Vec2 normal, float depth, float massAPercentage) {
+		public static void SeparateObjects(MobileObject mobA, MobileObject mobB, Vec2 normal, float depth) {
+			float massAPercentage = mobA.Mass / (mobA.Mass + mobB.Mass);
 			Vec2 bump = normal * depth;
 			mobA.Position += bump * massAPercentage;
 			mobB.Position -= bump * (1 - massAPercentage);
 		}
-		public static void BounceVelocities(MobileObject mobA, MobileObject mobB, float massA, float massB, Vec2 collisionNormal) {
+		public static void BounceVelocities(MobileObject mobA, MobileObject mobB, Vec2 collisionNormal) {
 			Vec2 relativeVelocity = mobA.Velocity - mobB.Velocity;
 			float velAlongNormal = Vec2.Dot(relativeVelocity, collisionNormal);
 			bool velocitiesAreAligned = velAlongNormal > 0;
 			if (velocitiesAreAligned) { return; }
 			float restitution = 0.8f; // Bounciness (0 = rock, 1 = super ball)
-			float invMassA = 1.0f / massA;
-			float invMassB = 1.0f / massB;
+			float invMassA = 1.0f / mobA.Mass;
+			float invMassB = 1.0f / mobB.Mass;
 			float numerator = -(1 + restitution) * velAlongNormal;
 			float denominator = invMassA + invMassB;
 			float impulseScalar = numerator / denominator;
@@ -74,7 +75,7 @@ namespace asteroids {
 			mobB.Velocity -= impulse * invMassB;
 		}
 		public static void CollisionTorque(MobileObject ship, MobileObject asteroid, Vec2 contactPoint,
-			float shipMass, float asteroidMass, ref float shipAngularVelocity, ref float asteroidAngularVelocity, Vec2 collisionNormal) {
+			Vec2 collisionNormal) {
 			// 2. Approximate Point of Contact (for simplicity, using A's center and Normal/Depth)
 			// More accurate: find the closest vertex of B to A, or midpoint of deepest edge.
 			// For this example, let's use the object centers, which is less accurate but simpler:
@@ -87,8 +88,8 @@ namespace asteroids {
 			// 4. Calculate relative velocity, including rotation component
 			// v_rel = (vB + (wB x rB)) - (vA + (wA x rA))
 			// Cross product (w x r) in 2D is: (-w*ry, w*rx)
-			Vec2 vA_rot = new Vec2(-shipAngularVelocity * rA.Y, shipAngularVelocity * rA.X);
-			Vec2 vB_rot = new Vec2(-asteroidAngularVelocity * rB.Y, asteroidAngularVelocity * rB.X);
+			Vec2 vA_rot = new Vec2(-ship.AngularVelocity * rA.Y, ship.AngularVelocity * rA.X);
+			Vec2 vB_rot = new Vec2(-asteroid.AngularVelocity * rB.Y, asteroid.AngularVelocity * rB.X);
 
 			Vec2 relativeVelocity = (asteroid.Velocity + vB_rot) - (ship.Velocity + vA_rot);
 			//float velAlongNormal = Vec2.Dot(relativeVelocity, manifold.Normal);
@@ -110,7 +111,7 @@ namespace asteroids {
 			//float asteroidInertia = 1;
 
 			float denominator =
-					(1f / shipMass) + (1f / asteroidMass) +
+					(1f / ship.Mass) + (1f / asteroid.Mass) +
 					(rACrossN * rACrossN / ship.Inertia) +
 					(rBCrossN * rBCrossN / asteroid.Inertia);
 
@@ -125,8 +126,8 @@ namespace asteroids {
 			//asteroid.Velocity += impulse * (1f / asteroidMass);
 
 			// Angular Application (This creates the spin!)
-			shipAngularVelocity += (rACrossN * j) / ship.Inertia;
-			asteroidAngularVelocity -= (rBCrossN * j) / asteroid.Inertia;
+			ship.AngularVelocity += (rACrossN * j) / ship.Inertia;
+			asteroid.AngularVelocity -= (rBCrossN * j) / asteroid.Inertia;
 		}
 	}
 }
