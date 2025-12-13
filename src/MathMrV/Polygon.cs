@@ -3,7 +3,7 @@ using System;
 
 namespace MathMrV {
 	public partial class Polygon {
-		public PolygonShape original;
+		public PolygonShape model;
 		private Vec2 directionUnitVector;
 		private Vec2 position;
 		private Vec2[] cachedPoints;
@@ -21,13 +21,13 @@ namespace MathMrV {
 			set { directionUnitVector = Vec2.NormalFromDegrees(value); SetDirty(); }
 		}
 		public Polygon(Vec2[] points) {
-			original = new PolygonShape(points);
+			model = new PolygonShape(points);
 			directionUnitVector = Vec2.DirectionMaxX;
 			cachedBoundBoxMax = cachedBoundBoxMin = position = Vec2.Zero;
 			cacheValid = false;
 			cachedPoints = null;
 			ConvexHullIndexLists = null;
-			BoundingCircleInLocalSpace = Welzl.GetMinimumCircle(points);
+			UpdateCacheAsNeeded();
 		}
 		public void SetDirty() => cacheValid = false;
 		public Vec2 GetPoint(int index) {
@@ -38,12 +38,12 @@ namespace MathMrV {
 			cachedPoints[index] = point;
 			float cos = directionUnitVector.x, sin = -directionUnitVector.y;
 			point -= position;
-			original.Points[index] = new Vec2(cos * point.x - sin * point.y, sin * point.x + cos * point.y);
+			model.Points[index] = new Vec2(cos * point.x - sin * point.y, sin * point.x + cos * point.y);
 			cacheValid = false;
 		}
 		public Circle GetCollisionBoundingCircle() {
 			Circle circle = BoundingCircleInLocalSpace;
-			circle.Position = Position + circle.center.RotatedRadians(RotationRadians);
+			circle.Center = Position + circle.Center.RotatedRadians(RotationRadians);
 			return circle;
 		}
 
@@ -57,12 +57,13 @@ namespace MathMrV {
 			ForceUpdateCache();
 		}
 		private void ForceUpdateCache() {
-			if (cachedPoints == null || cachedPoints.Length != original.Points.Length) {
-				cachedPoints = new Vec2[original.Points.Length];
+			if (cachedPoints == null || cachedPoints.Length != model.Points.Length) {
+				cachedPoints = new Vec2[model.Points.Length];
 			}
+			BoundingCircleInLocalSpace = Welzl.GetMinimumCircle(model.Points);
 			float cos = directionUnitVector.x, sin = directionUnitVector.y;
-			for (int i = 0; i < original.Points.Length; i++) {
-				Vec2 v = original.Points[i];
+			for (int i = 0; i < model.Points.Length; i++) {
+				Vec2 v = model.Points[i];
 				cachedPoints[i] = new Vec2(cos * v.x - sin * v.y + position.x, sin * v.x + cos * v.y + position.y);
 			}
 			if (!PolygonShape.TryGetAABB(cachedPoints, out cachedBoundBoxMin, out cachedBoundBoxMax)) {

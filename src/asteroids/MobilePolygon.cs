@@ -47,7 +47,7 @@ namespace asteroids {
 
 		public Circle GetCollisionCircle(int index) {
 			Circle circle = _detailedCollisionCirclesInLocalSpace[index];
-			circle.Position = Position + circle.center.RotatedRadians(RotationRadians);
+			circle.Center = Position + circle.Center.RotatedRadians(RotationRadians);
 			return circle;
 		}
 		public Circle GetCollisionBoundingCircle() => Polygon.GetCollisionBoundingCircle();
@@ -65,9 +65,9 @@ namespace asteroids {
 			if (!GetCollisionBoundingCircle().IsColliding(circle)) {
 				return null;
 			}
-			if (polygon.TryGetCircleCollision(circle.Position, circle.radius,
+			if (polygon.TryGetCircleCollision(circle.Center, circle.Radius,
 			out Vec2 closestPoint, out Vec2 circleToPointDelta, out float closestDistanceSq)) {
-				float depthOfCircleOverlap = circle.radius - MathF.Sqrt(closestDistanceSq);
+				float depthOfCircleOverlap = circle.Radius - MathF.Sqrt(closestDistanceSq);
 				Vec2 normal = circleToPointDelta.Normal;
 				return new CollisionData(this, null, closestPoint, normal, depthOfCircleOverlap);
 			}

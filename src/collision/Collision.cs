@@ -33,7 +33,7 @@ namespace collision {
 		public static CollisionData ForCircles(Circle a, Circle b) {
 			if (Circle.TryGetCircleCollision(a, b, out Vec2 delta, out float depth)) {
 				Vec2 normal = delta.Normal;
-				Vec2 centerOfCollision = a.center + normal * (a.radius - depth / 2);
+				Vec2 centerOfCollision = a.Center + normal * (a.Radius - depth / 2);
 				return new CollisionData(null, null, centerOfCollision, -normal, depth);
 			}
 			return null;

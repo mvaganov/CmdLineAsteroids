@@ -168,7 +168,7 @@ namespace collision {
 		private void InsertSelfIntoNewParent(Circle circle, T element, SpacePartition<T>.ObjectPools mem) {
 			Vec2 parentCellSize = aabb.Size;
 			Vec2 parentFullSize = parentCellSize.Scaled(new Vec2(columns, rows));
-			Vec2 center = (circle.center + Position) / 2;
+			Vec2 center = (circle.Center + Position) / 2;
 			AABB parentEstimate = AABB.CreateAt(center, parentFullSize);
 			Vec2 positionInParent = Position - parentEstimate.Min;
 			int col = (int)(positionInParent.x / parentCellSize.x);
@@ -232,7 +232,7 @@ namespace collision {
 		}
 
 		public bool CircleGoesHere(Circle circle) {
-			return circle.radius > 0 ? circle.IntersectsAABB(aabb) : aabb.Contains(circle.center);
+			return circle.Radius > 0 ? circle.IntersectsAABB(aabb) : aabb.Contains(circle.Center);
 		}
 		public List<SpacePartitionCell<T>> GetLeafPartitions(Circle circle) {
 			circle.TryGetAABB(out Vec2 min, out Vec2 max);
@@ -381,9 +381,9 @@ namespace collision {
 				for (int e = 0; e < subPart.elements.Count; ++e) {
 					T element = subPart.elements[e];
 					Circle otherCircle = convertElementToCircleMethod(element);
-					float targetDistance = otherCircle.radius;
-					if (circle.radius != 0) {
-						targetDistance += circle.radius;
+					float targetDistance = otherCircle.Radius;
+					if (circle.Radius != 0) {
+						targetDistance += circle.Radius;
 					}
 					if (!circle.IsColliding(otherCircle)) {
 						continue;

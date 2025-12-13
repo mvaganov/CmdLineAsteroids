@@ -6,7 +6,7 @@ using System;
 namespace asteroids {
 	public class MobileCircle : MobileObject, ICollidable {
 		private Circle circle;
-		public override Vec2 Position { get => circle.Position; set => circle.Position = value; }
+		public override Vec2 Position { get => circle.Center; set => circle.Center = value; }
 		public override Vec2 Direction { get => Velocity.Normal; set { } }
 		public override float Area => circle.Area;
 		public override float Inertia => circle.InertiaWithoutDensity * Density;

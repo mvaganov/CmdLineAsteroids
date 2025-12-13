@@ -10,6 +10,7 @@ namespace asteroids {
 		protected bool _active = true;
 		protected Vec2 _velocity;
 		protected ConsoleColor _color;
+		protected float _density = 1;
 		public virtual string Name { get => _name; set => _name = value; }
 		public virtual Vec2 Velocity { get => _velocity; set => _velocity = value; }
 		public virtual bool IsActive { get => _active; set => _active = value; }
@@ -18,7 +19,7 @@ namespace asteroids {
 		public abstract Vec2 Direction { get; set; }
 		public abstract float AngularVelocity { get; set; }
 		public abstract float Area { get; }
-		public virtual float Density { get => 1; set => throw new NotImplementedException(); }
+		public virtual float Density { get => _density; set => _density = value; }
 		public virtual float Mass {
 			get => Density * Area;
 			set => Density = value / Area;
@@ -106,10 +107,6 @@ namespace asteroids {
 			float restitution = 0.8f; // Bounciness (0 = rock, 1 = super ball)
 			float numerator = -(1f + restitution) * velAlongNormal;
 			// 6. Calculate the Full Impulse Denominator
-			// TODO
-			//float shipInertia = 1;
-			//float asteroidInertia = 1;
-
 			float denominator =
 					(1f / ship.Mass) + (1f / asteroid.Mass) +
 					(rACrossN * rACrossN / ship.Inertia) +

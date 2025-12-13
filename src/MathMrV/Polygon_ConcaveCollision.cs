@@ -13,26 +13,25 @@ namespace MathMrV {
 		public void DrawConvex(CommandLineCanvas canvas, int convexIndex) {
 			UpdateCacheAsNeeded();
 			IList<Vec2> verts = new VectorListFromIndexList(cachedPoints, ConvexHullIndexLists[convexIndex]);
-				//GetConvexVerts(convexIndex);
 			canvas.DrawSupersampledShape(IsInsidePolygon, cachedBoundBoxMin, cachedBoundBoxMax);
 			bool IsInsidePolygon(Vec2 point) => PolygonShape.IsInPolygon(verts, point);
 		}
 
 		public void UpdateConvexHullIndexLists() {
 			if (ConvexHullIndexLists != null) { return; }
-			int[][] triangleIndexes = DecomposePolygonIntoTriangles_HertelMehlhorn(original.Points);
-			MrV.Physics.InertiaCalculator.CalculatePolygonAreaAndInertia(original.Points, out Area, out InertiaWithoutDensity);
-			ConvexHullIndexLists = ConvertTriangleListIntoConvexHulls(triangleIndexes, original.Points);
+			int[][] triangleIndexes = DecomposePolygonIntoTriangles_HertelMehlhorn(model.Points);
+			MrV.Physics.InertiaCalculator.CalculatePolygonAreaAndInertia(model.Points, out Area, out InertiaWithoutDensity);
+			ConvexHullIndexLists = ConvertTriangleListIntoConvexHulls(triangleIndexes, model.Points);
 			ConvexHullCircles = new Circle[ConvexHullIndexLists.Length];
 			for (int i = 0; i < ConvexHullCircles.Length; ++i) {
-				ConvexHullCircles[i] = Welzl.GetMinimumCircle(original.Points, triangleIndexes[i]);
+				ConvexHullCircles[i] = Welzl.GetMinimumCircle(model.Points, ConvexHullIndexLists[i]);
 			}
 		}
 
 		public Circle GetCollisionBoundingCircle(int convexHullIndex) {
 			Circle circle = ConvexHullCircles[convexHullIndex];
-			circle.Position.Rotate(Direction);
-			circle.Position += Position;
+			circle.Center.Rotate(Direction);
+			circle.Center += Position;
 			return circle;
 		}
 

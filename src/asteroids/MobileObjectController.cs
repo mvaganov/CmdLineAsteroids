@@ -103,7 +103,7 @@ namespace asteroids {
 			_targetDirection = targetRadians;
 			float currentAngle = _target.Direction.NormalToRadians();
 			float deltaToTarget = GetRealDeltaRotationAccountingForWrap(_targetDirection, currentAngle);
-			AngularVelocity = (deltaToTarget < 0) ? -speed : speed;
+			AngularVelocity = (deltaToTarget == 0) ? 0 : (deltaToTarget < 0) ? -speed : speed;
 		}
 		public void ClearRotationTarget() {
 			_targetDirection = float.NaN;

@@ -4,18 +4,15 @@ using System.Collections.Generic;
 namespace MathMrV {
 	public struct PolygonShape {
 		private Vec2[] points;
+
 		public PolygonShape(Vec2[] points) {
 			this.points = points;
 		}
 		public override string ToString() => $"(polygon: {string.Join(", ", points)})";
 		public Vec2[] Points { get => points; set { points = value; } }
 		public int Count => points.Length;
-		public Vec2 GetPoint(int index) {
-			return points[index];
-		}
-		public void SetPoint(int index, Vec2 point) {
-			points[index] = point;
-		}
+		public Vec2 GetPoint(int index) => points[index];
+		public void SetPoint(int index, Vec2 point) => points[index] = point;
 		public static bool IsInPolygon(IList<Vec2> poly, Vec2 pt) {
 			bool inside = false;
 			for (int i = 0, j = poly.Count - 1; i < poly.Count; j = i++) {
