@@ -3,7 +3,7 @@ using System;
 
 namespace MathMrV {
 	public partial class Polygon {
-		public PolygonShape model;
+		public PolygonShapeDetailed model;
 		private Vec2 directionUnitVector;
 		private Vec2 position;
 		private Vec2[] cachedPoints;
@@ -21,7 +21,7 @@ namespace MathMrV {
 			set { directionUnitVector = Vec2.NormalFromDegrees(value); SetDirty(); }
 		}
 		public Polygon(Vec2[] points) {
-			model = new PolygonShape(points);
+			model = new PolygonShapeDetailed(points);
 			directionUnitVector = Vec2.DirectionMaxX;
 			cachedBoundBoxMax = cachedBoundBoxMin = position = Vec2.Zero;
 			cacheValid = false;

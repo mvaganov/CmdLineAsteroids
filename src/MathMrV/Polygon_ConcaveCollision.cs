@@ -6,6 +6,7 @@ using System.Linq;
 
 namespace MathMrV {
 	public partial class Polygon {
+		// TODO remove these, already calculated by `PolygonShapeDetailed`
 		public int[][] ConvexHullIndexLists;
 		public Circle[] ConvexHullCircles;
 		public float Area, InertiaWithoutDensity;
