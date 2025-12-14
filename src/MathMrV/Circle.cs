@@ -56,9 +56,7 @@ namespace MathMrV {
 		}
 		public bool IntersectsAABB(AABB aabb) => IntersectsAABB(aabb.Min, aabb.Max);
 		public bool IntersectsAABB(Vec2 min, Vec2 max) {
-			if (AABB.Contains(Center, min, max)) {
-				return true;
-			}
+			if (AABB.Contains(Center, min, max)) { return true; }
 			Vec2 radSize = new Vec2(Radius, Radius);
 			Vec2 expandedMin = min - radSize;
 			Vec2 expandedMax = max + radSize;
@@ -87,7 +85,3 @@ namespace MathMrV {
 		}
 	}
 }
-// TODO test possible optimization: cache Quadrance (radius*radius), and use in collision checks
-//	Should eliminate one multiply per collision check.
-//	May not actually speed things up because it would increase Circle from 16 bytes (very round number)
-//	to 20 bytes, which increases stack cost, possibly forces padding, all of which will harm cache locality

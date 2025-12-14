@@ -4,73 +4,73 @@ using System;
 namespace MathMrV {
 	public partial class Polygon {
 		public PolygonShapeDetailed model;
-		private Vec2 directionUnitVector;
-		private Vec2 position;
-		private Vec2[] cachedPoints;
-		private bool cacheValid;
-		private Vec2 cachedBoundBoxMin, cachedBoundBoxMax;
-		public Circle BoundingCircleInLocalSpace;
-		public Vec2 Position { get => position; set { position = value; SetDirty(); } }
-		public Vec2 Direction { get => directionUnitVector; set { directionUnitVector = value; SetDirty(); } }
+		private Vec2 _directionUnitVector;
+		private Vec2 _position;
+		private Vec2[] _cachedPoints;
+		private bool _cacheValid;
+		private Vec2 _cachedBoundBoxMin, _cachedBoundBoxMax;
+		private Circle _boundingCircleInGlobalSpace;
+		public Circle BoundingCircleInLocalSpace => model.BoundingCircleInLocalSpace;
+		public Vec2 Position { get => _position; set { _position = value; SetDirty(); } }
+		public Vec2 Direction { get => _directionUnitVector; set { _directionUnitVector = value; SetDirty(); } }
 		public float RotationRadians {
-			get => directionUnitVector.NormalToRadians();
-			set { directionUnitVector = Vec2.NormalFromRadians(value); SetDirty(); }
+			get => _directionUnitVector.NormalToRadians();
+			set { _directionUnitVector = Vec2.NormalFromRadians(value); SetDirty(); }
 		}
 		public float RotationDegrees {
-			get => directionUnitVector.NormalToDegrees();
-			set { directionUnitVector = Vec2.NormalFromDegrees(value); SetDirty(); }
+			get => _directionUnitVector.NormalToDegrees();
+			set { _directionUnitVector = Vec2.NormalFromDegrees(value); SetDirty(); }
 		}
 		public Polygon(Vec2[] points) {
 			model = new PolygonShapeDetailed(points);
-			directionUnitVector = Vec2.DirectionMaxX;
-			cachedBoundBoxMax = cachedBoundBoxMin = position = Vec2.Zero;
-			cacheValid = false;
-			cachedPoints = null;
-			ConvexHullIndexLists = null;
+			_directionUnitVector = Vec2.DirectionMaxX;
+			_cachedBoundBoxMax = _cachedBoundBoxMin = _position = Vec2.Zero;
+			_cacheValid = false;
+			_cachedPoints = null;
+			//model.ConvexHullIndexLists = null;
 			UpdateCacheAsNeeded();
 		}
-		public void SetDirty() => cacheValid = false;
+		public void SetDirty() => _cacheValid = false;
 		public Vec2 GetPoint(int index) {
 			UpdateCacheAsNeeded();
-			return cachedPoints[index];
+			return _cachedPoints[index];
 		}
 		public void SetPointGlobalSpace(int index, Vec2 point) {
-			cachedPoints[index] = point;
-			float cos = directionUnitVector.x, sin = -directionUnitVector.y;
-			point -= position;
+			_cachedPoints[index] = point;
+			float cos = _directionUnitVector.x, sin = -_directionUnitVector.y;
+			point -= _position;
 			model.Points[index] = new Vec2(cos * point.x - sin * point.y, sin * point.x + cos * point.y);
-			cacheValid = false;
+			_cacheValid = false;
 		}
-		public Circle GetCollisionBoundingCircle() {
-			Circle circle = BoundingCircleInLocalSpace;
-			circle.Center = Position + circle.Center.RotatedRadians(RotationRadians);
-			return circle;
-		}
+		public Circle GetCollisionBoundingCircle() => _boundingCircleInGlobalSpace;
 
 		public void Draw(CommandLineCanvas canvas) {
 			UpdateCacheAsNeeded();
-			canvas.DrawSupersampledShape(IsInsidePolygon, cachedBoundBoxMin, cachedBoundBoxMax);
+			canvas.DrawSupersampledShape(IsInsidePolygon, _cachedBoundBoxMin, _cachedBoundBoxMax);
+			canvas.SetColor(ConsoleColor.White);
+			//DrawConvex(canvas, (int)(MrV.Time.TimeSeconds*2) % model.ConvexHullIndexLists.Length);
 		}
-		public bool IsInsidePolygon(Vec2 point) => PolygonShape.IsInPolygon(cachedPoints, point);
+		public bool IsInsidePolygon(Vec2 point) => PolygonShape.IsInPolygon(_cachedPoints, point);
 		private void UpdateCacheAsNeeded() {
-			if (cacheValid) { return; }
+			if (_cacheValid) { return; }
 			ForceUpdateCache();
 		}
 		private void ForceUpdateCache() {
-			if (cachedPoints == null || cachedPoints.Length != model.Points.Length) {
-				cachedPoints = new Vec2[model.Points.Length];
+			if (_cachedPoints == null || _cachedPoints.Length != model.Points.Length) {
+				_cachedPoints = new Vec2[model.Points.Length];
 			}
-			BoundingCircleInLocalSpace = Welzl.GetMinimumCircle(model.Points);
-			float cos = directionUnitVector.x, sin = directionUnitVector.y;
+			_boundingCircleInGlobalSpace = BoundingCircleInLocalSpace;
+			_boundingCircleInGlobalSpace.Center.Rotate(_directionUnitVector);
+			_boundingCircleInGlobalSpace.Center += _position;
+			float cos = _directionUnitVector.x, sin = _directionUnitVector.y;
 			for (int i = 0; i < model.Points.Length; i++) {
 				Vec2 v = model.Points[i];
-				cachedPoints[i] = new Vec2(cos * v.x - sin * v.y + position.x, sin * v.x + cos * v.y + position.y);
+				_cachedPoints[i] = new Vec2(cos * v.x - sin * v.y + _position.x, sin * v.x + cos * v.y + _position.y);
 			}
-			if (!PolygonShape.TryGetAABB(cachedPoints, out cachedBoundBoxMin, out cachedBoundBoxMax)) {
+			if (!PolygonShape.TryGetAABB(_cachedPoints, out _cachedBoundBoxMin, out _cachedBoundBoxMax)) {
 				throw new Exception("failed to calculate bounding box for polygon");
 			}
-			UpdateConvexHullIndexLists();
-			cacheValid = true;
+			_cacheValid = true;
 		}
 	}
 }

@@ -59,7 +59,9 @@ namespace MathMrV {
 		}
 		public Vec2 RotatedRadians(float radians) => Rotated(NormalFromRadians(radians));
 		public Vec2 Rotated(Vec2 dir) => new Vec2(dir.x * x - dir.y * y, dir.y * x + dir.x * y);
+		public Vec2 Unrotated(Vec2 dir) => new Vec2(dir.x * x - -dir.y * y,-dir.y * x + dir.x * y);
 		public void Rotate(Vec2 dir) => this = Rotated(dir);
+		public void Unrotate(Vec2 dir) => this = Unrotated(dir);
 		public void RotateRadians(float radians) => this = RotatedRadians(radians);
 		public Vec2 RotatedDegrees(float degrees) => RotatedRadians(DegreesToRadians(degrees));
 		public void RotateDegrees(float degrees) => this = RotatedDegrees(degrees);

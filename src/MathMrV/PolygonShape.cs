@@ -27,9 +27,7 @@ namespace MathMrV {
 		public static bool TryGetAABB(IList<Vec2> points, out Vec2 min, out Vec2 max) {
 			min = Vec2.Max;
 			max = Vec2.Min;
-			if (points.Count == 0) {
-				return false;
-			}
+			if (points.Count == 0) { return false; }
 			for (int i = 0; i < points.Count; ++i) {
 				Vec2 p = points[i];
 				if (p.x < min.x) { min.x = p.x; }

@@ -96,11 +96,12 @@ namespace asteroids {
 				Vec2 normal = Vec2.Zero;
 				float depth = 0;
 				for (int i = 0; i < collisions.Count; ++i) {
+					// TODO better contact point calculation would involve finding Vec2 of where polygon segments cross
 					Polygon.CollisionData data = collisions[i];
 					Polygon a = data.objectA;
 					Polygon b = data.objectB;
-					Circle circleA = a.ConvexHullCircles[data.ObjectAConvexIndex];
-					Circle circleB = b.ConvexHullCircles[data.ObjectBConvexIndex];
+					Circle circleA = a.model.ConvexHullCircles[data.ObjectAConvexIndex];
+					Circle circleB = b.model.ConvexHullCircles[data.ObjectBConvexIndex];
 					Circle.TryGetCircleCollision(circleA, circleB, out Vec2 estimatedCollisionPoint);
 					//b.TryGetCircleCollisionConvex(data.ObjectBConvexIndex, circleA.center, 0,
 					//	out Vec2 closestPointOnB, out _, out _);
