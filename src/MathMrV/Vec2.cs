@@ -93,5 +93,25 @@ namespace MathMrV {
 		public static bool IsNaN(Vec2 vec) => float.IsNaN(vec.x) || float.IsNaN(vec.y);
 		public bool IsZero() => IsZero(this);
 		public static bool IsZero(Vec2 vec) => vec.x == 0 && vec.y == 0;
+		public static bool TryGetLineSegmentIntersection(Vec2 startA, Vec2 endA, Vec2 startB, Vec2 endB, out Vec2 point) {
+			Vec2 deltaA = endA - startA;
+			Vec2 deltaB = endB - startB;
+			// cross-product can be intuited as value for "how different are the directions of lines"
+			float orthogonalityOfLines = (deltaA.X * deltaB.Y) - (deltaA.Y * deltaB.X);
+			bool isParallel = Math.Abs(orthogonalityOfLines) < 1e-5f;
+			if (isParallel) {
+				point = Vec2.NaN;
+				return false;
+			}
+			Vec2 lineDelta = startB - startA;
+			float orthogonalityOfLineA = (lineDelta.X * deltaA.Y) - (lineDelta.Y * deltaA.X);
+			float orthogonalityOfLineB = (lineDelta.X * deltaB.Y) - (lineDelta.Y * deltaB.X);
+			float whereLineBCrossesOnLineA = orthogonalityOfLineB / orthogonalityOfLines;
+			float whereLineACrossesOnLineB = orthogonalityOfLineA / orthogonalityOfLines;
+			point = startA + (deltaA * whereLineBCrossesOnLineA);
+			bool doesLineBCollideLineA = whereLineBCrossesOnLineA >= 0f && whereLineBCrossesOnLineA <= 1f;
+			bool doesLineACollideLineB = whereLineACrossesOnLineB >= 0f && whereLineACrossesOnLineB <= 1f;
+			return (doesLineBCollideLineA && doesLineACollideLineB);
+		}
 	}
 }

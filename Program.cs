@@ -63,12 +63,6 @@ namespace asteroids {
 			playerCharacter.Name = "player";
 			playerCharacter.TypeId = (int)AsteroidType.Player;
 			playerCharacter.Color = ConsoleColor.Blue;
-			playerCharacter.CollisionCircles = new Circle[] {
-				new Circle((1.25f, 0), 1.25f),
-				new Circle((-0.6875f,-1.4375f), 0.5f),
-				new Circle((-0.6875f, 1.4375f), 0.5f),
-				new Circle((3.625f,0), 0.5f),
-			};
 			MobileObjectController playerControl = new MobileObjectController(playerCharacter);
 			float playerAutoRotationSpeedRadianPerSecond = MathF.PI * 4;
 			float playerFreeRotationSpeedRadianPerSecond = MathF.PI * 2;

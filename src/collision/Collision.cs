@@ -13,6 +13,7 @@ namespace collision {
 		public float Depth;
 		public int ColliderIndexSelf = -1;
 		public int ColliderIndexOther = -1;
+		public IList<Vec2> contacts;
 		public List<CollisionLogic.Function> collisionFunctions;
 		public string Name => (Self is IGameObject a ? a.Name : "?") + "." + (Other is IGameObject b ? b.Name : "?");
 		public void Get<TypeA, TypeB>(out TypeA self, out TypeB other) {
