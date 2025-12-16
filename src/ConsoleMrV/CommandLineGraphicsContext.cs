@@ -40,22 +40,22 @@ namespace ConsoleMrV {
 
 		public Vec2 WriteAt(string text, int col, int row) => WriteAt(ConsoleGlyph.Convert(text), col, row);
 		public Vec2 WriteAt(ConsoleGlyph[] text, int col, int row) => WriteAt(text, col, row, false);
-		public Vec2 WriteAt(ConsoleGlyph[] text, int col, int row, bool alsoUseBackground) {
+		public Vec2 WriteAt(ConsoleGlyph[] text, int col, int row, bool useNewBgColor) {
 			for (int i = 0; i < text.Length; i++) {
 				ConsoleGlyph g = text[i];
 				switch (g.Letter) {
 					case '\n': col = 0; ++row; break;
-					default: WriteAt(g, col, row, alsoUseBackground); ++col; break;
+					default: WriteAt(g, col, row, useNewBgColor); ++col; break;
 				}
 			}
 			return new Vec2(col, row);
 		}
 		public void WriteAt(ConsoleGlyph glyph, int col, int row) => WriteAt(glyph, col, row, true);
-		public void WriteAt(ConsoleGlyph glyph, int col, int row, bool alsoUseGlyphBackground) {
+		public void WriteAt(ConsoleGlyph glyph, int col, int row, bool useNewBgColor) {
 			if (!IsValidCoordinate(col, row)) {
 				return;
 			}
-			if (!alsoUseGlyphBackground) {
+			if (!useNewBgColor) {
 				glyph.back = _currentBuffer[col, row].back;
 			}
 			_currentBuffer[col, row] = glyph;

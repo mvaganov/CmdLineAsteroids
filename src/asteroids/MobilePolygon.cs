@@ -49,7 +49,7 @@ namespace asteroids {
 			out Vec2 closestPoint, out Vec2 circleToPointDelta, out float closestDistanceSq)) {
 				float depthOfCircleOverlap = circle.Radius - MathF.Sqrt(closestDistanceSq);
 				Vec2 normal = circleToPointDelta.Normal;
-				return new CollisionData(this, null, closestPoint, normal, depthOfCircleOverlap);
+				return new CollisionData(this, null, closestPoint, normal, depthOfCircleOverlap, null);
 			}
 			return null;
 		}
@@ -63,19 +63,19 @@ namespace asteroids {
 				Vec2 point = Vec2.Zero;
 				Vec2 normal = Vec2.Zero;
 				float depth = 0;
+				List<Vec2> contacts = null;
 				for (int i = 0; i < collisions.Count; ++i) {
-					// TODO better contact point calculation would involve finding Vec2 of where polygon segments cross
 					Polygon.CollisionData data = collisions[i];
 					Polygon a = data.objectA;
 					Polygon b = data.objectB;
 					Circle circleA = a.model.ConvexHullCircles[data.ObjectAConvexIndex];
 					Circle circleB = b.model.ConvexHullCircles[data.ObjectBConvexIndex];
 					Circle.TryGetCircleCollision(circleA, circleB, out Vec2 estimatedCollisionPoint);
-					//b.TryGetCircleCollisionConvex(data.ObjectBConvexIndex, circleA.center, 0,
-					//	out Vec2 closestPointOnB, out _, out _);
-					//a.TryGetCircleCollisionConvex(data.ObjectAConvexIndex, circleB.center, 0,
-					//	out Vec2 closestPointOnA, out _, out _);
-					//Vec2 estimatedCollisionPoint = (closestPointOnA + closestPointOnB) / 2;
+					IList<Vec2> convexContacts = Polygon.GetIntersections(a, data.ObjectAConvexIndex, b, data.ObjectBConvexIndex);
+					if (convexContacts != null) {
+						if  (contacts == null) {  contacts = new List<Vec2>(); }
+						contacts.AddRange(convexContacts);
+					}
 					point += estimatedCollisionPoint;
 					depth += data.Depth;
 					normal += data.Normal;
@@ -86,7 +86,7 @@ namespace asteroids {
 					normal.Normalize();
 					depth /= collisions.Count;
 				}
-				return new CollisionData(this, other, point, normal, depth);
+				return new CollisionData(this, other, point, normal, depth, contacts);
 			}
 			return null;
 		}

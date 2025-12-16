@@ -93,19 +93,20 @@ namespace MathMrV {
 		public static bool IsNaN(Vec2 vec) => float.IsNaN(vec.x) || float.IsNaN(vec.y);
 		public bool IsZero() => IsZero(this);
 		public static bool IsZero(Vec2 vec) => vec.x == 0 && vec.y == 0;
+		public static float Cross(Vec2 a, Vec2 b) => (a.x * b.y) - (a.y * b.x);
+		public static float Cross(Vec2 a, Vec2 b, Vec2 c) => (b.X - a.X) * (c.Y - b.Y) - (b.Y - a.Y) * (c.X - b.X);
 		public static bool TryGetLineSegmentIntersection(Vec2 startA, Vec2 endA, Vec2 startB, Vec2 endB, out Vec2 point) {
 			Vec2 deltaA = endA - startA;
 			Vec2 deltaB = endB - startB;
-			// cross-product can be intuited as value for "how different are the directions of lines"
-			float orthogonalityOfLines = (deltaA.X * deltaB.Y) - (deltaA.Y * deltaB.X);
+			float orthogonalityOfLines = Cross(deltaA, deltaB);
 			bool isParallel = Math.Abs(orthogonalityOfLines) < 1e-5f;
 			if (isParallel) {
 				point = Vec2.NaN;
 				return false;
 			}
-			Vec2 lineDelta = startB - startA;
-			float orthogonalityOfLineA = (lineDelta.X * deltaA.Y) - (lineDelta.Y * deltaA.X);
-			float orthogonalityOfLineB = (lineDelta.X * deltaB.Y) - (lineDelta.Y * deltaB.X);
+			Vec2 linesDelta = startB - startA;
+			float orthogonalityOfLineA = Cross(linesDelta, deltaA);
+			float orthogonalityOfLineB = Cross(linesDelta, deltaB);
 			float whereLineBCrossesOnLineA = orthogonalityOfLineB / orthogonalityOfLines;
 			float whereLineACrossesOnLineB = orthogonalityOfLineA / orthogonalityOfLines;
 			point = startA + (deltaA * whereLineBCrossesOnLineA);

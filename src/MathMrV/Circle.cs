@@ -1,5 +1,7 @@
 ﻿using ConsoleMrV;
 using System;
+using System.Collections.Generic;
+using System.Numerics;
 
 namespace MathMrV {
 	public struct Circle {
@@ -82,6 +84,35 @@ namespace MathMrV {
 				return true;
 			}
 			return false;
+		}
+
+		public static IList<Vec2> FindCircleCircleIntersections(Circle c1, Circle c2) {
+			Vec2[] intersections = null;
+			Vec2 delta = c2.Center - c1.Center;
+			float quadrance = delta.MagnitudeSqr;
+			float d = MathF.Sqrt(quadrance);
+			bool circlesTooFarApart = d > c1.Radius + c2.Radius;
+			if (circlesTooFarApart) { return intersections; }
+			bool oneCircleInsideTheOther = d < Math.Abs(c1.Radius - c2.Radius);
+			if (oneCircleInsideTheOther) { return intersections = Array.Empty<Vec2>(); }
+			bool circlesAreCoincident = (d == 0 && c1.Radius == c2.Radius);
+			if (circlesAreCoincident) { return intersections; }
+			float c1r2 = c1.Radius * c1.Radius;
+			float c2r2 = c2.Radius * c2.Radius;
+			float distanceC1ToRadicalLine = (c1r2 - c2r2 + quadrance) / (2 * d);
+			float distanceBetweenCollisionPoints = MathF.Sqrt(c1r2 - distanceC1ToRadicalLine * distanceC1ToRadicalLine);
+			Vec2 dir = delta / d;
+			Vec2 radicalCenter = c1.Center + dir * distanceC1ToRadicalLine;
+			Vec2 perpendicularDistanceBetweenPoints = dir.Perpendicular() * distanceBetweenCollisionPoints;
+			Vec2 intersection = radicalCenter + perpendicularDistanceBetweenPoints;
+			bool isTangent = d == c1.Radius + c2.Radius || d == Math.Abs(c1.Radius - c2.Radius);
+			intersections = new Vec2[!isTangent ? 2 : 1];
+			intersections[0] = intersection;
+			if (!isTangent) {
+				intersection = radicalCenter - perpendicularDistanceBetweenPoints;
+				intersections[1] = intersection;
+			}
+			return intersections;
 		}
 	}
 }

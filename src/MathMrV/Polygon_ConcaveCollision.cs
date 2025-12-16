@@ -90,9 +90,25 @@ namespace MathMrV {
 			return foundCollision;
 		}
 
+		public static IList<Vec2> GetIntersections(Polygon a, int convexHullA, Polygon b, int convexHullB) {
+			List<Vec2> intersections = null;
+			int[] subMeshA = a.model.ConvexHullIndexLists[convexHullA];
+			int[] subMeshB = b.model.ConvexHullIndexLists[convexHullB];
+			for (int i = 0; i < subMeshA.Length; ++i) {
+				int nextIndex = (i+1) % subMeshA.Length;
+				if (!a.IsIndexPairConsecutive(i, nextIndex)) { continue; }
+				Vec2 lineStart = b.ConvertPointToLocalSpace(a.GetPoint(subMeshA[i]));
+				Vec2 lineEnd = b.ConvertPointToLocalSpace(a.GetPoint(subMeshA[nextIndex]));
+				if (b.model.TryGetCrossingSegment(lineStart, lineEnd, convexHullB, out _, out Vec2 result)) {
+					if (intersections == null) { intersections = new List<Vec2>(); }
+					intersections.Add(b.ConvertLocalPositionToWorldSpace(result));
+				}
+			}
+			return intersections;
+		}
+
 		private static bool CheckCollisionOfSubMeshes(Polygon mainPoly, Polygon otherPoly, int mainConvex, int otherConvex, ref CollisionData result) {
 			int[] mainIndexList = mainPoly.model.ConvexHullIndexLists[mainConvex];
-
 			for (int i = 0; i < mainIndexList.Length; i++) {
 				int index0 = mainIndexList[i], index1 = mainIndexList[(i + 1) % mainIndexList.Length];
 				Vec2 p0 = mainPoly.GetPoint(index0), p1 = mainPoly.GetPoint(index1);

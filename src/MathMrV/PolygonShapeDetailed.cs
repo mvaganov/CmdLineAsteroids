@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace MathMrV {
-	// TODO use this insead of PolygonShape
 	public class PolygonShapeDetailed {
 		public PolygonShape Shape;
 		public Circle BoundingCircleInLocalSpace; // TODO rename BoundingCircle
@@ -48,7 +47,7 @@ namespace MathMrV {
 					int iNext = (i == indexes.Count - 1) ? 0 : i + 1;
 					int p0 = indexes[iPrev], p1 = indexes[i], p2 = indexes[iNext];
 					Vec2 v0 = vertices[p0], v1 = vertices[p1], v2 = vertices[p2];
-					float crossProduct = (v1.X - v0.X) * (v2.Y - v1.Y) - (v1.Y - v0.Y) * (v2.X - v1.X);
+					float crossProduct = (v1.X - v0.X) * (v2.Y - v1.Y) - (v1.Y - v0.Y) * (v2.X - v1.X); // TODO cross product function
 					bool isCCWTriangle = crossProduct > 0;
 					bool IsEmptyTriangle() {
 						foreach (int pTest in indexes) {
@@ -72,14 +71,13 @@ namespace MathMrV {
 		}
 
 		public static bool IsPointInsideTriangle(Vec2 P, Vec2 A, Vec2 B, Vec2 C) {
-			float CrossProduct2D(Vec2 a, Vec2 b) => (a.X * b.Y) - (a.Y * b.X);
-			float crossA = CrossProduct2D(B - A, P - A);
-			float crossB = CrossProduct2D(C - B, P - B);
-			float crossC = CrossProduct2D(A - C, P - C);
+			float crossA = Vec2.Cross(B - A, P - A);
+			float crossB = Vec2.Cross(C - B, P - B);
+			float crossC = Vec2.Cross(A - C, P - C);
 			bool signA = crossA >= 0;
 			bool signB = crossB >= 0;
 			bool signC = crossC >= 0;
-			return signA == signB && signB == signC;
+			return signA && signB && signC;
 		}
 
 		public static int[][] ConvertTriangleListIntoConvexHulls(int[][] triangleIndexes, Vec2[] originalVertices) {
@@ -146,8 +144,8 @@ namespace MathMrV {
 					int iPrev = (i == 0) ? indexList.Count - 1 : i - 1;
 					int iNext = (i == indexList.Count - 1) ? 0 : i + 1;
 					Vec2 p0 = vertList[indexList[iPrev]], p1 = vertList[indexList[i]], p2 = vertList[indexList[iNext]];
-					float crossProduct = (p1.X - p0.X) * (p2.Y - p1.Y) - (p1.Y - p0.Y) * (p2.X - p1.X);
-					bool isCCW = crossProduct > 0;
+					float directionalityOfPoints = Vec2.Cross(p0, p1, p2);
+					bool isCCW = directionalityOfPoints > 0;
 					if (!isCCW) { return false; }
 				}
 				return true;
@@ -161,7 +159,7 @@ namespace MathMrV {
 				Vec2 a = Points[poly[i]], b = Points[poly[(i + 1) % poly.Length]];
 				Vec2 edgeDelta = b - a;
 				Vec2 pointToA = point - a;
-				float cross = (edgeDelta.x * pointToA.y) - (edgeDelta.y * pointToA.x);
+				float cross = Vec2.Cross(edgeDelta, pointToA);
 				bool isCCW = cross > 0;
 				if (!isCCW) { return false; }
 			}
@@ -222,6 +220,23 @@ namespace MathMrV {
 			float pointProjectedOnLine = Vec2.Dot(pointRelativeToLine, lineDelta) / Vec2.Dot(lineDelta, lineDelta);
 			pointProjectedOnLine = Math.Clamp(pointProjectedOnLine, 0f, 1f);
 			return a + (lineDelta * pointProjectedOnLine);
+		}
+		public bool TryGetCrossingSegment(Vec2 lineStartLocalSpace, Vec2 lineEndLocalSpace,
+		int convexPolygonId, out int segmentIndex, out Vec2 result) {
+			int[] poly = ConvexHullIndexLists[convexPolygonId];
+			for (int i = 0; i < poly.Length; i++) {
+				int indexA = poly[i], indexB = poly[(i + 1) % poly.Length];
+				bool segmentABIsOnEdgeOfMainPolygon = IsIndexPairConsecutiveOnPolygonEdge(indexA, indexB);
+				if (!segmentABIsOnEdgeOfMainPolygon) { continue; }
+				Vec2 vecA = Points[indexA], vecB = Points[indexB];
+				if (Vec2.TryGetLineSegmentIntersection(lineStartLocalSpace, lineEndLocalSpace, vecA, vecB, out result)) {
+					segmentIndex = i;
+					return true;
+				}
+			}
+			segmentIndex = -1;
+			result = Vec2.NaN;
+			return false;
 		}
 	}
 }

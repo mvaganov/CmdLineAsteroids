@@ -13,14 +13,14 @@ namespace collision {
 		public float Depth;
 		public int ColliderIndexSelf = -1;
 		public int ColliderIndexOther = -1;
-		public IList<Vec2> contacts;
+		public IList<Vec2> Contacts;
 		public List<CollisionLogic.Function> collisionFunctions;
 		public string Name => (Self is IGameObject a ? a.Name : "?") + "." + (Other is IGameObject b ? b.Name : "?");
 		public void Get<TypeA, TypeB>(out TypeA self, out TypeB other) {
 			self = (TypeA)this.Self;
 			other = (TypeB)this.Other;
 		}
-		public CollisionData(ICollidable self, ICollidable other, Vec2 point, Vec2 normal, float depth) {
+		public CollisionData(ICollidable self, ICollidable other, Vec2 point, Vec2 normal, float depth, IList<Vec2> contacts) {
 			this.Self = self;
 			this.Other = other;
 			this.Point = point;
@@ -29,13 +29,15 @@ namespace collision {
 				throw new Exception("bad normal");
 			}
 			this.Depth = depth;
+			this.Contacts = contacts;
 		}
 		public void SetParticipants(ICollidable self, ICollidable other) { this.Self = self; this.Other = other; }
 		public static CollisionData ForCircles(Circle a, Circle b) {
 			if (Circle.TryGetCircleCollision(a, b, out Vec2 delta, out float depth)) {
 				Vec2 normal = delta.Normal;
 				Vec2 centerOfCollision = a.Center + normal * (a.Radius - depth / 2);
-				return new CollisionData(null, null, centerOfCollision, -normal, depth);
+				IList<Vec2> contacts = Circle.FindCircleCircleIntersections(a, b);
+				return new CollisionData(null, null, centerOfCollision, -normal, depth, contacts);
 			}
 			return null;
 		}

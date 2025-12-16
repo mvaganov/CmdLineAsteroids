@@ -301,6 +301,7 @@ namespace asteroids {
 				graphics.DrawLine(playerControl.Position, lineEnd, lineWidth);
 			}
 
+			IList<Vec2> SpecialDebugPoints = null;
 			// additional labels, overlay GUI
 			postDraw.Add(DebugDraw);
 			postDraw.Add(DrawScore);
@@ -325,6 +326,12 @@ namespace asteroids {
 						}
 					}
 				}
+				if (SpecialDebugPoints != null) {
+					for (int i = 0; i < SpecialDebugPoints.Count; ++i) {
+						Vec2 c = SpecialDebugPoints[i];
+						graphics.WriteAt(ConsoleGlyph.Convert($"{i}", ConsoleColor.Gray, ConsoleColor.Red), c);
+					}
+				}
 			}
 			void LabelList<T>(IList<T> objects, ConsoleColor textColor) where T : IGameObject {
 				string name;
@@ -332,7 +339,7 @@ namespace asteroids {
 					if (!objects[i].IsActive || (name = objects[i].Name) == null) {
 						continue;
 					}
-					graphics.WriteAt(ConsoleGlyph.Convert(name, textColor), objects[i].Position);
+					graphics.WriteAt(ConsoleGlyph.Convert(name, textColor), objects[i].Position, false);
 				}
 			}
 
@@ -458,9 +465,14 @@ namespace asteroids {
 			Action CollidePlayers(CollisionData collision) {
 				return () => {
 					collision.Get(out MobilePolygon player, out MobilePolygon asteroid);
-					MobileObject.SeparateObjects(player, asteroid, collision.Normal, collision.Depth);
-					MobileObject.BounceVelocities(player, asteroid, collision.Normal);
-					MobileObject.CollisionTorque(player, asteroid, collision.Point, collision.Normal);
+					//MobileObject.SeparateObjects(player, asteroid, collision.Normal, collision.Depth);
+					//MobileObject.BounceVelocities(player, asteroid, collision.Normal);
+					//MobileObject.CollisionTorque(player, asteroid, collision.Point, collision.Normal);
+					player.Velocity = Vec2.Zero;
+					asteroid.Velocity = Vec2.Zero;
+					player.AngularVelocity = 0;
+					asteroid.AngularVelocity = 0;
+					SpecialDebugPoints = collision.Contacts;
 				};
 			}
 

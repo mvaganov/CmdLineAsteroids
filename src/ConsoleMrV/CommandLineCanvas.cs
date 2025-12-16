@@ -84,12 +84,12 @@ namespace ConsoleMrV {
 		public Vec2 GetConsolePosition(Vec2 canvasPosition) =>
 			(canvasPosition - _originOffsetULCorner).InverseScaled(_scale);
 
-		public void WriteAt(string text, Vec2 position, bool alsoUseBackground = false) =>
-			WriteAt(ConsoleGlyph.Convert(text), position, alsoUseBackground);
+		public void WriteAt(string text, Vec2 position, bool useNewBgColor = false) =>
+			WriteAt(ConsoleGlyph.Convert(text), position, useNewBgColor);
 
-		public void WriteAt(ConsoleGlyph[] text, Vec2 position, bool alsoUseBackground = false) {
+		public void WriteAt(ConsoleGlyph[] text, Vec2 position, bool useConsoleGlyphBgColor = true) {
 			Vec2 consolePosition = GetConsolePosition(position);
-			WriteAt(text, (int)consolePosition.x, (int)consolePosition.y, alsoUseBackground);
+			WriteAt(text, (int)consolePosition.x, (int)consolePosition.y, useConsoleGlyphBgColor);
 		}
 
 		public void DrawSupersampledShape(Func<Vec2, bool> isInsideShape, Vec2 aabbMin, Vec2 aabbMax) {
