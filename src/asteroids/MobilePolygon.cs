@@ -3,7 +3,6 @@ using ConsoleMrV;
 using MathMrV;
 using System;
 using System.Collections.Generic;
-using System.Numerics;
 
 namespace asteroids {
 	public class MobilePolygon : MobileObject, ICollidable {
@@ -22,9 +21,7 @@ namespace asteroids {
 			polygon = new Polygon(playerPoly);
 		}
 		public override void Draw(CommandLineCanvas canvas) {
-			if (!_active) {
-				return;
-			}
+			if (!_active) { return; }
 			polygon.Draw(canvas);
 		}
 
@@ -42,9 +39,7 @@ namespace asteroids {
 		}
 
 		public CollisionData GetCollision(Circle circle) {
-			if (!GetCollisionBoundingCircle().IsColliding(circle)) {
-				return null;
-			}
+			if (!GetCollisionBoundingCircle().IsColliding(circle)) { return null; }
 			if (polygon.TryGetCircleCollision(circle.Center, circle.Radius,
 			out Vec2 closestPoint, out Vec2 circleToPointDelta, out float closestDistanceSq)) {
 				float depthOfCircleOverlap = circle.Radius - MathF.Sqrt(closestDistanceSq);
@@ -60,23 +55,17 @@ namespace asteroids {
 			List<Polygon.CollisionData> collisions = null;
 			bool isColliding = other.Polygon.TryGetPolyCollision(Polygon, ref collisions);
 			if (isColliding) {
-				Vec2 point = Vec2.Zero;
-				Vec2 normal = Vec2.Zero;
+				Vec2 point = Vec2.Zero, normal = Vec2.Zero;
 				float depth = 0;
 				List<Vec2> contacts = null;
 				for (int i = 0; i < collisions.Count; ++i) {
 					Polygon.CollisionData data = collisions[i];
-					Polygon a = data.objectA;
-					Polygon b = data.objectB;
-					Circle circleA = a.model.ConvexHullCircles[data.ObjectAConvexIndex];
-					Circle circleB = b.model.ConvexHullCircles[data.ObjectBConvexIndex];
-					Circle.TryGetCircleCollision(circleA, circleB, out Vec2 estimatedCollisionPoint);
-					IList<Vec2> convexContacts = Polygon.GetIntersections(a, data.ObjectAConvexIndex, b, data.ObjectBConvexIndex);
+					IList<Vec2> convexContacts = data.CalculateContacts();
 					if (convexContacts != null) {
-						if  (contacts == null) {  contacts = new List<Vec2>(); }
+						if  (contacts == null) { contacts = new List<Vec2>(); }
 						contacts.AddRange(convexContacts);
 					}
-					point += estimatedCollisionPoint;
+					point += data.CalculateEstimateCollisionPoint();
 					depth += data.Depth;
 					normal += data.Normal;
 				}

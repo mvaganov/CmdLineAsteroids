@@ -36,15 +36,8 @@ namespace asteroids {
 				ParticleSystem.Kind.None, ConsoleColor.Magenta, 0, null);
 			List<ParticleSystem> particleSystems = new List<ParticleSystem>() { marker, explosion };
 
-			// test polygon
-			Vec2[] testPoly = new Vec2[] {
-				(8,0),(1,1),(0,5),(-1,1),(-5,0),(-1,-1),(0,-5),(1,-1)
-				//(5, 0), (6,2), (7,5), (2,5), (3,1), (0, 3), (-1, 0), (0, -3)
-				//(5, 0), (-3, 3), (0, 0), (-3, -3)
-				//(5,0),(0,3),(0,-3)
-			};
-			// initialize player
-			Vec2[] playerPoly = new Vec2[] { (5, 0), (-3, 3), (0, 0), (-3, -3) };//(5, 0), (0, 3), (0, -3) };//
+			Vec2[] derelictVessel = new Vec2[] { (8,0),(1,1),(0,5),(-1,1),(-5,0),(-1,-1),(0,-5),(1,-1) };
+			Vec2[] playerPoly = new Vec2[] { (5, 0), (-3, 3), (0, 0), (-3, -3) };
 
 			float playerRotationAngleDegrees = 5;
 			long playerShootCooldownMs = 50;
@@ -53,12 +46,11 @@ namespace asteroids {
 			int playerAmmo = 10;
 			float playerMaxHp = 10;
 			float playerHp = playerMaxHp;
-			MobilePolygon testCharacter = new MobilePolygon(testPoly);
-			//testCharacter.Density = 1000;
-			testCharacter.Name = "test";
-			testCharacter.TypeId = (int)AsteroidType.Player;
-			testCharacter.Color = ConsoleColor.DarkGray;
-			testCharacter.Position = (10, 3);
+			MobilePolygon npcCharacter = new MobilePolygon(derelictVessel);
+			npcCharacter.Name = "test";
+			npcCharacter.TypeId = (int)AsteroidType.Player;
+			npcCharacter.Color = ConsoleColor.DarkGray;
+			npcCharacter.Position = (10, 3);
 			MobilePolygon playerCharacter = new MobilePolygon(playerPoly);
 			playerCharacter.Name = "player";
 			playerCharacter.TypeId = (int)AsteroidType.Player;
@@ -69,7 +61,7 @@ namespace asteroids {
 			float playerMinThrustDuration = 1f / 2;
 			playerControl.MaxSpeed = 10;
 			playerControl.DirectionMatchesVelocity = true;
-			List<IGameObject> playerObjects = new List<IGameObject>() { playerCharacter, testCharacter };
+			List<IGameObject> playerObjects = new List<IGameObject>() { playerCharacter, npcCharacter };
 			objects.AddRange(playerObjects);
 			objects.Add(playerControl);
 			collideList.AddRange(playerObjects.ConvertAll(p => (ICollidable)p));
@@ -253,12 +245,10 @@ namespace asteroids {
 				powerup.TypeId = (int)AsteroidType.None;
 				powerup.Color = ConsoleColor.Magenta;
 			});
-			void CreatePowerup(MobileObject projectile, Vec2 position) {
+			void CreatePowerup(Vec2 position, Vec2 velocityOfPowerup) {
 				MobileCircle powerup = powerupPool.Commission();
 				powerup.Position = position;
-				if (projectile != null) {
-					powerup.Velocity = -projectile.Velocity.Normal;
-				}
+				powerup.Velocity = velocityOfPowerup;
 			}
 
 			// add acceleration force to bring objects back to center if they stray too far
@@ -314,15 +304,15 @@ namespace asteroids {
 				LabelList(playerObjects, ConsoleColor.Green);
 				LabelList(asteroidPool, ConsoleColor.DarkYellow);
 				LabelList(powerupPool, ConsoleColor.Green);
-				float spin = MathF.Abs(testCharacter.AngularVelocity);
+				float spin = MathF.Abs(npcCharacter.AngularVelocity);
 				if (spin != 0) {
 					if (spin < Time.DeltaTimeSeconds) {
-						testCharacter.AngularVelocity = 0;
+						npcCharacter.AngularVelocity = 0;
 					} else {
-						if (testCharacter.AngularVelocity < 0) {
-							testCharacter.AngularVelocity += Time.DeltaTimeSeconds;
+						if (npcCharacter.AngularVelocity < 0) {
+							npcCharacter.AngularVelocity += Time.DeltaTimeSeconds;
 						} else {
-							testCharacter.AngularVelocity -= Time.DeltaTimeSeconds;
+							npcCharacter.AngularVelocity -= Time.DeltaTimeSeconds;
 						}
 					}
 				}
@@ -465,14 +455,14 @@ namespace asteroids {
 			Action CollidePlayers(CollisionData collision) {
 				return () => {
 					collision.Get(out MobilePolygon player, out MobilePolygon asteroid);
-					//MobileObject.SeparateObjects(player, asteroid, collision.Normal, collision.Depth);
-					//MobileObject.BounceVelocities(player, asteroid, collision.Normal);
-					//MobileObject.CollisionTorque(player, asteroid, collision.Point, collision.Normal);
-					player.Velocity = Vec2.Zero;
-					asteroid.Velocity = Vec2.Zero;
-					player.AngularVelocity = 0;
-					asteroid.AngularVelocity = 0;
-					SpecialDebugPoints = collision.Contacts;
+					MobileObject.SeparateObjects(player, asteroid, collision.Normal, collision.Depth);
+					MobileObject.BounceVelocities(player, asteroid, collision.Normal);
+					MobileObject.CollisionTorque(player, asteroid, collision.Point, collision.Normal);
+					//player.Velocity = Vec2.Zero;
+					//asteroid.Velocity = Vec2.Zero;
+					//player.AngularVelocity = 0;
+					//asteroid.AngularVelocity = 0;
+					//SpecialDebugPoints = collision.Contacts;
 				};
 			}
 
@@ -487,13 +477,10 @@ namespace asteroids {
 				collision.Get(out MobilePolygon projectile, out MobileCircle asteroid);
 				return () => {
 					explosion.Emit(10, projectile.Position, projectile.Color, 0);
-					if (!BreakApartAsteroid(asteroid, projectile.Position)) {
-						CreatePowerup(projectile, projectile.Position);
-					}
+					PleayerBrokeAsteroid(asteroid, collision, -projectile.Velocity.Normal);
 					if (projectile.IsActive) {
 						projectilePool.DecommissionDelayed(projectile);
 					}
-					++playerScore;
 				};
 			}
 			Action CollidePlayerAndAsteroid(CollisionData collision) {
@@ -511,9 +498,16 @@ namespace asteroids {
 					MobileObject.BounceVelocities(player, asteroid, collision.Normal);
 					MobileObject.CollisionTorque(player, asteroid, collision.Point, collision.Normal);
 					if (asteroidDestroyed) {
-						BreakApartAsteroid(asteroid, collision.Point);
+						PleayerBrokeAsteroid(asteroid, collision, -asteroid.Velocity.Normal);
 					}
 				};
+			}
+			void PleayerBrokeAsteroid(MobileCircle asteroid, CollisionData collision, Vec2 velocityOfPowerup) {
+				bool brokenIntoMoreAsteroids = BreakApartAsteroid(asteroid, collision.Point);
+				if (!brokenIntoMoreAsteroids) {
+					CreatePowerup(asteroid.Position, velocityOfPowerup);
+				}
+				++playerScore;
 			}
 			Action CollidePlayerAndPowerup(CollisionData collision) {
 				collision.Get(out MobilePolygon player, out MobileCircle powerup);

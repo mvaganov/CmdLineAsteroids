@@ -10,7 +10,7 @@ namespace MathMrV {
 		private bool _cacheValid;
 		private Vec2 _cachedBoundBoxMin, _cachedBoundBoxMax;
 		private Circle _boundingCircleInGlobalSpace;
-		public Circle BoundingCircleInLocalSpace => model.BoundingCircleInLocalSpace;
+		public Circle BoundingCircleInLocalSpace => model.BoundingCircle;
 		public Vec2 Position { get => _position; set { _position = value; SetDirty(); } }
 		public Vec2 Direction { get => _directionUnitVector; set { _directionUnitVector = value; SetDirty(); } }
 		public float RotationRadians {
@@ -27,20 +27,12 @@ namespace MathMrV {
 			_cachedBoundBoxMax = _cachedBoundBoxMin = _position = Vec2.Zero;
 			_cacheValid = false;
 			_cachedPoints = null;
-			//model.ConvexHullIndexLists = null;
 			UpdateCacheAsNeeded();
 		}
 		public void SetDirty() => _cacheValid = false;
 		public Vec2 GetPoint(int index) {
 			UpdateCacheAsNeeded();
 			return _cachedPoints[index];
-		}
-		public void SetPointGlobalSpace(int index, Vec2 point) {
-			_cachedPoints[index] = point;
-			float cos = _directionUnitVector.x, sin = -_directionUnitVector.y;
-			point -= _position;
-			model.Points[index] = new Vec2(cos * point.x - sin * point.y, sin * point.x + cos * point.y);
-			_cacheValid = false;
 		}
 		public Circle GetCollisionBoundingCircle() => _boundingCircleInGlobalSpace;
 

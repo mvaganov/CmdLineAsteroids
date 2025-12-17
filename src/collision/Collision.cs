@@ -17,21 +17,21 @@ namespace collision {
 		public List<CollisionLogic.Function> collisionFunctions;
 		public string Name => (Self is IGameObject a ? a.Name : "?") + "." + (Other is IGameObject b ? b.Name : "?");
 		public void Get<TypeA, TypeB>(out TypeA self, out TypeB other) {
-			self = (TypeA)this.Self;
-			other = (TypeB)this.Other;
+			self = (TypeA)Self;
+			other = (TypeB)Other;
 		}
 		public CollisionData(ICollidable self, ICollidable other, Vec2 point, Vec2 normal, float depth, IList<Vec2> contacts) {
-			this.Self = self;
-			this.Other = other;
-			this.Point = point;
-			this.Normal = normal;
+			Self = self;
+			Other = other;
+			Point = point;
+			Normal = normal;
 			if (Vec2.IsNaN(normal) || normal.Magnitude > 1.1f || normal.Magnitude < 0.9f) {
 				throw new Exception("bad normal");
 			}
-			this.Depth = depth;
-			this.Contacts = contacts;
+			Depth = depth;
+			Contacts = contacts;
 		}
-		public void SetParticipants(ICollidable self, ICollidable other) { this.Self = self; this.Other = other; }
+		public void SetParticipants(ICollidable self, ICollidable other) { Self = self; Other = other; }
 		public static CollisionData ForCircles(Circle a, Circle b) {
 			if (Circle.TryGetCircleCollision(a, b, out Vec2 delta, out float depth)) {
 				Vec2 normal = delta.Normal;
@@ -48,7 +48,7 @@ namespace collision {
 			return hash;
 		}
 		public override bool Equals(object obj) => obj is CollisionData cd && Equals(cd);
-		public bool Equals(CollisionData other) => this.Self == other.Self && this.Other == other.Other && this.Point == other.Point;
+		public bool Equals(CollisionData other) => Self == other.Self && Other == other.Other && Point == other.Point;
 		public void CalculateCollisionResults(List<CollisionLogic.ToResolve> out_collisionResolutions) {
 			for (int i = 0; i < collisionFunctions.Count; i++) {
 				CollisionLogic.Function f = collisionFunctions[i];

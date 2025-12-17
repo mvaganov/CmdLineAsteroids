@@ -4,9 +4,12 @@ using System.Collections.Generic;
 
 namespace collision {
 	public class CollisionDatabase : IList<CollisionData> {
-		public Dictionary<ICollidable, List<CollisionData>> database = new Dictionary<ICollidable, List<CollisionData>>();
-		List<List<CollisionData>> collisionLists = new List<List<CollisionData>>();
-		ObjectPool<List<CollisionData>> collisionListPool = new ObjectPool<List<CollisionData>>();
+		public Dictionary<ICollidable, List<CollisionData>> collisionsPerAgent =
+			new Dictionary<ICollidable, List<CollisionData>>();
+		private List<List<CollisionData>> collisionLists =
+			new List<List<CollisionData>>();
+		private ObjectPool<List<CollisionData>> collisionListPool =
+			new ObjectPool<List<CollisionData>>();
 		public int Count {
 			get {
 				int count = 0;
@@ -25,39 +28,30 @@ namespace collision {
 			set => throw new NotImplementedException();
 		}
 		public CollisionDatabase() {
-			collisionListPool.Setup(CreateCollisionList, CommisionCollisionList, DecommisionCollisionList, DestroyCollisionList);
+			collisionListPool.Setup(CreateCollisionList, CommisionCollisionList,
+				DecommisionCollisionList, DestroyCollisionList);
 		}
 		private static List<CollisionData> CreateCollisionList() => new List<CollisionData>();
 		private static void CommisionCollisionList(List<CollisionData> list) { list.Clear(); }
 		private static void DecommisionCollisionList(List<CollisionData> list) { list.Clear(); }
 		private static void DestroyCollisionList(List<CollisionData> list) { }
-		public void Clear() { database.Clear(); collisionLists.Clear(); collisionListPool.Clear(); }
+		public void Clear() { collisionsPerAgent.Clear(); collisionLists.Clear(); collisionListPool.Clear(); }
 		public void AddCollision(CollisionData data) {
-			if (!database.TryGetValue(data.Self, out List<CollisionData> collisions)) {
-				database[data.Self] = collisions = collisionListPool.Commission();
+			if (!collisionsPerAgent.TryGetValue(data.Self, out List<CollisionData> collisions)) {
+				collisionsPerAgent[data.Self] = collisions = collisionListPool.Commission();
 				collisionLists.Add(collisions);
 			}
-			for (int i = 0; i < collisions.Count; ++i) {
-				if (collisions[i].Other == data.Other) {
-#if !RELEASE
-					//if (collisions[i].Equals(data)) {
-					//	Log.d($"duplicate collision discovered: {data.Name}");
-					//} else {
-					//	Log.w($"multiple different collisions: {data.Name}");
-					//}
-#endif
-					return;
-				}
+			bool alreadyHaveThisCollision = collisions.Find(known => known.Other == data.Other) != null;
+			if (!alreadyHaveThisCollision) {
+				collisions.Add(data);
 			}
-			collisions.Add(data);
 		}
 		public List<CollisionData> GetCollisions(ICollidable obj) {
-			if (!database.TryGetValue(obj, out List<CollisionData> collisions)) {
+			if (!collisionsPerAgent.TryGetValue(obj, out List<CollisionData> collisions)) {
 				return null;
 			}
 			return collisions;
 		}
-		public IEnumerator<CollisionData> GetEnumerator() => new Enumerator(this);
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 		private void GetTrueIndex(int iListIndex, out int subList, out int index) {
 			if (!TryGetTrueIndex(iListIndex, out subList, out index)) {
@@ -122,22 +116,30 @@ namespace collision {
 			collisionLists[subList].Remove(item);
 			return true;
 		}
-
-		public class Enumerator : IEnumerator<CollisionData> {
-			CollisionDatabase database;
-			private int subList, index;
-			public Enumerator(CollisionDatabase database) { this.database = database; Reset(); }
-			public void Reset() { subList = 0; index = -1; }
-			public void Dispose() { }
-			public CollisionData Current => database.collisionLists[subList][index]; object IEnumerator.Current => Current;
-			public bool MoveNext() {
-				if (subList >= database.collisionLists.Count) { return false; }
-				++index;
-				List<CollisionData> collisions = database.collisionLists[subList];
-				if (index >= collisions.Count) { ++subList; index = -1; return MoveNext(); }
-				return true;
+		public IEnumerator<CollisionData> GetEnumerator() {
+			for(int subList = 0; subList < collisionLists.Count; ++subList) {
+				List<CollisionData> list = collisionLists[subList];
+				for (int i = 0; i < list.Count; ++i) {
+					yield return list[i];
+				}
 			}
 		}
+		//public IEnumerator<CollisionData> GetEnumerator() => new Enumerator(this);
+		//public class Enumerator : IEnumerator<CollisionData> {
+		//	CollisionDatabase database;
+		//	private int subList, index;
+		//	public Enumerator(CollisionDatabase database) { this.database = database; Reset(); }
+		//	public void Reset() { subList = 0; index = -1; }
+		//	public void Dispose() { }
+		//	public CollisionData Current => database.collisionLists[subList][index]; object IEnumerator.Current => Current;
+		//	public bool MoveNext() {
+		//		if (subList >= database.collisionLists.Count) { return false; }
+		//		++index;
+		//		List<CollisionData> collisions = database.collisionLists[subList];
+		//		if (index >= collisions.Count) { ++subList; index = -1; return MoveNext(); }
+		//		return true;
+		//	}
+		//}
 	}
 
 }

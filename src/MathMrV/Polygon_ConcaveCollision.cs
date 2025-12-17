@@ -32,7 +32,7 @@ namespace MathMrV {
 
 		public void DrawConvex(CommandLineCanvas canvas, int convexIndex) {
 			UpdateCacheAsNeeded();
-			IList<Vec2> verts = model.ConvexHullPoints[convexIndex];
+			IList<Vec2> verts = model.ConvexHull.Points[convexIndex];
 			canvas.DrawSupersampledShape(IsInsidePolygon, _cachedBoundBoxMin, _cachedBoundBoxMax);
 			bool IsInsidePolygon(Vec2 point) => PolygonShape.IsInPolygon(verts, ConvertPointToLocalSpace(point));
 		}
@@ -60,6 +60,15 @@ namespace MathMrV {
 				Depth = float.MaxValue;
 				Normal = Vec2.Zero;
 			}
+			public IList<Vec2> CalculateContacts() {
+				return Polygon.GetIntersections(objectA, ObjectAConvexIndex, objectB, ObjectBConvexIndex);
+			}
+			public Vec2 CalculateEstimateCollisionPoint() {
+				Circle circleA = objectA.model.ConvexHull.BoundingCircles[ObjectAConvexIndex];
+				Circle circleB = objectB.model.ConvexHull.BoundingCircles[ObjectBConvexIndex];
+				Circle.TryGetCircleCollision(circleA, circleB, out Vec2 estimatedCollisionPoint);
+				return estimatedCollisionPoint;
+			}
 		}
 		public bool TryGetPolyCollision(Polygon other, ref List<CollisionData> collisionDatas) {
 			UpdateCacheAsNeeded();
@@ -69,8 +78,8 @@ namespace MathMrV {
 
 		private static bool TryGetPolygonCollision(Polygon mainPoly, Polygon otherPoly, ref List<CollisionData> collisionDatas) {
 			bool foundCollision = false;
-			for (int mainConvex = 0; mainConvex < mainPoly.model.ConvexHullIndexLists.Length; mainConvex++) {
-				for (int otherConvex = 0; otherConvex < otherPoly.model.ConvexHullIndexLists.Length; otherConvex++) {
+			for (int mainConvex = 0; mainConvex < mainPoly.model.ConvexHull.IndexLists.Length; mainConvex++) {
+				for (int otherConvex = 0; otherConvex < otherPoly.model.ConvexHull.IndexLists.Length; otherConvex++) {
 					CollisionData result = new CollisionData();
 					result.Init();
 					bool collisionJustHappened = CheckCollisionOfSubMeshes(mainPoly, otherPoly, mainConvex, otherConvex, ref result)
@@ -92,8 +101,8 @@ namespace MathMrV {
 
 		public static IList<Vec2> GetIntersections(Polygon a, int convexHullA, Polygon b, int convexHullB) {
 			List<Vec2> intersections = null;
-			int[] subMeshA = a.model.ConvexHullIndexLists[convexHullA];
-			int[] subMeshB = b.model.ConvexHullIndexLists[convexHullB];
+			int[] subMeshA = a.model.ConvexHull.IndexLists[convexHullA];
+			int[] subMeshB = b.model.ConvexHull.IndexLists[convexHullB];
 			for (int i = 0; i < subMeshA.Length; ++i) {
 				int nextIndex = (i+1) % subMeshA.Length;
 				if (!a.IsIndexPairConsecutive(i, nextIndex)) { continue; }
@@ -108,7 +117,7 @@ namespace MathMrV {
 		}
 
 		private static bool CheckCollisionOfSubMeshes(Polygon mainPoly, Polygon otherPoly, int mainConvex, int otherConvex, ref CollisionData result) {
-			int[] mainIndexList = mainPoly.model.ConvexHullIndexLists[mainConvex];
+			int[] mainIndexList = mainPoly.model.ConvexHull.IndexLists[mainConvex];
 			for (int i = 0; i < mainIndexList.Length; i++) {
 				int index0 = mainIndexList[i], index1 = mainIndexList[(i + 1) % mainIndexList.Length];
 				Vec2 p0 = mainPoly.GetPoint(index0), p1 = mainPoly.GetPoint(index1);
@@ -135,7 +144,7 @@ namespace MathMrV {
 		}
 		public void ProjectPolygon(Vec2 axis, int convexIndex, out float min, out float max) {
 			min = float.MaxValue; max = float.MinValue;
-			int[] indexList = model.ConvexHullIndexLists[convexIndex];
+			int[] indexList = model.ConvexHull.IndexLists[convexIndex];
 			for (int i = 0; i < indexList.Length; i++) {
 				float projection = Vec2.Dot(GetPoint(indexList[i]), axis);
 				if (projection < min) { min = projection; }
