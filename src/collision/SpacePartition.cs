@@ -361,7 +361,7 @@ namespace collision {
 		}
 		public void CalculateCollisionsAndResolve(Dictionary<(ColliderID,ColliderID), List<CollisionLogic.Function>> rules, CollisionDatabase collisionDatabase) {
 			List<CollisionLogic.ToResolve> collisionsToResolve = CalculateCollisionResolutions(rules, collisionDatabase);
-			if (collisionsToResolve == null) {
+			if (collisionsToResolve == null || collisionsToResolve.Count == 0) {
 				return;
 			}
 			collisionsToResolve.ForEach(collision => collision.resolution.Invoke());

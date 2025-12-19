@@ -64,8 +64,8 @@ namespace MathMrV {
 				return Polygon.GetIntersections(objectA, ObjectAConvexIndex, objectB, ObjectBConvexIndex);
 			}
 			public Vec2 CalculateEstimateCollisionPoint() {
-				Circle circleA = objectA.model.ConvexHull.BoundingCircles[ObjectAConvexIndex];
-				Circle circleB = objectB.model.ConvexHull.BoundingCircles[ObjectBConvexIndex];
+				Circle circleA = objectA.GetCollisionBoundingCircle(ObjectAConvexIndex);
+				Circle circleB = objectB.GetCollisionBoundingCircle(ObjectBConvexIndex);
 				Circle.TryGetCircleCollision(circleA, circleB, out Vec2 estimatedCollisionPoint);
 				return estimatedCollisionPoint;
 			}
@@ -100,18 +100,20 @@ namespace MathMrV {
 		}
 
 		public static IList<Vec2> GetIntersections(Polygon a, int convexHullA, Polygon b, int convexHullB) {
-			List<Vec2> intersections = null;
-			int[] subMeshA = a.model.ConvexHull.IndexLists[convexHullA];
-			int[] subMeshB = b.model.ConvexHull.IndexLists[convexHullB];
-			for (int i = 0; i < subMeshA.Length; ++i) {
-				int nextIndex = (i+1) % subMeshA.Length;
-				if (!a.IsIndexPairConsecutive(i, nextIndex)) { continue; }
-				Vec2 lineStart = b.ConvertPointToLocalSpace(a.GetPoint(subMeshA[i]));
-				Vec2 lineEnd = b.ConvertPointToLocalSpace(a.GetPoint(subMeshA[nextIndex]));
-				if (b.model.TryGetCrossingSegment(lineStart, lineEnd, convexHullB, out _, out Vec2 result)) {
-					if (intersections == null) { intersections = new List<Vec2>(); }
-					intersections.Add(b.ConvertLocalPositionToWorldSpace(result));
+			List<Vec2> intersections = new List<Vec2>();
+			int[] subMesh = a.model.ConvexHull.IndexLists[convexHullA];
+			for (int i = 0; i < subMesh.Length; ++i) {
+				int indexA = subMesh[i];
+				int indexB = subMesh[(i+1) % subMesh.Length];
+				bool segmentIsOnEdgeOfMainPolygon = a.IsIndexPairConsecutive(indexA, indexB);
+				if (!segmentIsOnEdgeOfMainPolygon) { continue; }
+				Vec2 lineStart = b.ConvertPointToLocalSpace(a.GetPoint(indexA));
+				Vec2 lineEnd = b.ConvertPointToLocalSpace(a.GetPoint(indexB));
+				if (b.model.TryGetCrossingSegment(lineStart, lineEnd, convexHullB, intersections)) {
 				}
+			}
+			for (int i = 0; i < intersections.Count; ++i) {
+				intersections[i] = b.ConvertLocalPositionToWorldSpace(intersections[i]);
 			}
 			return intersections;
 		}

@@ -7,12 +7,11 @@ namespace asteroids {
 	public class MobileObjectController : IGameObject {
 		private MobileObject _target;
 		private string _name;
-		//private float _rotationRadiansPerSecond;
 		private float _thrustDuration = 0;
 		private float _maxSpeed = 1;
 		private float _acceleration = 10;
 		private float _targetDirection = float.NaN;
-		public bool _active;
+		private bool _active;
 		private bool _directionMatchesVelocity;
 		private bool _autoStopWithoutThrust = false;
 		private bool _brake;
@@ -79,21 +78,23 @@ namespace asteroids {
 			}
 		}
 		private void UpdateTargetRotationLogic(float currentRadians, float rotationThisMoment) {
-			float deltaToTarget = GetRealDeltaRotationAccountingForWrap(_targetDirection, currentRadians);
-			if (MathF.Abs(rotationThisMoment) > MathF.Abs(deltaToTarget)) {
+			float deltaToTarget = GetShortDeltaRotationAccountingForWrap(_targetDirection, currentRadians);
+			bool spinThisMomentWouldOvershoot = MathF.Abs(rotationThisMoment) > MathF.Abs(deltaToTarget);
+			if (spinThisMomentWouldOvershoot) {
 				_target.RotationRadians = _targetDirection;
 				AngularVelocity = 0;
 				return;
 			}
 			_target.RotationRadians += rotationThisMoment;
 		}
-		private float GetRealDeltaRotationAccountingForWrap(float aRad, float bRad) {
-			aRad = Vec2.WrapRadian(aRad);
-			bRad = Vec2.WrapRadian(bRad);
-			float delta = aRad - bRad;
+		private float GetShortDeltaRotationAccountingForWrap(float destination, float source) {
+			destination = Vec2.WrapRadian(destination);
+			source = Vec2.WrapRadian(source);
+			float delta = destination - source;
 			delta = Vec2.WrapRadian(delta);
 			if (delta == 0) { return 0; }
-			if (MathF.Abs(delta) > MathF.PI) {
+			bool shorterToSpinInOtherDirection = MathF.Abs(delta) > MathF.PI;
+			if (shorterToSpinInOtherDirection) {
 				bool isNegative = delta < 0;
 				delta = isNegative ? -(MathF.PI + delta) : -(MathF.PI - delta);
 			}
@@ -102,7 +103,7 @@ namespace asteroids {
 		public void SmoothRotateTarget(float targetRadians, float speed) {
 			_targetDirection = targetRadians;
 			float currentAngle = _target.Direction.NormalToRadians();
-			float deltaToTarget = GetRealDeltaRotationAccountingForWrap(_targetDirection, currentAngle);
+			float deltaToTarget = GetShortDeltaRotationAccountingForWrap(_targetDirection, currentAngle);
 			const float rotationEpsilon = 1f / (1 << 16);
 			bool needToTurn = MathF.Abs(deltaToTarget) > rotationEpsilon;
 			AngularVelocity = !needToTurn ? 0 : speed * MathF.Sign(deltaToTarget);

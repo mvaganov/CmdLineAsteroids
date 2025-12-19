@@ -2,6 +2,7 @@
 using MathMrV;
 using MrV;
 using System;
+using System.Numerics;
 using ColliderID = System.Byte;
 
 namespace asteroids {
@@ -49,9 +50,9 @@ namespace asteroids {
 		}
 		public virtual void Copy(MobileObject other) {
 			TypeId = other.TypeId;
-			IsActive = other._active;
-			Velocity = other._velocity;
-			Color = other._color;
+			IsActive = other.IsActive;
+			Velocity = other.Velocity;
+			Color = other.Color;
 		}
 
 		public static void SeparateObjects(MobileObject mobA, MobileObject mobB, Vec2 normal, float depth) {
@@ -60,71 +61,43 @@ namespace asteroids {
 			mobA.Position += bump * massAPercentage;
 			mobB.Position -= bump * (1 - massAPercentage);
 		}
-		public static void BounceVelocities(MobileObject mobA, MobileObject mobB, Vec2 collisionNormal) {
+		public static void BounceVelocities(MobileObject mobA, MobileObject mobB, Vec2 collisionNormal, float bounciness = 0.5f) {
 			Vec2 relativeVelocity = mobA.Velocity - mobB.Velocity;
 			float velAlongNormal = Vec2.Dot(relativeVelocity, collisionNormal);
 			bool velocitiesAreAligned = velAlongNormal > 0;
 			if (velocitiesAreAligned) { return; }
-			float restitution = 0.8f; // Bounciness (0 = rock, 1 = super ball)
-			float invMassA = 1.0f / mobA.Mass;
-			float invMassB = 1.0f / mobB.Mass;
-			float numerator = -(1 + restitution) * velAlongNormal;
-			float denominator = invMassA + invMassB;
-			float impulseScalar = numerator / denominator;
-			Vec2 impulse = collisionNormal * impulseScalar;
-			mobA.Velocity += impulse * invMassA;
-			mobB.Velocity -= impulse * invMassB;
+			float inverseMassSum = (1f / mobA.Mass) + (1f / mobB.Mass);
+			float impulseMagnitude = -(1 + bounciness) * velAlongNormal;
+			impulseMagnitude /= inverseMassSum;
+			Vec2 impulseVector = collisionNormal * impulseMagnitude;
+			mobA.Velocity += impulseVector / mobA.Mass;
+			mobB.Velocity += -impulseVector / mobB.Mass;
 		}
-		public static void CollisionTorque(MobileObject ship, MobileObject asteroid, Vec2 contactPoint,
-			Vec2 collisionNormal) {
-			// 2. Approximate Point of Contact (for simplicity, using A's center and Normal/Depth)
-			// More accurate: find the closest vertex of B to A, or midpoint of deepest edge.
-			// For this example, let's use the object centers, which is less accurate but simpler:
-			//Vec2 contactPoint = playerCharacter.Polygon + bounceNormal * (collisionAdjustment.Depth / 2f);
 
-			// 3. Calculate Radius Vectors
-			Vec2 rA = contactPoint - ship.Position;
-			Vec2 rB = contactPoint - asteroid.Position;
-
-			// 4. Calculate relative velocity, including rotation component
-			// v_rel = (vB + (wB x rB)) - (vA + (wA x rA))
-			// Cross product (w x r) in 2D is: (-w*ry, w*rx)
-			Vec2 vA_rot = new Vec2(-ship.AngularVelocity * rA.Y, ship.AngularVelocity * rA.X);
-			Vec2 vB_rot = new Vec2(-asteroid.AngularVelocity * rB.Y, asteroid.AngularVelocity * rB.X);
-
-			Vec2 relativeVelocity = (asteroid.Velocity + vB_rot) - (ship.Velocity + vA_rot);
-			//float velAlongNormal = Vec2.Dot(relativeVelocity, manifold.Normal);
-
+		public static void CollisionBounceWithTorque(MobileObject mobA, MobileObject mobB,
+		Vec2 contactPoint, Vec2 collisionNormal, float bounciness = 0.5f) {
+			Vec2 contactOffsetA = contactPoint - mobA.Position;
+			Vec2 contactOffsetB = contactPoint - mobB.Position;
+			Vec2 pointVelocityA = mobA.Velocity + GetTangentialVelocity(contactOffsetA, mobA.AngularVelocity);
+			Vec2 pointVelocityB = mobB.Velocity + GetTangentialVelocity(contactOffsetB, mobB.AngularVelocity);
+			Vec2 GetTangentialVelocity(Vec2 point, float angularVelocity) {
+				return new Vec2(-angularVelocity * point.Y, angularVelocity * point.X);
+			}
+			Vec2 relativeVelocity = pointVelocityA - pointVelocityB;
 			float velAlongNormal = Vec2.Dot(relativeVelocity, collisionNormal);
-			// Only resolve if closing
-			if (velAlongNormal >= 0) return;
-
-			// 5. Calculate 2D Cross Products (r x n)
-			// This is the scalar component of torque
-			float rACrossN = (rA.X * collisionNormal.y) - (rA.Y * collisionNormal.x);
-			float rBCrossN = (rB.X * collisionNormal.y) - (rB.Y * collisionNormal.x);
-
-			float restitution = 0.8f; // Bounciness (0 = rock, 1 = super ball)
-			float numerator = -(1f + restitution) * velAlongNormal;
-			// 6. Calculate the Full Impulse Denominator
-			float denominator =
-					(1f / ship.Mass) + (1f / asteroid.Mass) +
-					(rACrossN * rACrossN / ship.Inertia) +
-					(rBCrossN * rBCrossN / asteroid.Inertia);
-
-			// 7. Calculate the final scalar impulse magnitude (j)
-			float j = numerator / denominator;
-
-			// 8. Apply Linear and Angular Impulse
-			//Vec2 impulse = collisionNormal * j;
-
-			//// Linear Application
-			//ship.Velocity -= impulse * (1f / shipMass);
-			//asteroid.Velocity += impulse * (1f / asteroidMass);
-
-			// Angular Application (This creates the spin!)
-			ship.AngularVelocity += (rACrossN * j) / ship.Inertia;
-			asteroid.AngularVelocity -= (rBCrossN * j) / asteroid.Inertia;
+			bool velocitiesAreAligned = velAlongNormal > 0;
+			if (velocitiesAreAligned) { return; }
+			float leverageA = Vec2.Cross(contactOffsetA, collisionNormal);
+			float leverageB = Vec2.Cross(contactOffsetB, collisionNormal);
+			float inverseMassSum = (1f / mobA.Mass) + (1f / mobB.Mass);
+			float rotationResistance = (leverageA * leverageA / mobA.Inertia) + (leverageB * leverageB / mobB.Inertia);
+			float impulseMagnitude = -(1 + bounciness) * velAlongNormal;
+			impulseMagnitude /= (inverseMassSum + rotationResistance);
+			Vec2 impulseVector = impulseMagnitude * collisionNormal;
+			mobA.Velocity += impulseVector / mobA.Mass;
+			mobB.Velocity += -impulseVector / mobB.Mass;
+			mobA.AngularVelocity += Vec2.Cross(contactOffsetA, impulseVector) / mobA.Inertia;
+			mobB.AngularVelocity += Vec2.Cross(contactOffsetB, -impulseVector) / mobB.Inertia;
 		}
 	}
 }

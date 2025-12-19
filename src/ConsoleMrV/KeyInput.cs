@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace ConsoleMrV {
 	public class KeyInput {
 		public static KeyInput Instance;
-		public List<char> keys = new List<char>();
+		public List<char> Keys = new List<char>();
 		public Dictionary<char, List<Action<KeyInput>>> keyBinding = new Dictionary<char, List<Action<KeyInput>>>();
 		private List<List<Action<KeyInput>>> toExecuteThisFrame = new List<List<Action<KeyInput>>>();
 
@@ -13,9 +13,9 @@ namespace ConsoleMrV {
 				Instance = this;
 			}
 		}
-		public int Count => keys.Count;
+		public int Count => Keys.Count;
 		public char this[int index] => GetChar(index);
-		public char GetChar(int index) => this.keys[index];
+		public char GetChar(int index) => Keys[index];
 		public KeyInput get_instance() {
 			if (Instance != null) {
 				return Instance;
@@ -28,37 +28,37 @@ namespace ConsoleMrV {
 			TriggerKeyBinding();
 		}
 		public void UpdateKeyInput() {
-			this.ClearKeys();
+			ClearKeys();
 			while (Console.KeyAvailable) {
 				ConsoleKeyInfo key = Console.ReadKey();
-				this.keys.Add(key.KeyChar);
+				Keys.Add(key.KeyChar);
 			}
 		}
 		public void TriggerKeyBinding() {
-			for(int i = 0; i < this.keys.Count; i++) {
-				if (this.keyBinding.TryGetValue(this.keys[i], out List<Action<KeyInput>> actions)) {
-					this.toExecuteThisFrame.Add(actions);
+			for(int i = 0; i < Keys.Count; i++) {
+				if (keyBinding.TryGetValue(Keys[i], out List<Action<KeyInput>> actions)) {
+					toExecuteThisFrame.Add(actions);
 				}
 			}
-			this.toExecuteThisFrame.ForEach(actions => actions.ForEach(a => a.Invoke(this)));
-			this.toExecuteThisFrame.Clear();
+			toExecuteThisFrame.ForEach(actions => actions.ForEach(a => a.Invoke(this)));
+			toExecuteThisFrame.Clear();
 		}
-		public void ClearKeys() { this.keys.Clear(); }
+		public void ClearKeys() { Keys.Clear(); }
 		public bool HasKey(char keyChar) {
 			return GetKeyIndex(keyChar) != -1;
 		}
 		public int GetKeyIndex(char keyChar) {
-			for (int i = 0; i < this.keys.Count; ++i) {
-				if (this.keys[i] == keyChar) {
+			for (int i = 0; i < Keys.Count; ++i) {
+				if (Keys[i] == keyChar) {
 					return i;
 				}
 			}
 			return -1;
 		}
 		public List<Action<KeyInput>> BindKey(char key, Action<KeyInput> action) {
-			if (!this.keyBinding.TryGetValue(key, out List<Action<KeyInput>> actions)) {
+			if (!keyBinding.TryGetValue(key, out List<Action<KeyInput>> actions)) {
 				actions = new List<Action<KeyInput>>();
-				this.keyBinding[key] = actions;
+				keyBinding[key] = actions;
 			}
 			actions.Add(action);
 			return actions;
@@ -68,7 +68,7 @@ namespace ConsoleMrV {
 		/// <returns></returns>
 		public int Unbind(char key, Action<object> action) {
 			int removedCount = 0;
-			if (!this.keyBinding.TryGetValue(key, out List<Action<KeyInput>> actions)) {
+			if (!keyBinding.TryGetValue(key, out List<Action<KeyInput>> actions)) {
 				return removedCount;
 			}
 			for(int i = actions.Count - 1; i >= 0; --i) {

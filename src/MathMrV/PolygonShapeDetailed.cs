@@ -232,21 +232,20 @@ namespace MathMrV {
 			return a + (lineDelta * pointProjectedOnLine);
 		}
 		public bool TryGetCrossingSegment(Vec2 lineStartLocalSpace, Vec2 lineEndLocalSpace,
-		int convexPolygonId, out int segmentIndex, out Vec2 result) {
+		int convexPolygonId, List<Vec2> results) {
 			int[] hullIndex = ConvexHull.IndexLists[convexPolygonId];
+			bool collisionFound = false;
 			for (int i = 0; i < hullIndex.Length; i++) {
 				int indexA = hullIndex[i], indexB = hullIndex[(i + 1) % hullIndex.Length];
-				bool segmentABIsOnEdgeOfMainPolygon = IsIndexPairConsecutiveOnPolygonEdge(indexA, indexB);
-				if (!segmentABIsOnEdgeOfMainPolygon) { continue; }
+				bool segmentIsOnEdgeOfMainPolygon = IsIndexPairConsecutiveOnPolygonEdge(indexA, indexB);
+				if (!segmentIsOnEdgeOfMainPolygon) { continue; }
 				Vec2 vA = Points[indexA], vB = Points[indexB];
-				if (Vec2.TryGetLineSegmentIntersection(lineStartLocalSpace, lineEndLocalSpace, vA, vB, out result)) {
-					segmentIndex = i;
-					return true;
+				if (Vec2.TryGetLineSegmentIntersection(lineStartLocalSpace, lineEndLocalSpace, vA, vB, out Vec2 result)) {
+					collisionFound = true;
+					if (results != null) { results.Add(result); }
 				}
 			}
-			segmentIndex = -1;
-			result = Vec2.NaN;
-			return false;
+			return collisionFound;
 		}
 	}
 }

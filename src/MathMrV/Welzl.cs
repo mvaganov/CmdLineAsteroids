@@ -61,19 +61,13 @@ namespace MathMrV {
 		}
 
 		public static Circle Circumcircle(Vec2 a, Vec2 b, Vec2 c) {
-			float determinant = 2 * (a.x * (b.y - c.y) +
-			                         b.x * (c.y - a.y) +
-			                         c.x * (a.y - b.y));
-			const float epsilon = 1e-9f;
-			if (MathF.Abs(determinant) < epsilon) {
-				return new Circle(new Vec2(0, 0), float.PositiveInfinity);
-			}
-			float x = ((a.x * a.x + a.y * a.y) * (b.y - c.y) +
-			           (b.x * b.x + b.y * b.y) * (c.y - a.y) +
-			           (c.x * c.x + c.y * c.y) * (a.y - b.y)) / determinant;
-			float y = ((a.x * a.x + a.y * a.y) * (c.x - b.x) +
-			           (b.x * b.x + b.y * b.y) * (a.x - c.x) +
-			           (c.x * c.x + c.y * c.y) * (b.x - a.x)) / determinant;
+			float determinant = 2 * (a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y));
+			const float epsilon = 1e-6f;
+			bool pointsAreColinear = MathF.Abs(determinant) < epsilon;
+			if (pointsAreColinear) { return Circle.NaN; }
+			float aMagSqr = a.MagnitudeSqr, bMagSqr = b.MagnitudeSqr, cMagSqr = c.MagnitudeSqr;
+			float x = (aMagSqr * (b.y - c.y) + bMagSqr * (c.y - a.y) + cMagSqr * (a.y - b.y)) / determinant;
+			float y = (aMagSqr * (c.x - b.x) + bMagSqr * (a.x - c.x) + cMagSqr * (b.x - a.x)) / determinant;
 			Vec2 center = new Vec2(x, y);
 			return new Circle(center, center.Distance(a));
 		}

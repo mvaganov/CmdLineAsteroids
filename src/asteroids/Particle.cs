@@ -13,7 +13,7 @@ namespace asteroids {
 		public float CurrentLife;
 		public float Lifetime;
 		public float StartSize;
-		public ParticleSystem _particleSystem;
+		public ParticleSystem ParticleSystem;
 		public virtual string Name { get => _name; set => _name = value; }
 		public Vec2 Position { get => circle.Center; set => circle.Center = value; }
 		public float Radius { get => circle.Radius; set => circle.Radius = value; }
@@ -23,7 +23,7 @@ namespace asteroids {
 		public ConsoleColor Color { get => _color; set => _color = value; }
 		public byte TypeId { get; set; }
 		public Particle(ParticleSystem parent, Vec2 position, float size, Vec2 velocity, ConsoleColor color, float lifetime) {
-			_particleSystem = parent;
+			ParticleSystem = parent;
 			StartSize = size;
 			circle = new Circle(position, size);
 			Velocity = velocity;
@@ -42,12 +42,12 @@ namespace asteroids {
 				return;
 			}
 			if (CurrentLife >= Lifetime) {
-				_particleSystem.Absorb(this);
+				ParticleSystem.Absorb(this);
 				return;
 			}
 			CurrentLife += Time.DeltaTimeSeconds;
 			float normalizedLife = CurrentLife / Lifetime;
-			Radius = StartSize * _particleSystem.GetSizeAtTime(normalizedLife);
+			Radius = StartSize * ParticleSystem.GetSizeAtTime(normalizedLife);
 			Vec2 moveThisFrame = _velocity * Time.DeltaTimeSeconds;
 			Position += moveThisFrame;
 		}
