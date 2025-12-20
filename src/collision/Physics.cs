@@ -1,4 +1,5 @@
-﻿using MathMrV;
+﻿using asteroids;
+using MathMrV;
 using System;
 
 namespace MrV.Physics {
@@ -24,31 +25,50 @@ namespace MrV.Physics {
 			area = MathF.PI * radius * radius;
 			inertiaWithoutDensity = 0.5f * area * radius * radius;
 		}
-
-		/// <summary>
-		/// Helper: Calculates the geometric center (centroid) of a polygon.
-		/// You should subtract this from every vertex so the object rotates around its real center.
-		/// </summary>
-		public static Vec2 CalculateCentroid(Vec2[] points) {
-			if (points.Length < 3) { return Vec2.Zero; }
-			Vec2 centerSum = Vec2.Zero;
-			float totalArea = 0f;
-			for (int i = 0; i < points.Length; i++) {
-				Vec2 v1 = points[i];
-				Vec2 v2 = points[(i + 1) % points.Length];
-				float cross = Vec2.Cross(v1, v2);
-				float triangleArea = 0.5f * cross;
-				totalArea += triangleArea;
-				centerSum += (v1 + v2) * triangleArea; // Weighted by area
+	}
+	public static class Collision {
+		public static void SeparateObjects(MobileObject mobA, MobileObject mobB, Vec2 normal, float depth) {
+			float massAPercentage = mobA.Mass / (mobA.Mass + mobB.Mass);
+			Vec2 bump = normal * depth;
+			mobA.Position += bump * massAPercentage;
+			mobB.Position -= bump * (1 - massAPercentage);
+		}
+		public static void BounceVelocities(MobileObject mobA, MobileObject mobB, Vec2 collisionNormal, float bounciness = 0.5f) {
+			Vec2 relativeVelocity = mobA.Velocity - mobB.Velocity;
+			float velAlongNormal = Vec2.Dot(relativeVelocity, collisionNormal);
+			bool velocitiesAreAligned = velAlongNormal > 0;
+			if (velocitiesAreAligned) { return; }
+			float inverseMassSum = (1f / mobA.Mass) + (1f / mobB.Mass);
+			float impulseMagnitude = -(1 + bounciness) * velAlongNormal;
+			impulseMagnitude /= inverseMassSum;
+			Vec2 impulseVector = collisionNormal * impulseMagnitude;
+			mobA.Velocity += impulseVector / mobA.Mass;
+			mobB.Velocity += -impulseVector / mobB.Mass;
+		}
+		public static void BounceVelocitiesAndTorque(MobileObject mobA, MobileObject mobB,
+		Vec2 contactPoint, Vec2 collisionNormal, float bounciness = 0.5f) {
+			Vec2 contactOffsetA = contactPoint - mobA.Position;
+			Vec2 contactOffsetB = contactPoint - mobB.Position;
+			Vec2 pointVelocityA = mobA.Velocity + GetTangentialVelocity(contactOffsetA, mobA.AngularVelocity);
+			Vec2 pointVelocityB = mobB.Velocity + GetTangentialVelocity(contactOffsetB, mobB.AngularVelocity);
+			Vec2 GetTangentialVelocity(Vec2 point, float angularVelocity) {
+				return new Vec2(-angularVelocity * point.Y, angularVelocity * point.X);
 			}
-
-			// Centroid formula involves dividing by 3x the area due to triangle centers being at 1/3 height
-			// But since we weighted by triangleArea (which is 0.5 * cross), the math simplifies:
-			// Centroid = (Sum of (v1 + v2) * cross) / (3 * Sum of cross)
-			if (totalArea == 0) { return Vec2.Zero; }
-
-			// The standard simplified centroid formula using cross product weights:
-			return centerSum / (3f * totalArea);
+			Vec2 relativeVelocity = pointVelocityA - pointVelocityB;
+			float velAlongNormal = Vec2.Dot(relativeVelocity, collisionNormal);
+			bool velocitiesAreAligned = velAlongNormal > 0;
+			if (velocitiesAreAligned) { return; }
+			float leverageA = Vec2.Cross(contactOffsetA, collisionNormal);
+			float leverageB = Vec2.Cross(contactOffsetB, collisionNormal);
+			float inverseMassSum = (1f / mobA.Mass) + (1f / mobB.Mass);
+			float rotationResistance = (leverageA * leverageA / mobA.Inertia) + (leverageB * leverageB / mobB.Inertia);
+			float impulseMagnitude = -(1 + bounciness) * velAlongNormal;
+			impulseMagnitude /= (inverseMassSum + rotationResistance);
+			Vec2 impulseVector = impulseMagnitude * collisionNormal;
+			mobA.Velocity += impulseVector / mobA.Mass;
+			mobB.Velocity += -impulseVector / mobB.Mass;
+			mobA.AngularVelocity += Vec2.Cross(contactOffsetA, impulseVector) / mobA.Inertia;
+			mobB.AngularVelocity += Vec2.Cross(contactOffsetB, -impulseVector) / mobB.Inertia;
 		}
 	}
 }

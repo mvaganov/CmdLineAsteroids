@@ -8,6 +8,7 @@ namespace MathMrV {
 		public float InertiaWithoutDensity => model.InertiaWithoutDensity;
 
 		public Vec2 ConvertLocalPositionToWorldSpace(Vec2 point) {
+			point -= model.GeometricCenterOffset;
 			point.Rotate(Direction);
 			point += _position;
 			return point;

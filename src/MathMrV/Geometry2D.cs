@@ -5,13 +5,15 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace MathMrV {
-	public class PolygonShapeDetailed {
+	public class Geometry2D {
 		public PolygonShape Shape;
 		public ConvexHulls ConvexHull;
 		public Circle BoundingCircle;
+		public Vec2 GeometricCenterOffset;
 		public float Area, InertiaWithoutDensity;
-		public PolygonShapeDetailed(Vec2[] points) {
+		public Geometry2D(Vec2[] points) {
 			Shape = new PolygonShape(points);
+			GeometricCenterOffset = CalculateCentroid(points);
 			Initialize();
 		}
 		public class ConvexHulls {
@@ -32,12 +34,14 @@ namespace MathMrV {
 				if (triangleIndexes.Length == 0) { return null; }
 				List<int[]> hulls = new List<int[]>(triangleIndexes);
 				while (MergeHulls()) { }
+				return hulls.ToArray();
+
 				bool MergeHulls() {
 					for (int a = 0; a < hulls.Count; a++) {
 						for (int b = a + 1; b < hulls.Count; b++) {
 							int[] newHull = TryMergeConvexHulls(originalVertices, hulls[a], hulls[b]);
 							if (newHull != null) {
-								hulls.RemoveAt(b); // Remove the one with the higher index first
+								hulls.RemoveAt(b); // Remove higher index first
 								hulls.RemoveAt(a);
 								hulls.Add(newHull);
 								return true;
@@ -46,15 +50,10 @@ namespace MathMrV {
 					}
 					return false;
 				}
-				return hulls.ToArray();
 			}
 		}
-		public override string ToString() => $"(polygon: {string.Join(", ", Points)})";
+		public override string ToString() => $"(Geometry: {string.Join(", ", Points)})";
 		public Vec2[] Points { get => Shape.Points; set { Shape.Points = value; } }
-		public int Count => Points.Length;
-		public Vec2 GetPoint(int index) => Points[index];
-		public void SetPoint(int index, Vec2 point) => Points[index] = point;
-		public Circle GetCollisionBoundingCircle() => BoundingCircle;
 		public Circle GetCollisionBoundingCircle(int convexHullIndex) => ConvexHull.BoundingCircles[convexHullIndex];
 		public void Initialize() {
 			if (Points == null) {
@@ -105,23 +104,23 @@ namespace MathMrV {
 		}
 
 		public static bool IsPointInsideCCWTriangle(Vec2 Point, Vec2 A, Vec2 B, Vec2 C) {
-			// frontload all math before logic check. there's a good chance SIMD will speed it up.
 			float crossA = Vec2.Cross(B - A, Point - A);
 			float crossB = Vec2.Cross(C - B, Point - B);
 			float crossC = Vec2.Cross(A - C, Point - C);
-			bool signA = crossA >= 0, signB = crossB >= 0, signC = crossC >= 0;
-			return signA && signB && signC;
+			// bitwise & prevents branching, allows math batching
+			return (crossA >= 0) & (crossB >= 0) & (crossC >= 0);
 		}
 
 		private static int[] TryMergeConvexHulls(IList<Vec2> vertList, int[] indexListHullA, int[] indexListHullB) {
-			if (TryGetSharedEdgeIndices(indexListHullA, indexListHullB, out int hullAIndex, out int hullBIndex)) {
-				int[] mergedHull = SpliceHullIndexList(indexListHullA, indexListHullB, hullAIndex, hullBIndex);
+			if (TryGetSharedEdgeIndices(out int hullAIndex, out int hullBIndex)) {
+				int[] mergedHull = SpliceHullIndexList(hullAIndex, hullBIndex);
 				if (IsHullConvex(vertList, mergedHull)) { // only give back convex shape
 					return mergedHull;
 				}
 			}
 			return null;
-			bool TryGetSharedEdgeIndices(int[] indexListHullA, int[] indexListHullB, out int hullAIndex, out int hullBIndex) {
+
+			bool TryGetSharedEdgeIndices(out int hullAIndex, out int hullBIndex) {
 				for (hullAIndex = 0; hullAIndex < indexListHullA.Length; hullAIndex++) {
 					int hullAvert0 = indexListHullA[hullAIndex];
 					int hullAvert1 = indexListHullA[(hullAIndex + 1) % indexListHullA.Length];
@@ -135,14 +134,14 @@ namespace MathMrV {
 				hullBIndex = -1;
 				return false;
 			}
-			int[] SpliceHullIndexList(int[] hullA, int[] hullB, int hullASharedEdgeIndex, int hullBSharedEdgeIndex) {
+			int[] SpliceHullIndexList(int hullASharedEdgeIndex, int hullBSharedEdgeIndex) {
 				List<int> newVertices = new List<int>();
-				newVertices.AddRange(hullA);
+				newVertices.AddRange(indexListHullA);
 				List<int> hullBsegment = new List<int>();
-				int currIndex = (hullBSharedEdgeIndex + 2) % hullB.Length;
+				int currIndex = (hullBSharedEdgeIndex + 2) % indexListHullB.Length;
 				while (currIndex != hullBSharedEdgeIndex) {
-					hullBsegment.Add(hullB[currIndex]);
-					currIndex = (currIndex + 1) % hullB.Length;
+					hullBsegment.Add(indexListHullB[currIndex]);
+					currIndex = (currIndex + 1) % indexListHullB.Length;
 				}
 				newVertices.InsertRange(hullASharedEdgeIndex + 1, hullBsegment);
 				return newVertices.ToArray();
@@ -246,6 +245,21 @@ namespace MathMrV {
 				}
 			}
 			return collisionFound;
+		}
+		public static Vec2 CalculateCentroid(IList<Vec2> points) {
+			if (points.Count < 3) { return Vec2.Zero; }
+			Vec2 centerSum = Vec2.Zero;
+			float totalArea = 0f;
+			for (int i = 0; i < points.Count; i++) {
+				Vec2 v1 = points[i];
+				Vec2 v2 = points[(i + 1) % points.Count];
+				float cross = Vec2.Cross(v1, v2);
+				float triangleArea = 0.5f * cross;
+				totalArea += triangleArea;
+				centerSum += (v1 + v2) * triangleArea; // Weighted by area
+			}
+			if (totalArea == 0) { return Vec2.Zero; }
+			return centerSum / (3f * totalArea);
 		}
 	}
 }

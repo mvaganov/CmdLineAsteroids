@@ -55,19 +55,19 @@ namespace MathMrV {
 		}
 
 		public static Circle MakeDiameter(Vec2 a, Vec2 b) {
-			Vec2 center = new Vec2((a.x + b.x) / 2, (a.y + b.y) / 2);
+			Vec2 center = new Vec2((a.X + b.X) / 2, (a.Y + b.Y) / 2);
 			float radius = center.Distance(a);
 			return new Circle(center, radius);
 		}
 
 		public static Circle Circumcircle(Vec2 a, Vec2 b, Vec2 c) {
-			float determinant = 2 * (a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y));
+			float determinant = 2 * (a.X * (b.Y - c.Y) + b.X * (c.Y - a.Y) + c.X * (a.Y - b.Y));
 			const float epsilon = 1e-6f;
 			bool pointsAreColinear = MathF.Abs(determinant) < epsilon;
 			if (pointsAreColinear) { return Circle.NaN; }
 			float aMagSqr = a.MagnitudeSqr, bMagSqr = b.MagnitudeSqr, cMagSqr = c.MagnitudeSqr;
-			float x = (aMagSqr * (b.y - c.y) + bMagSqr * (c.y - a.y) + cMagSqr * (a.y - b.y)) / determinant;
-			float y = (aMagSqr * (c.x - b.x) + bMagSqr * (a.x - c.x) + cMagSqr * (b.x - a.x)) / determinant;
+			float x = (aMagSqr * (b.Y - c.Y) + bMagSqr * (c.Y - a.Y) + cMagSqr * (a.Y - b.Y)) / determinant;
+			float y = (aMagSqr * (c.X - b.X) + bMagSqr * (a.X - c.X) + cMagSqr * (b.X - a.X)) / determinant;
 			Vec2 center = new Vec2(x, y);
 			return new Circle(center, center.Distance(a));
 		}

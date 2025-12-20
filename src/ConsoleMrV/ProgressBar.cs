@@ -17,7 +17,7 @@ namespace ConsoleMrV {
 		}
 		public void Draw(CommandLineCanvas canvas) {
 			Vec2 delta = end - start;
-			int width = (int)(delta.x > delta.y ? delta.x : delta.y);
+			int width = (int)(delta.X > delta.Y ? delta.X : delta.Y);
 			Vec2 increment = delta / width;
 			Vec2 cursor = start;
 			int progressInt = (int)(progress * width);
@@ -37,7 +37,7 @@ namespace ConsoleMrV {
 					glyph.Letter = '|';
 					++specialIndex;
 				}
-				canvas.WriteAt(glyph, (int)cursor.x, (int)cursor.y);
+				canvas.WriteAt(glyph, (int)cursor.X, (int)cursor.Y);
 				//canvas.WriteAt(glyph.Letter, (int)cursor.x, (int)cursor.y);
 				cursor += increment;
 			}

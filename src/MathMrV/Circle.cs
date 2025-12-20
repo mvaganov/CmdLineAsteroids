@@ -15,7 +15,7 @@ namespace MathMrV {
 		public Circle(Vec2 center, float radius) { Center = center; Radius = radius; }
 		public override string ToString() => $"({Center}, r:{Radius})";
 		public static bool IsInsideCircle(Vec2 position, float radius, Vec2 point) {
-			float dx = point.x - position.x, dy = point.y - position.y;
+			float dx = point.X - position.X, dy = point.Y - position.Y;
 			return dx * dx + dy * dy <= radius * radius;
 		}
 		public bool Contains(Vec2 point) => IsInsideCircle(Center, Radius, point);
@@ -31,8 +31,8 @@ namespace MathMrV {
 		public bool IsColliding(Vec2 otherCenter, float otherRadius) =>
 			IsColliding(Center, Radius, otherCenter, otherRadius);
 		public static bool IsColliding(Vec2 centerA, float radiusA, Vec2 centerB, float radiusB) {
-			float dx = centerA.x - centerB.x;
-			float dy = centerA.y - centerB.y;
+			float dx = centerA.X - centerB.X;
+			float dy = centerA.Y - centerB.Y;
 			float r = radiusA + radiusB;
 			return dx * dx + dy * dy < r * r;
 		}
@@ -64,16 +64,16 @@ namespace MathMrV {
 			Vec2 expandedMax = max + radSize;
 			if (AABB.Contains(Center, expandedMin, expandedMax)) {
 				Vec2 cornerCase = Vec2.NaN;
-				if (Center.x < min.x) {
-					if (Center.y < min.y) {
+				if (Center.X < min.X) {
+					if (Center.Y < min.Y) {
 						cornerCase = min;
-					} else if (Center.y > max.y) {
-						cornerCase = new Vec2(min.x, max.y);
+					} else if (Center.Y > max.Y) {
+						cornerCase = new Vec2(min.X, max.Y);
 					}
-				} else if (Center.x > max.x) {
-					if (Center.y < min.y) {
-						cornerCase = new Vec2(max.x, min.y);
-					} else if (Center.y > max.y) {
+				} else if (Center.X > max.X) {
+					if (Center.Y < min.Y) {
+						cornerCase = new Vec2(max.X, min.Y);
+					} else if (Center.Y > max.Y) {
 						cornerCase = max;
 					}
 				}

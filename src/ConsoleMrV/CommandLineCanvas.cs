@@ -89,7 +89,7 @@ namespace ConsoleMrV {
 
 		public void WriteAt(ConsoleGlyph[] text, Vec2 position, bool useConsoleGlyphBgColor = true) {
 			Vec2 consolePosition = GetConsolePosition(position);
-			WriteAt(text, (int)consolePosition.x, (int)consolePosition.y, useConsoleGlyphBgColor);
+			WriteAt(text, (int)consolePosition.X, (int)consolePosition.Y, useConsoleGlyphBgColor);
 		}
 
 		public void DrawSupersampledShape(Func<Vec2, bool> isInsideShape, Vec2 aabbMin, Vec2 aabbMax) {
@@ -105,15 +105,15 @@ namespace ConsoleMrV {
 			if (renderMin.Y < 0) { renderMin.X = 0; }
 			if (renderMax.X > Width) { renderMax.X = Width; }
 			if (renderMax.Y > Height) { renderMax.Y = Height; }
-			for (int y = (int)renderMin.y; y < renderMax.y; ++y) {
-				for (int x = (int)renderMin.x; x < renderMax.x; ++x) {
+			for (int y = (int)renderMin.Y; y < renderMax.Y; ++y) {
+				for (int x = (int)renderMin.X; x < renderMax.X; ++x) {
 					Vec2 supersample = Vec2.Zero;
 					const int SUPERSAMPLE = 2;
 					int samplesFound = 0;
 					for (int row = 0; row < SUPERSAMPLE; ++row) {
 						supersample.X = 0;
 						for (int col = 0; col < SUPERSAMPLE; ++col) {
-							Vec2 point = ((x + supersample.x) * _scale.x, (y + supersample.y) * _scale.y);
+							Vec2 point = ((x + supersample.X) * _scale.X, (y + supersample.Y) * _scale.Y);
 							point += _originOffsetULCorner;
 							if (isInsideShape.Invoke(point)) {
 								samplesFound++;
@@ -136,11 +136,11 @@ namespace ConsoleMrV {
 		}
 		public void FillRect(AABB aabb) => FillRect(aabb.Min, aabb.Max);
 		public void FillRect(Vec2 aabbMin, Vec2 aabbMax) {
-			bool IsInsideRectangle(Vec2 p) => p.x >= aabbMin.x && p.y >= aabbMin.y && p.x <= aabbMax.x && p.y <= aabbMax.y;
+			bool IsInsideRectangle(Vec2 p) => p.X >= aabbMin.X && p.Y >= aabbMin.Y && p.X <= aabbMax.X && p.Y <= aabbMax.Y;
 			DrawSupersampledShape(IsInsideRectangle, aabbMin, aabbMax);
 		}
 		public void DrawLine(Vec2 start, Vec2 end, float lineWidth = 0.5f) {
-			lineWidth *= Scale.y;
+			lineWidth *= Scale.Y;
 			DrawLineUnscaled(start, end, lineWidth);
 		}
 		public void DrawLineUnscaled(Vec2 start, Vec2 end, float lineWidth = 0.5f) {

@@ -17,8 +17,8 @@ namespace asteroids {
 		public override float Inertia => polygon.InertiaWithoutDensity * Density;
 		public override float AngularVelocity { get => _angularVelocity; set => _angularVelocity = value; }
 
-		public MobilePolygon(Vec2[] playerPoly) {
-			polygon = new Polygon(playerPoly);
+		public MobilePolygon(Geometry2D polygonShape) {
+			polygon = new Polygon(polygonShape);
 		}
 		public override void Draw(CommandLineCanvas canvas) {
 			if (!_active) { return; }

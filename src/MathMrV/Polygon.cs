@@ -3,7 +3,7 @@ using System;
 
 namespace MathMrV {
 	public partial class Polygon {
-		public PolygonShapeDetailed model;
+		public Geometry2D model;
 		private Vec2 _directionUnitVector;
 		private Vec2 _position;
 		private Vec2[] _cachedPoints;
@@ -21,14 +21,15 @@ namespace MathMrV {
 			get => _directionUnitVector.NormalToDegrees();
 			set { _directionUnitVector = Vec2.NormalFromDegrees(value); SetDirty(); }
 		}
-		public Polygon(Vec2[] points) {
-			model = new PolygonShapeDetailed(points);
+		public Polygon(Geometry2D polygonShape) {
+			model = polygonShape;
 			_directionUnitVector = Vec2.DirectionMaxX;
 			_cachedBoundBoxMax = _cachedBoundBoxMin = _position = Vec2.Zero;
 			_cacheValid = false;
 			_cachedPoints = null;
 			UpdateCacheAsNeeded();
 		}
+		public Polygon(Vec2[] points) : this (new Geometry2D(points)) {}
 		public void SetDirty() => _cacheValid = false;
 		public Vec2 GetPoint(int index) {
 			UpdateCacheAsNeeded();
@@ -52,12 +53,12 @@ namespace MathMrV {
 				_cachedPoints = new Vec2[model.Points.Length];
 			}
 			_boundingCircleInGlobalSpace = BoundingCircleInLocalSpace;
-			_boundingCircleInGlobalSpace.Center.Rotate(_directionUnitVector);
-			_boundingCircleInGlobalSpace.Center += _position;
-			float cos = _directionUnitVector.x, sin = _directionUnitVector.y;
+			//_boundingCircleInGlobalSpace.Center.Rotate(_directionUnitVector);
+			//_boundingCircleInGlobalSpace.Center += _position;
+			_boundingCircleInGlobalSpace.Center = ConvertLocalPositionToWorldSpace(_boundingCircleInGlobalSpace.Center);
+			float cos = _directionUnitVector.X, sin = _directionUnitVector.Y;
 			for (int i = 0; i < model.Points.Length; i++) {
-				Vec2 v = model.Points[i];
-				_cachedPoints[i] = new Vec2(cos * v.x - sin * v.y + _position.x, sin * v.x + cos * v.y + _position.y);
+				_cachedPoints[i] = ConvertLocalPositionToWorldSpace(model.Points[i]);
 			}
 			if (!PolygonShape.TryGetAABB(_cachedPoints, out _cachedBoundBoxMin, out _cachedBoundBoxMax)) {
 				throw new Exception("failed to calculate bounding box for polygon");

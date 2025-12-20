@@ -32,7 +32,7 @@ namespace MathMrV {
 			bool inside = false;
 			for (int i = 0, j = poly.Count - 1; i < poly.Count; j = i++) {
 				Vec2 pi = poly[i], pj = poly[j];
-				bool intersect = pi.y > pt.y != pj.y > pt.y && pt.x < (pj.x - pi.x) * (pt.y - pi.y) / (pj.y - pi.y) + pi.x;
+				bool intersect = pi.Y > pt.Y != pj.Y > pt.Y && pt.X < (pj.X - pi.X) * (pt.Y - pi.Y) / (pj.Y - pi.Y) + pi.X;
 				if (intersect) {
 					inside = !inside;
 				}
@@ -45,10 +45,10 @@ namespace MathMrV {
 			if (points.Count == 0) { return false; }
 			for (int i = 0; i < points.Count; ++i) {
 				Vec2 p = points[i];
-				if (p.x < min.x) { min.x = p.x; }
-				if (p.y < min.y) { min.y = p.y; }
-				if (p.x > max.x) { max.x = p.x; }
-				if (p.y > max.y) { max.y = p.y; }
+				if (p.X < min.X) { min.X = p.X; }
+				if (p.Y < min.Y) { min.Y = p.Y; }
+				if (p.X > max.X) { max.X = p.X; }
+				if (p.Y > max.Y) { max.Y = p.Y; }
 			}
 			return true;
 		}

@@ -128,13 +128,13 @@ namespace collision {
 			TransferElementsToSubSpacePartitions();
 			void CreateSubSpacePartitions() {
 				Vec2 size = aabb.Size;
-				Vec2 subCellSize = new Vec2(size.x / columns, size.y / rows);
+				Vec2 subCellSize = new Vec2(size.X / columns, size.Y / rows);
 				if (subPartition == null) {
 					subPartition = mem.branchPool.Commission();
 				}
 				Vec2 cursor = aabb.Min;
 				for (int r = 0; r < rows; ++r) {
-					cursor.x = aabb.Min.x;
+					cursor.X = aabb.Min.X;
 					for (int c = 0; c < columns; ++c) {
 						SpacePartitionCell<T> nextCell = null;
 						if (optionallyGetExistingCellAtColumnRow != null) {
@@ -146,9 +146,9 @@ namespace collision {
 								(byte)(availableDepth - 1), columns, rows, convertElementToCircle, this);
 						}
 						subPartition[r, c] = nextCell;
-						cursor.x += subCellSize.x;
+						cursor.X += subCellSize.X;
 					}
-					cursor.y += subCellSize.y;
+					cursor.Y += subCellSize.Y;
 				}
 			}
 			void TransferElementsToSubSpacePartitions() {
@@ -171,15 +171,15 @@ namespace collision {
 			Vec2 center = (circle.Center + Position) / 2;
 			AABB parentEstimate = AABB.CreateAt(center, parentFullSize);
 			Vec2 positionInParent = Position - parentEstimate.Min;
-			int col = (int)(positionInParent.x / parentCellSize.x);
-			int row = (int)(positionInParent.y / parentCellSize.y);
+			int col = (int)(positionInParent.X / parentCellSize.X);
+			int row = (int)(positionInParent.Y / parentCellSize.Y);
 			if (col < 0) { col = 0; }
 			if (col >= columns) { col = columns - 1; }
 			if (row < 0) { row = 0; }
 			if (row >= rows) { row = rows - 1; }
 			Vec2 parentMin = aabb.Min;
-			parentMin.x -= parentCellSize.x * col;
-			parentMin.y -= parentCellSize.y * row;
+			parentMin.X -= parentCellSize.X * col;
+			parentMin.Y -= parentCellSize.Y * row;
 			Vec2 parentMax = parentMin + parentFullSize;
 			SpacePartitionCell<T> newParent = mem.cellPool.Commission();
 			newParent.Set(parentMin, parentMax, (byte)(availableDepth + 1), columns, rows, convertElementToCircle);
@@ -250,13 +250,13 @@ namespace collision {
 			min -= aabb.Min;
 			max -= aabb.Min;
 			Vec2 cellSize = subPartition[0, 0].AABB.Size;
-			int startRow = (int)(min.y / cellSize.y);
+			int startRow = (int)(min.Y / cellSize.Y);
 			if (startRow > lastRow) { return null; }
-			int startCol = (int)(min.x / cellSize.x);
+			int startCol = (int)(min.X / cellSize.X);
 			if (startCol > lastCol) { return null; }
-			int endRow = (int)(max.y / cellSize.y);
+			int endRow = (int)(max.Y / cellSize.Y);
 			if (endRow < 0) { return null; };
-			int endCol = (int)(max.x / cellSize.x);
+			int endCol = (int)(max.X / cellSize.X);
 			if (endCol < 0) { return null; }
 			// limit search to calculated range
 			startRow = Math.Max(0, startRow);
