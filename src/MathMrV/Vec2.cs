@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using System.Numerics;
 
 namespace MathMrV {
 	// TODO replace usage of Vec2 with Vector2, for optimization purposes.
@@ -15,7 +14,6 @@ namespace MathMrV {
 		public float MagnitudeSqr => X * X + Y * Y;
 		public Vec2 Normal {
 			get {
-				Vector2 a = Vector2.UnitX;
 				if (X == 0 && Y == 0) { return DirectionMaxX; }
 				float mag = Magnitude;
 				return new Vec2(X / mag, Y / mag);
