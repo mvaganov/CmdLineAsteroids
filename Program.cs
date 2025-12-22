@@ -478,7 +478,7 @@ namespace asteroids {
 					collision.Get(out MobilePolygon player, out MobilePolygon asteroid);
 					Collision.SeparateObjects(player, asteroid, collision.Normal, collision.Depth);
 					//Collision.BounceVelocities(player, asteroid, collision.Normal);
-					SpecialDebugPoints = new Vec2[] { collision.Point, collision.Point + collision.Normal };
+					//SpecialDebugPoints = new Vec2[] { collision.Point, collision.Point + collision.Normal };
 					Collision.BounceVelocitiesAndTorque(player, asteroid, collision.Point, collision.Normal);
 					//player.Velocity = Vec2.Zero;
 					//asteroid.Velocity = Vec2.Zero;

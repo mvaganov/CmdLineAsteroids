@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 
 namespace MathMrV {
 	// TODO replace usage of Vec2 with Vector2, for optimization purposes.
@@ -99,24 +100,24 @@ namespace MathMrV {
 		public static bool IsZero(Vec2 vec) => vec.X == 0 && vec.Y == 0;
 		public static float Cross(Vec2 a, Vec2 b) => (a.X * b.Y) - (a.Y * b.X);
 		public static float Cross(Vec2 a, Vec2 b, Vec2 c) => (b.X - a.X) * (c.Y - b.Y) - (b.Y - a.Y) * (c.X - b.X);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryGetLineSegmentIntersection(Vec2 startA, Vec2 endA, Vec2 startB, Vec2 endB, out Vec2 point) {
-			Vec2 deltaA = endA - startA;
-			Vec2 deltaB = endB - startB;
-			float orthogonalityOfLines = Cross(deltaA, deltaB);
-			bool isParallel = Math.Abs(orthogonalityOfLines) < 1e-5f;
-			if (isParallel) {
-				point = Vec2.NaN;
-				return false;
-			}
-			Vec2 linesDelta = startB - startA;
-			float orthogonalityOfLineA = Cross(linesDelta, deltaA);
-			float orthogonalityOfLineB = Cross(linesDelta, deltaB);
-			float whereLineBCrossesOnLineA = orthogonalityOfLineB / orthogonalityOfLines;
-			float whereLineACrossesOnLineB = orthogonalityOfLineA / orthogonalityOfLines;
-			point = startA + (deltaA * whereLineBCrossesOnLineA);
-			bool doesLineBCollideLineA = whereLineBCrossesOnLineA >= 0f && whereLineBCrossesOnLineA <= 1f;
-			bool doesLineACollideLineB = whereLineACrossesOnLineB >= 0f && whereLineACrossesOnLineB <= 1f;
-			return (doesLineBCollideLineA && doesLineACollideLineB);
+			Vec2 lineA = endA - startA, lineB = endB - startB;
+			// cross-product determinant is the area of the parallelogram defined by the given lines
+			float determinantLineALineB = Cross(lineA, lineB);
+			const float epsilon = 1e-5f;
+			bool isParallel = determinantLineALineB < epsilon || determinantLineALineB > -epsilon;
+			if (isParallel) { point = default; return false; }
+			Vec2 lineDelta = startB - startA;
+			float parallelogramAreaOfLineDeltaLineB = Cross(lineDelta, lineB);
+			float inverseDeterminantLineALineB = 1f / determinantLineALineB; // avoid multiple division later
+			float whereLineBCrossesOnLineA = parallelogramAreaOfLineDeltaLineB * inverseDeterminantLineALineB;
+			if (whereLineBCrossesOnLineA < 0f || whereLineBCrossesOnLineA > 1f) { point = default; return false; }
+			float parallelogramAreaOfLineDeltaLineA = Cross(lineDelta, lineA);
+			float whereLineACrossesOnLineB = parallelogramAreaOfLineDeltaLineA * inverseDeterminantLineALineB;
+			if (whereLineACrossesOnLineB < 0f || whereLineACrossesOnLineB > 1f) { point = default; return false; }
+			point = startA + (lineA * whereLineBCrossesOnLineA);
+			return true;
 		}
 	}
 }
