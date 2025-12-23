@@ -83,7 +83,7 @@ namespace MathMrV {
 			return SideIndex.Invalid;
 		}
 		public void Scale(float d) { Min *= d; Max *= d; }
-		public void Scale(Vec2 v) { Min.Scale(v); Max.Scale(v); }
+		public void Scale(Vec2 v) { Min *= v; Max *= v; }
 		public void CorrectNegativeDimensions() {
 			float swap;
 			if (Min.X > Max.X) { swap = Min.X; Min.X = Max.X; Max.X = swap; }

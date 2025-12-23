@@ -23,7 +23,7 @@ namespace MathMrV {
 		}
 		public Polygon(Geometry2D polygonShape) {
 			model = polygonShape;
-			_directionUnitVector = Vec2.DirectionMaxX;
+			_directionUnitVector = Vec2.UnitX;
 			_cachedBoundBoxMax = _cachedBoundBoxMin = _position = Vec2.Zero;
 			_cacheValid = false;
 			_cachedPoints = null;

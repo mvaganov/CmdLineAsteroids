@@ -464,12 +464,12 @@ src/Geometry/Vec2.cs
 ```
 namespace MrV.Geometry {
 	public struct Vec2 {
-		public float x, y;
-		public Vec2(float x, float y) { this.x = x; this.y = y; }
-		public static Vec2 operator +(Vec2 a, Vec2 b) => new Vec2(a.x + b.x, a.y + b.y);
-		public static Vec2 operator -(Vec2 a, Vec2 b) => new Vec2(a.x - b.x, a.y - b.y);
-		public static implicit operator Vec2((float x, float y) tuple) => new Vec2(tuple.x, tuple.y);
-		public override string ToString() => $"({x},{y})";
+		public float X, Y;
+		public Vec2(float x, float y) { X = x; Y = y; }
+		public static Vec2 operator +(Vec2 a, Vec2 b) => new Vec2(a.X + b.X, a.Y + b.Y);
+		public static Vec2 operator -(Vec2 a, Vec2 b) => new Vec2(a.X - b.X, a.Y - b.Y);
+		public static implicit operator Vec2((float x, float y) tuple) => new Vec2(tuple.X, tuple.Y);
+		public override string ToString() => $"({X},{Y})";
 	}
 }
 ```
@@ -486,7 +486,7 @@ this is a very basic 2D vector structure, which we'll add to during the tutorial
 `Vec2` makes all of it's members public. As a general rule, it's bad practice in OOP to have everything public; Instead, an Object should hide as many implementation details as possible, with public accessors and properties. This makes implementation details easier to change in the future, and to avoid burdening programmers with the cognitive load of implementation details.
 However, the `Vec2` class is often designed this way, because it is simple enough for most programmers to understand completely with little effort, and unlikely to change it's already written functionality later.
 
-This tutorial will add more functionality to the `Vec2` class later.
+This tutorial will add more functionality to the `Vec2` class later. The class is being written as an exercise in understanding math, not exactly as a best practice. C-sharp already has a class called `Vector2` that should be used instead of this class in almost every situation. I'll be modeling this class on `Vector2` to make it easier to replace later.
 
 this code is very densely written, with little vertical whitespace, using inlined curly-brackets for simple lines of code, and the expression-bodied fat-arrow for single line methods. I want it to be easy to see without scrolling, and easy copy.
 
@@ -504,7 +504,7 @@ src/LowFiRockBlaster/Program.cs, add to Main
 ```
 ...
 		public static void DrawRectangle(Vec2 position, Vec2 size, char letterToPrint) {
-			DrawRectangle((int)position.x, (int)position.y, (int)size.x, (int)size.y, letterToPrint);
+			DrawRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y, letterToPrint);
 		}
 ...
 ```
@@ -578,8 +578,8 @@ src/MrV/Geometry/AABB.cs
 namespace MrV.Geometry {
 	public struct AABB {
 		public Vec2 Min, Max;
-		public float Width => (Max.x - Min.x);
-		public float Height => (Max.y - Min.y);
+		public float Width => (Max.X - Min.X);
+		public float Height => (Max.Y - Min.Y);
 		public AABB(AABB r) : this(r.Min, r.Max) { }
 		public AABB(Vec2 min, Vec2 max) {
 			Min = min; Max = max;
@@ -641,7 +641,7 @@ Program.cs
 ```
 ...
 		public static void DrawRectangle(AABB aabb, char letterToPrint) {
-			DrawRectangle((int)aabb.Min.x, (int)aabb.Min.y, (int)aabb.Width, (int)aabb.Height, letterToPrint);
+			DrawRectangle((int)aabb.Min.X, (int)aabb.Min.Y, (int)aabb.Width, (int)aabb.Height, letterToPrint);
 		}
 ...
 ```
@@ -719,7 +719,7 @@ A polygon's shape can be described as a list of 2 dimensional vectors, with the 
 ### scene
 black background, 3 rows of labeled white boxes (each white box has 4 smaller gray boxes inside), followed by a text label.
 	2 boxes labeled [x, y], followed by label: `Vec2`
-	4 boxes labeled [Min.x, Min.y, Max.x, Max.y], followed by label: `AABB`
+	4 boxes labeled [Min.X, Min.Y, Max.X, Max.Y], followed by label: `AABB`
 	3 boxes labeled [x, y, radius], followed by label: `Circle`
 	below these 3 rows is another 1 row, with a white box (with 8 smaller gray boxes inside)
 	1 box labeled [points], followed by the label `PolygonShape`
@@ -755,11 +755,11 @@ Program.cs
 			Vec2 start = pos - extent;
 			Vec2 end = pos + extent;
 			float r2 = radius * radius;
-			for (int y = (int)start.y; y < end.y; ++y) {
-				for (int x = (int)start.x; x < end.x; ++x) {
+			for (int y = (int)start.Y; y < end.Y; ++y) {
+				for (int x = (int)start.X; x < end.X; ++x) {
 					if (x < 0 || y < 0) { continue; }
-					float dx = x - pos.x;
-					float dy = y - pos.y;
+					float dx = x - pos.X;
+					float dy = y - pos.Y;
 					bool pointIsInside = dx * dx + dy * dy < r2;
 					if (pointIsInside) {
 						Console.SetCursorPosition(x, y);
@@ -799,7 +799,7 @@ Circle.cs
 ```
 ...
 		public static bool IsInsideCircle(Vec2 position, float radius, Vec2 point) {
-			float dx = point.x - position.x, dy = point.y - position.y;
+			float dx = point.X - position.X, dy = point.Y - position.Y;
 			return dx * dx + dy * dy <= radius * radius;
 		}
 		public bool Contains(Vec2 point) => IsInsideCircle(center, radius, point);
@@ -832,13 +832,13 @@ PolygonShape.cs
 			bool inside = false;
 			for (int index = 0, prevIndex = poly.Count - 1; index < poly.Count; prevIndex = index++) {
 				Vec2 vertex = poly[index], prevVertex = poly[prevIndex];
-				bool edgeVerticallySpansRay = (vertex.y > pt.y) != (prevVertex.y > pt.y);
+				bool edgeVerticallySpansRay = (vertex.Y > pt.Y) != (prevVertex.Y > pt.Y);
 				if (!edgeVerticallySpansRay) {
 					continue;
 				}
-				float slope = (prevVertex.x - vertex.x) / (prevVertex.y - vertex.y);
-				float xIntersection = slope * (pt.y - vertex.y) + vertex.x;
-				bool intersect = pt.x < xIntersection;
+				float slope = (prevVertex.X - vertex.X) / (prevVertex.Y - vertex.Y);
+				float xIntersection = slope * (pt.Y - vertex.Y) + vertex.X;
+				bool intersect = pt.X < xIntersection;
 				if (intersect) {
 					inside = !inside;
 				}
@@ -853,10 +853,10 @@ PolygonShape.cs
 			min = max = points[0];
 			for (int i = 1; i < points.Count; ++i) {
 				Vec2 p = points[i];
-				if (p.x < min.x) { min.x = p.x; }
-				if (p.y < min.y) { min.y = p.y; }
-				if (p.x > max.x) { max.x = p.x; }
-				if (p.y > max.y) { max.y = p.y; }
+				if (p.X < min.X) { min.X = p.X; }
+				if (p.Y < min.Y) { min.Y = p.Y; }
+				if (p.X > max.X) { max.X = p.X; }
+				if (p.Y > max.Y) { max.Y = p.Y; }
 			}
 			return true;
 		}
@@ -897,8 +897,8 @@ Program.cs
 			if (!PolygonShape.TryGetAABB(poly, out Vec2 start, out Vec2 end)) {
 				return;
 			}
-			for (int y = (int)start.y; y < end.y; ++y) {
-				for (int x = (int)start.x; x < end.x; ++x) {
+			for (int y = (int)start.Y; y < end.Y; ++y) {
+				for (int x = (int)start.X; x < end.X; ++x) {
 					if (x < 0 || y < 0) { continue; }
 					bool pointIsInside = PolygonShape.IsInPolygon(poly, new Vec2(x, y));
 					if (pointIsInside) {
@@ -963,10 +963,10 @@ I want to be able to see progress with my eyes, and test my understanding with v
 				Console.SetCursorPosition(0, (int)height);
 				char input = Console.ReadKey().KeyChar;
 				switch(input) {
-				case 'w': position.y -= moveIncrement; break;
-				case 'a': position.x -= moveIncrement; break;
-				case 's': position.y += moveIncrement; break;
-				case 'd': position.x += moveIncrement; break;
+				case 'w': position.Y -= moveIncrement; break;
+				case 'a': position.X -= moveIncrement; break;
+				case 's': position.Y += moveIncrement; break;
+				case 'd': position.X += moveIncrement; break;
 				case 'e': radius += moveIncrement; break;
 				case 'r': radius -= moveIncrement; break;
 				case (char)27: running = false; break;
@@ -1043,10 +1043,10 @@ we should formalize this a bit more clearly in the code.
 			}
 			void Update() {
 				switch (input) {
-					case 'w': position.y -= moveIncrement; break;
-					case 'a': position.x -= moveIncrement; break;
-					case 's': position.y += moveIncrement; break;
-					case 'd': position.x += moveIncrement; break;
+					case 'w': position.Y -= moveIncrement; break;
+					case 'a': position.X -= moveIncrement; break;
+					case 's': position.Y += moveIncrement; break;
+					case 'd': position.X += moveIncrement; break;
 					case 'e': radius += moveIncrement; break;
 					case 'r': radius -= moveIncrement; break;
 					case (char)27: running = false; break;
@@ -1111,10 +1111,10 @@ public class Game {
 	}
 	public void Update() {
 		switch(input) {
-		case 'w': position.y -= moveIncrement; break;
-		case 'a': position.x -= moveIncrement; break;
-		case 's': position.y += moveIncrement; break;
-		case 'd': position.x += moveIncrement; break;
+		case 'w': position.Y -= moveIncrement; break;
+		case 'a': position.X -= moveIncrement; break;
+		case 's': position.Y += moveIncrement; break;
+		case 'd': position.X += moveIncrement; break;
 		case 'e': radius += moveIncrement; break;
 		case 'r': radius -= moveIncrement; break;
 		case (char)27: IsRunning = false; break;
@@ -1560,8 +1560,8 @@ namespace MrV.CommandLine {
 	public partial class DrawBuffer {
 		public delegate bool IsInsideShapeDelegate(Vec2 position);
 		public void DrawShape(IsInsideShapeDelegate isInsideShape, Vec2 start, Vec2 end, char letterToPrint) {
-			for (int y = (int)start.y; y < end.y; ++y) {
-				for (int x = (int)start.x; x < end.x; ++x) {
+			for (int y = (int)start.Y; y < end.Y; ++y) {
+				for (int x = (int)start.X; x < end.X; ++x) {
 					if (!IsValidLocation(y, x)) { continue; }
 					bool pointIsInside = isInsideShape == null || isInsideShape(new Vec2(x, y));
 					if (!pointIsInside) { continue; }
@@ -1588,8 +1588,8 @@ namespace MrV.CommandLine {
 			float r2 = radius * radius;
 			DrawShape(IsInCircle, start, end, letterToPrint);
 			bool IsInCircle(Vec2 point) {
-				float dx = point.x - pos.x;
-				float dy = point.y - pos.y;
+				float dx = point.X - pos.X;
+				float dy = point.Y - pos.Y;
 				return dx * dx + dy * dy < r2;
 			}
 		}
@@ -1659,15 +1659,14 @@ Lets add scale methods to Vec2
 MrV/Geometry/Vec2.cs
 ```
 ...
-		public void Scale(Vec2 scale) { x *= scale.x; y *= scale.y; }
-		public Vec2 Scaled(Vec2 scale) => new Vec2(x * scale.x, y * scale.y);
-		public void InverseScale(Vec2 scale) { x /= scale.x; y /= scale.y; }
+		public static Vec2 operator *(Vec2 a, Vec2 b) => new Vec2(a.X * b.X, a.Y * b.Y);
+		public static Vec2 operator /(Vec2 a, Vec2 b) => new Vec2(a.X / b.X, a.Y / b.Y);
+
 ...
 ```
 
 ### voice
-in addition to Scale, we should be able to undo scaling.
-Also, we will want a version of Scale that returns a new scaled structure without modifying this structure's data.
+in addition to scaling with multiply, we should be able to undo scaling with divide.
 
 ### scene 
 MrV/DrawBuffer_geometry.cs
@@ -1681,10 +1680,10 @@ MrV/DrawBuffer_geometry.cs
 			Vec2 renderEnd = end;
 			renderStart.InverseScale(ShapeScale);
 			renderEnd.InverseScale(ShapeScale);
-			for (int y = (int)renderStart.y; y < renderEnd.y; ++y) {
-				for (int x = (int)renderStart.x; x < renderEnd.x; ++x) {
+			for (int y = (int)renderStart.Y; y < renderEnd.Y; ++y) {
+				for (int x = (int)renderStart.X; x < renderEnd.X; ++x) {
 					if (!IsValidLocation(y, x)) { continue; }
-					bool pointIsInside = isInsideShape == null || isInsideShape(new Vec2(x * ShapeScale.x, y * ShapeScale.y));
+					bool pointIsInside = isInsideShape == null || isInsideShape(new Vec2(x * ShapeScale.X, y * ShapeScale.Y));
 					if (!pointIsInside) { continue; }
 					WriteAt(letterToPrint, y, x);
 				}
@@ -1992,10 +1991,10 @@ src/Program.cs
 ```
 ...
 			DrawBuffer graphics = new DrawBuffer(height, width);
-			KeyInput.Bind('w', () => position.y -= moveIncrement, "move circle up");
-			KeyInput.Bind('a', () => position.x -= moveIncrement, "move circle left");
-			KeyInput.Bind('s', () => position.y += moveIncrement, "move circle down");
-			KeyInput.Bind('d', () => position.x += moveIncrement, "move circle right");
+			KeyInput.Bind('w', () => position.Y -= moveIncrement, "move circle up");
+			KeyInput.Bind('a', () => position.X -= moveIncrement, "move circle left");
+			KeyInput.Bind('s', () => position.Y += moveIncrement, "move circle down");
+			KeyInput.Bind('d', () => position.X += moveIncrement, "move circle right");
 			KeyInput.Bind('e', () => radius += moveIncrement, "expand radius");
 			KeyInput.Bind('r', () => radius -= moveIncrement, "reduce radius");
 			KeyInput.Bind((char)27, () => running = false, "quit");
@@ -2138,7 +2137,7 @@ src/Program.cs
 ...
 			int targetMsDelay = (int)(1000 / targetFps);
 			GraphicsContext graphics = new GraphicsContext(height, width);
-			KeyInput.Bind('w', () => position.y -= moveIncrement, "move circle up");
+			KeyInput.Bind('w', () => position.Y -= moveIncrement, "move circle up");
 ...
 ```
 
@@ -2528,14 +2527,14 @@ src/MrV/DrawBuffer_geometry.cs
 			int TotalSamplesPerGlyph = AntiAliasColorMap.GetLength(1);
 			int SamplesPerDimension = (int)Math.Sqrt(TotalSamplesPerGlyph);
 			float SuperSampleIncrement = 1f / SamplesPerDimension;
-			for (int y = (int)renderStart.y; y < renderEnd.y; ++y) {
-				for (int x = (int)renderStart.x; x < renderEnd.x; ++x) {
+			for (int y = (int)renderStart.Y; y < renderEnd.Y; ++y) {
+				for (int x = (int)renderStart.X; x < renderEnd.X; ++x) {
 					if (!IsValidLocation(y, x)) { continue; }
 					int countSamples = 0;
 					if (isInsideShape != null) {
 						for (float sampleY = 0; sampleY < 1; sampleY += SuperSampleIncrement) {
 							for (float sampleX = 0; sampleX < 1; sampleX += SuperSampleIncrement) {
-								bool pointIsInside = isInsideShape(new Vec2((x + sampleX) * ShapeScale.x, (y + sampleY) * ShapeScale.y));
+								bool pointIsInside = isInsideShape(new Vec2((x + sampleX) * ShapeScale.X, (y + sampleY) * ShapeScale.Y));
 								if (pointIsInside) {
 									++countSamples;
 								}
@@ -2577,8 +2576,8 @@ src/MrV/DrawBuffer_geometry.cs
 ...
 		public void DrawLine(Vec2 start, Vec2 end, float thickness, ConsoleGlyph letterToPrint) {
 			Vec2 delta = end - start;
-			Vec2 direction = delta.Normalized;
-			Vec2 perp = direction.Perpendicular * thickness;
+			Vec2 direction = delta.Normalized();
+			Vec2 perp = direction.Perpendicular() * thickness;
 			Vec2[] line = new Vec2[] { start - perp, start + perp, end + perp, end - perp };
 			DrawPolygon(line, letterToPrint); 
 		}
@@ -2595,13 +2594,13 @@ Vec2 needs some additional math to support this math.
 ### scene
 ```
 ...
-		public float MagnitudeSqr => x * x + y * y;
-		public float Magnitude => MathF.Sqrt(MagnitudeSqr);
-		public static Vec2 operator *(Vec2 vector, float scalar) => new Vec2(vector.x * scalar, vector.y * scalar);
-		public static Vec2 operator /(Vec2 vector, float scalar) => new Vec2(vector.x / scalar, vector.y / scalar);
-		public Vec2 Normalized => this / Magnitude;
-		public Vec2 Perpendicular => new Vec2(y, -x);
-		public bool Equals(Vec2 v) => x == v.x && y == v.y;
+		public float LengthSquared() => x * x + y * y;
+		public float Length() => MathF.Sqrt(LengthSquared());
+		public static Vec2 operator *(Vec2 vector, float scalar) => new Vec2(vector.X * scalar, vector.Y * scalar);
+		public static Vec2 operator /(Vec2 vector, float scalar) => new Vec2(vector.X / scalar, vector.Y / scalar);
+		public Vec2 Normalized() => this / Length();
+		public Vec2 Perpendicular() => new Vec2(y, -x);
+		public bool Equals(Vec2 v) => x == v.X && y == v.Y;
 ...
 ```
 PolygonShape.cs, with cartesian plane + grid diagram in small window
@@ -2610,16 +2609,16 @@ draw lines AB
 
 ### voice
 if you have 2 points in space, you can calculate their difference, or `Delta` with simple subtraction.
-the distance, also called the `Magnitude` of the `Delta`, can be determined with the pythagorean theorem, 'horizontal' squared plus 'vertical' squared equals 'hypotenuse' squared.
+the distance, or `Length`, also called the magnitude of the `Delta`, can be determined with the pythagorean theorem, 'horizontal' squared plus 'vertical' squared equals 'hypotenuse' squared.
 the square root operation is fairly expensive for a computer to do accurately, so for performance reasons, it's best to do math that avoids square root where possible.
-	for this reason, game engine APIs will often include a `MagnitudeSqr`, to eliminate a call to the square-root function.
+	for this reason, game engine APIs will often include a LengthSquared, to eliminate a call to the square-root function.
 	this is fine as long as we compare it against other squared values
 
 ### scene
 draw a thicker line along point AB that stops at length 1, at the edge of the unit circle
 
 ### voice
-if we divide the entire vector by it's `Magnitude`, we get it's `Normalized` value, which we can think of as a direction.
+if we divide the entire vector by it's `Length`, we get it's `Normalized` value, which we can think of as a direction.
 
 ### scene
 show angle theta between line AB and the X axis starting at point A
@@ -2666,7 +2665,7 @@ namespace MrV.GameEngine {
 		}
 		public void Draw(GraphicsContext g) {
 			g.DrawCircle(Circle, Color);
-			float speed = Velocity.Magnitude;
+			float speed = Velocity.Length();
 			if (speed > 0) {
 				Vec2 direction = Velocity / speed;
 				Vec2 rayStart = Circle.center + direction * Circle.radius;
@@ -2778,22 +2777,22 @@ src/MrV/Geometry/Vec2
 		public static float RadiansToDegrees(float radians) => radians * 180 / MathF.PI;
 		public static Vec2 ConvertRadians(float radians) => new Vec2(MathF.Cos(radians), MathF.Sin(radians));
 		public static Vec2 ConvertDegrees(float degrees) => ConvertRadians(DegreesToRadians(degrees));
+		public float NormalToRadians() => MathF.Atan2(y, x);
 		public float NormalToDegrees() => RadiansToDegrees(NormalToRadians());
-		public float NormalToRadians() => WrapRadian(MathF.Atan2(y, x));
-		public static float WrapRadian(float radian) {
-			while (radian > MathF.PI) { radian -= 2 * MathF.PI; }
-			while (radian <= -MathF.PI) { radian += 2 * MathF.PI; }
-			return radian;
-		}
+		public static float WrapRadian(float radian) => MathF.IEEERemainder(radian, 2 * MathF.PI);
+		public static float WrapDegrees(float degrees) => MathF.IEEERemainder(degrees, 360);
 ...
 ```
 
 ### voice
 for the sake of working with angles, I'll add methods that convert angles to unit vectors.
 
-There are conversions for both Radians and Degrees because the standard C# math library uses Radians even though most people find 360 degrees more intuitive.
+There are conversions for both Radians and Degrees because the standard C# math library uses Radians even though most schools teach 360 degrees.
 Doing angle math in pure radians means the computer does less conversion math total.
-	but during initialization, more efficient math has almost no performance gain. It makes more sense to use the more intuitive 360 degree format there.
+	but during initialization, more efficient math has almost no performance gain. It can make more sense to use the more intuitive 360 degree format there.
+	Finding comfort with multiple data formats at the same time like this is an important Invisible Wizard Problem to practice.
+
+The `Vec2.WrapRadian` function is helpful for fixing bugs related to angle conversions that we might encounter during testing. It keeps an radian angle within the -Pi to +Pi range. The `IEEERemainder` function isn't named intuitively, so I'm putting a more intuitive version here next to the other angle-related code.
 
 ### scene
 run the code and see the particles expand out from their origin
@@ -2878,7 +2877,7 @@ src/MrV/GameEngine/Particle.cs
 		public void Draw(GraphicsContext g) {
 			if (!Enabled) { return; }
 			g.DrawCircle(Circle, Color);
-			//float speed = Velocity.Magnitude;
+			//float speed = Velocity.Length();
 			//if (speed > 0) {
 			//	Vec2 direction = Velocity / speed;
 			//	Vec2 rayStart = Circle.center + direction * Circle.radius;
@@ -3593,7 +3592,7 @@ the `DrawShape` function doesn't need to change that much. we need to offset the
 ```
 ...
 							for (float sampleX = 0; sampleX < 1; sampleX += SuperSampleIncrement) {
-								bool pointIsInside = isInsideShape(new Vec2((x + sampleX) * ShapeScale.x, (y + sampleY) * ShapeScale.y)
+								bool pointIsInside = isInsideShape(new Vec2((x + sampleX) * ShapeScale.X, (y + sampleY) * ShapeScale.Y)
 									+ _originOffsetULCorner);
 								if (pointIsInside) {
 ...
@@ -3708,8 +3707,8 @@ The player will shoot projectiles. I want to see spinning triangles for these pr
 When the player destroys asteroids, they will break into smaller asteroids. after 2 breaks, the asteroids will break into an ammo pickup.
 I'll also need some user interface that stays static on the screen, to tell the user their score, ammo, and health.
 
-I want to use Object Oriented Programming for some of this game design because it's a natural way of thinking about software problems in game development.
-I will use some standard OOP guidelines, but I will make exceptions. Exceptions to OOP guidelines is something worth discussing, especially for newer programmers.
+I want to use Object Oriented Programming for some of this game design. OOP is how I and many other programmers were trained to solve problems, so it's a natural way of thinking for me. Natural thinking makes it easier to iterate quickly. There's also a lot of OOP code on the internet that machine intelligence has been trained on, so you will see this style of problem solving in the future.
+I will continue to use standard OOP guidelines, and explain exceptions I make to them.
 
 Probably the most well known and well respected guideline for Object Oriented Design is the SOLID principles.
 
@@ -3729,8 +3728,8 @@ However, I also intentionally bend, break, or avoid SOLID principles, also in su
 
 ### scene
 a black screen with a gray block of text near the bottom. The text is "good programming discipline"
-one more gray box of black text appear on top of the initial box, labeled "rapid prototyping for user experience"
-the black background seems to shrink as a red border grows inward from the edges of the screen. the resulting black background focuses around "rapid prototyping for user experience", with just a little bit of "good programming discipline" in the black legible space, and the rest obscured by red.
+one more gray box of black text appears above the initial box, labeled "rapid prototyping for user experience"
+the black background seems to shrink as a red border grows inward from the edges of the screen. the resulting black background focuses around "rapid prototyping for user experience", with a little bit of "good programming discipline" in the black legible space, and the rest obscured by red.
 
 ### voice
 During game development, SOLID principles, like most programming disciplines, are more aspirational than critically important.
@@ -3745,7 +3744,7 @@ Maintaining both at the same time is another invisible wizard problem worth disc
 ### voice
 My opinion is that SOLID should be filtered through other simpler heuristics.
 
-Good code should be easy to change. Experience can teach you that keeping SOLID principles too strictly can make code harder to change,
+Good code should be easy to change. Keeping SOLID principles too strictly can make code difficult to change,
 
 ### scene
 show the SOLID screen again, the white text on black background defining each letter of the SOLID acronym.

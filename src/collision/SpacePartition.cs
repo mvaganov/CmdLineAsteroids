@@ -167,7 +167,7 @@ namespace collision {
 		}
 		private void InsertSelfIntoNewParent(Circle circle, T element, SpacePartition<T>.ObjectPools mem) {
 			Vec2 parentCellSize = aabb.Size;
-			Vec2 parentFullSize = parentCellSize.Scaled(new Vec2(columns, rows));
+			Vec2 parentFullSize = parentCellSize * new Vec2(columns, rows);
 			Vec2 center = (circle.Center + Position) / 2;
 			AABB parentEstimate = AABB.CreateAt(center, parentFullSize);
 			Vec2 positionInParent = Position - parentEstimate.Min;

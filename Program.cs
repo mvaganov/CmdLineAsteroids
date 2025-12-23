@@ -106,7 +106,7 @@ namespace asteroids {
 			preDraw.Add(CameraFollowsPlayer);
 			void CameraFollowsPlayer() {
 				Vec2 halfScreen = graphics.Size / 2;
-				Vec2 screenAnchor = playerControl.Position - halfScreen.Scaled(graphics.Scale) + userCameraOffset;
+				Vec2 screenAnchor = playerControl.Position - (halfScreen * graphics.Scale) + userCameraOffset;
 				if (cameraLookAhead) {
 					Vec2 cameraTargetScreenOffset = screenAnchor + playerControl.Velocity * (graphics.Scale.Y / 2);
 					Vec2 delta = cameraTargetScreenOffset - graphics.Offset;
@@ -404,17 +404,17 @@ namespace asteroids {
 			keyInput.BindKey('9', k => playerMove(-1 / 4f));
 			keyInput.BindKey('b', testMove);
 			void testMove(KeyInput k) {
-				playerCharacter.Velocity = Vec2.DirectionMinX;
-				playerControl.Velocity = Vec2.DirectionMaxX;
+				playerCharacter.Velocity = -Vec2.UnitX;
+				playerControl.Velocity = Vec2.UnitX;
 			}
-			keyInput.BindKey('I', k => playerControl.Position += Vec2.DirectionMinY);
-			keyInput.BindKey('J', k => playerControl.Position += Vec2.DirectionMinX);
-			keyInput.BindKey('K', k => playerControl.Position += Vec2.DirectionMaxY);
-			keyInput.BindKey('L', k => playerControl.Position += Vec2.DirectionMaxX);
-			keyInput.BindKey('i', k => userCameraOffset += Vec2.DirectionMinY.Scaled(graphics.Scale));
-			keyInput.BindKey('j', k => userCameraOffset += Vec2.DirectionMinX.Scaled(graphics.Scale));
-			keyInput.BindKey('k', k => userCameraOffset += Vec2.DirectionMaxY.Scaled(graphics.Scale));
-			keyInput.BindKey('l', k => userCameraOffset += Vec2.DirectionMaxX.Scaled(graphics.Scale));
+			keyInput.BindKey('I', k => playerControl.Position += -Vec2.UnitY);
+			keyInput.BindKey('J', k => playerControl.Position += -Vec2.UnitX);
+			keyInput.BindKey('K', k => playerControl.Position += Vec2.UnitY);
+			keyInput.BindKey('L', k => playerControl.Position += Vec2.UnitX);
+			keyInput.BindKey('i', k => userCameraOffset += -Vec2.UnitY * graphics.Scale);
+			keyInput.BindKey('j', k => userCameraOffset += -Vec2.UnitX * graphics.Scale);
+			keyInput.BindKey('k', k => userCameraOffset += Vec2.UnitY * graphics.Scale);
+			keyInput.BindKey('l', k => userCameraOffset += Vec2.UnitX * graphics.Scale);
 			keyInput.BindKey('O', k => playerHp = playerMaxHp = 100000);
 			void playerMove(float normalizedRadian) {
 				playerControl.SmoothRotateTarget(MathF.PI * normalizedRadian, playerAutoRotationAngularVelocity);

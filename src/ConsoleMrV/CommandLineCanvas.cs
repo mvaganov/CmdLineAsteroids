@@ -82,7 +82,7 @@ namespace ConsoleMrV {
 		}
 
 		public Vec2 GetConsolePosition(Vec2 canvasPosition) =>
-			(canvasPosition - _originOffsetULCorner).InverseScaled(_scale);
+			(canvasPosition - _originOffsetULCorner) / _scale;
 
 		public void WriteAt(string text, Vec2 position, bool useNewBgColor = false) =>
 			WriteAt(ConsoleGlyph.Convert(text), position, useNewBgColor);

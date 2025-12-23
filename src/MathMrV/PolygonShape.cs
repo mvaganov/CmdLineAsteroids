@@ -54,7 +54,7 @@ namespace MathMrV {
 		}
 		public static Vec2[] CreateRegular(int sides, Vec2 startingPoint = default) {
 			if (startingPoint == default) {
-				startingPoint = Vec2.DirectionMaxX;
+				startingPoint = Vec2.UnitX;
 			}
 			Vec2[] points = new Vec2[sides];
 			Vec2 point = startingPoint;
