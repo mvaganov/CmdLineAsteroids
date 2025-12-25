@@ -207,7 +207,7 @@ namespace MathMrV {
 				Vec2 vecA = Points[indexA], vecB = Points[indexB];
 				Vec2 closestOnSegment = GetClosestPointOnSegment(vecA, vecB, circleCenter);
 				Vec2 delta = closestOnSegment - circleCenter;
-				float distanceSq = delta.MagnitudeSqr;
+				float distanceSq = delta.LengthSquared();
 				if (distanceSq < circlePointDistanceSq) {
 					circlePointDistanceSq = distanceSq;
 					closestPoint = closestOnSegment;

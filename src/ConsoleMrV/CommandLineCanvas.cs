@@ -145,7 +145,7 @@ namespace ConsoleMrV {
 		}
 		public void DrawLineUnscaled(Vec2 start, Vec2 end, float lineWidth = 0.5f) {
 			Vec2 delta = end - start;
-			float lineLength = delta.Magnitude;
+			float lineLength = delta.Length();
 			Vec2 direction = delta / lineLength;
 			Vec2 perp = direction.Perpendicular() * (lineWidth / 2);
 			Vec2[] line = new Vec2[4] { start + perp, start - perp, end - perp, end + perp, };

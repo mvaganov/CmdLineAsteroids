@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace MathMrV {
@@ -12,12 +11,12 @@ namespace MathMrV {
 	//}
 	public struct Vec2 {
 		public float X, Y;
-		public float Magnitude => MathF.Sqrt(MagnitudeSqr);
-		public float MagnitudeSqr => X * X + Y * Y;
+		public float Length() => MathF.Sqrt(LengthSquared());
+		public float LengthSquared() => X * X + Y * Y;
 		public Vec2 Normal {
 			get {
 				if (X == 0 && Y == 0) { return UnitX; }
-				float mag = Magnitude;
+				float mag = Length();
 				return new Vec2(X / mag, Y / mag);
 			}
 		}
@@ -39,15 +38,15 @@ namespace MathMrV {
 		public override bool Equals(object obj) => obj is Vec2 vec2 && Equals(vec2);
 		public override int GetHashCode() => X.GetHashCode() ^ Y.GetHashCode();
 		public override string ToString() => $"({X},{Y})";
-		public float Distance(Vec2 other) => (this - other).Magnitude;
-		public float DistanceSquared(Vec2 other) => (this - other).MagnitudeSqr;
+		public float Distance(Vec2 other) => (this - other).Length();
+		public float DistanceSquared(Vec2 other) => (this - other).LengthSquared();
 		internal static float Distance(Vec2 a, Vec2 b) => a.Distance(b);
 		internal static float DistanceSquared(Vec2 a, Vec2 b) => a.DistanceSquared(b);
 		public void InverseScale(Vec2 scale) { X /= scale.X; Y /= scale.Y; }
 		public void Floor() { X = MathF.Floor(X); Y = MathF.Floor(Y); }
 		public void Ceil() { X = MathF.Ceiling(X); Y = MathF.Ceiling(Y); }
 		public static float DegreesToRadians(float degrees) => degrees * MathF.PI / 180;
-		public void Normalize() { float mag = Magnitude; X /= mag; Y /= mag; }
+		public void Normalize() { float mag = Length(); X /= mag; Y /= mag; }
 		public static Vec2 NormalFromRadians(float radians) => new Vec2(MathF.Cos(radians), MathF.Sin(radians));
 		public static Vec2 NormalFromDegrees(float degrees) => NormalFromRadians(DegreesToRadians(degrees));
 		public float NormalToRadians() => MathF.Atan2(Y, X);
@@ -69,9 +68,7 @@ namespace MathMrV {
 		public Vec2 Perpendicular() => new Vec2(-Y, X);
 		public void ClampToInt() { X = (int)X; Y = (int)Y; }
 		public void RoundToInt() { X = MathF.Round(X); Y = MathF.Round(Y); }
-		public static float Dot(Vec2 a, Vec2 b) {
-			return a.X * b.X + a.Y * b.Y;
-		}
+		public static float Dot(Vec2 a, Vec2 b) => a.X * b.X + a.Y * b.Y;
 		public static Vec2 Reflect(Vec2 incomingVector, Vec2 surfaceNormal) {
 			return incomingVector - (surfaceNormal * 2 * Vec2.Dot(incomingVector, surfaceNormal));
 		}
@@ -84,26 +81,6 @@ namespace MathMrV {
 		public readonly static Vec2 UnitX = (1, 0);
 		public readonly static Vec2 UnitY = (0, 1);
 		public readonly static Vec2 NaN = (float.NaN, float.NaN);
-		// TODO use these for better Vector2 compliance, implement if they don't exist.
-		//public static Vector2 Abs(Vector2 value);
-		//public static Vector2 Add(Vector2 left, Vector2 right);
-		//public static Vector2 Clamp(Vector2 value1, Vector2 min, Vector2 max);
-		//public static float Distance(Vector2 value1, Vector2 value2);
-		//public static float DistanceSquared(Vector2 value1, Vector2 value2);
-		//public static Vector2 Divide(Vector2 left, Vector2 right);
-		//public static Vector2 Divide(Vector2 left, float divisor);
-		//public static float Dot(Vector2 value1, Vector2 value2);
-		//public static Vector2 Lerp(Vector2 value1, Vector2 value2, float amount);
-		//public static Vector2 Max(Vector2 value1, Vector2 value2);
-		//public static Vector2 Min(Vector2 value1, Vector2 value2);
-		//public static Vector2 Multiply(float left, Vector2 right);
-		//public static Vector2 Multiply(Vector2 left, float right);
-		//public static Vector2 Multiply(Vector2 left, Vector2 right);
-		//public static Vector2 Negate(Vector2 value);
-		//public static Vector2 Normalize(Vector2 value);
-		//public static Vector2 Reflect(Vector2 vector, Vector2 normal);
-		//public static Vector2 SquareRoot(Vector2 value);
-		//public static Vector2 Subtract(Vector2 left, Vector2 right);
 		public bool IsNaN() => IsNaN(this);
 		public static bool IsNaN(Vec2 vec) => float.IsNaN(vec.X) || float.IsNaN(vec.Y);
 		public bool IsZero() => IsZero(this);

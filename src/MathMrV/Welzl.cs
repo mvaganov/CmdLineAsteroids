@@ -65,9 +65,9 @@ namespace MathMrV {
 			const float epsilon = 1e-6f;
 			bool pointsAreColinear = MathF.Abs(determinant) < epsilon;
 			if (pointsAreColinear) { return Circle.NaN; }
-			float aMagSqr = a.MagnitudeSqr, bMagSqr = b.MagnitudeSqr, cMagSqr = c.MagnitudeSqr;
-			float x = (aMagSqr * (b.Y - c.Y) + bMagSqr * (c.Y - a.Y) + cMagSqr * (a.Y - b.Y)) / determinant;
-			float y = (aMagSqr * (c.X - b.X) + bMagSqr * (a.X - c.X) + cMagSqr * (b.X - a.X)) / determinant;
+			float aMagSq = a.LengthSquared(), bMagSq = b.LengthSquared(), cMagSq = c.LengthSquared();
+			float x = (aMagSq * (b.Y - c.Y) + bMagSq * (c.Y - a.Y) + cMagSq * (a.Y - b.Y)) / determinant;
+			float y = (aMagSq * (c.X - b.X) + bMagSq * (a.X - c.X) + cMagSq * (b.X - a.X)) / determinant;
 			Vec2 center = new Vec2(x, y);
 			return new Circle(center, center.Distance(a));
 		}

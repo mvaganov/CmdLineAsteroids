@@ -25,7 +25,7 @@ namespace collision {
 			Other = other;
 			Point = point;
 			Normal = normal;
-			if (Vec2.IsNaN(normal) || normal.Magnitude > 1.1f || normal.Magnitude < 0.9f) {
+			if (Vec2.IsNaN(normal) || normal.Length() > 1.1f || normal.Length() < 0.9f) {
 				throw new Exception("bad normal");
 			}
 			Depth = depth;

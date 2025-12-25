@@ -39,7 +39,7 @@ namespace MathMrV {
 		public bool TryGetAABB(out Vec2 min, out Vec2 max) => TryGetAABB(Center, Radius, out min, out max);
 		public static bool TryGetCircleCollision(Circle a, Circle b, out Vec2 delta, out float depth) {
 			delta = b.Center - a.Center;
-			float dist = delta.Magnitude;
+			float dist = delta.Length();
 			float totalRad = a.Radius + b.Radius;
 			depth = totalRad - dist;
 			return depth > 0;
@@ -78,7 +78,7 @@ namespace MathMrV {
 					}
 				}
 				if (!cornerCase.IsNaN()) {
-					float distanceSqr = (cornerCase - Center).MagnitudeSqr;
+					float distanceSqr = (cornerCase - Center).LengthSquared();
 					return distanceSqr <= Radius * Radius;
 				}
 				return true;
@@ -89,7 +89,7 @@ namespace MathMrV {
 		public static IList<Vec2> FindCircleCircleIntersections(Circle c1, Circle c2) {
 			Vec2[] intersections = null;
 			Vec2 delta = c2.Center - c1.Center;
-			float quadrance = delta.MagnitudeSqr;
+			float quadrance = delta.LengthSquared();
 			float d = MathF.Sqrt(quadrance);
 			bool circlesTooFarApart = d > c1.Radius + c2.Radius;
 			if (circlesTooFarApart) { return intersections; }

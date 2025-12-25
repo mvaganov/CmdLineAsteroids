@@ -110,7 +110,7 @@ namespace asteroids {
 				if (cameraLookAhead) {
 					Vec2 cameraTargetScreenOffset = screenAnchor + playerControl.Velocity * (graphics.Scale.Y / 2);
 					Vec2 delta = cameraTargetScreenOffset - graphics.Offset;
-					float dist = delta.Magnitude;
+					float dist = delta.Length();
 					float cameraSpeed = 1;
 					if (dist < cameraSpeed) {
 						graphics.Offset = cameraTargetScreenOffset;
@@ -146,7 +146,7 @@ namespace asteroids {
 				MobilePolygon projectile = new MobilePolygon(projectilePolyGeom);
 				projectile.TypeId = (byte)AsteroidType.Projectile;
 				projectile.Color = ConsoleColor.Red;
-				//projectile.AngularVelocity = projectileRotation;
+				projectile.AngularVelocity = projectileRotation;
 				return projectile;
 			}, projectile => {
 				projectile.IsActive = true;
@@ -310,7 +310,7 @@ namespace asteroids {
 			postDraw.Add(DrawScore);
 			void DrawScore() {
 				graphics.WriteAt(ConsoleGlyph.Convert($"score: {playerScore}    DT:{Time.DeltaTimeMsAverage}   \n" +
-					$"ammo: {playerAmmo}\nhp: {playerHp}/{playerMaxHp}  {playerControl.Speed}:{playerCharacter.Velocity.Magnitude}"), 0, (int)graphics.Size.Y - 3, true);
+					$"ammo: {playerAmmo}\nhp: {playerHp}/{playerMaxHp}  {playerControl.Speed}:{playerCharacter.Velocity.Length()}"), 0, (int)graphics.Size.Y - 3, true);
 			}
 			void DebugDraw() {
 				LabelList(projectilePool, ConsoleColor.Magenta);

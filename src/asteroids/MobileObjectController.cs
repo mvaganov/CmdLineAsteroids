@@ -16,7 +16,7 @@ namespace asteroids {
 		private bool _autoStopWithoutThrust = false;
 		private bool _brake;
 		public float Speed {
-			get => _target.Velocity.Magnitude;
+			get => _target.Velocity.Length();
 			set => _target.Velocity = (_directionMatchesVelocity || _target.Velocity == Vec2.Zero ? _target.Direction : _target.Velocity.Normal) * value;
 		}
 		public float MaxSpeed { get => _maxSpeed; set => _maxSpeed = value; }

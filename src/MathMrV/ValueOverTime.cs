@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace MathMrV {
 	public class ValueOverTime : ValueOverTime<float> {
-		public static ValueOverTime GrowAndShrink = new ValueOverTime(new Frame<float>[] { new Frame<float>(0, 0), new Frame<float>(0.5f, 1), new Frame<float>(1, 0) });
+		public static ValueOverTime GrowAndShrink = new ValueOverTime(new Frame[] { new Frame(0, 0), new Frame(0.5f, 1), new Frame(1, 0) });
 		public static ValueOverTime None = new ValueOverTime(null);
-		public ValueOverTime(IList<Frame<float>> curve) : base(curve) {
+		public ValueOverTime(IList<Frame> curve) : base(curve) {
 		}
 		public override float Lerp(float percentageProgress, float start, float end) {
 			float delta = end - start;
@@ -14,7 +14,7 @@ namespace MathMrV {
 	}
 	public abstract class ValueOverTime<T> {
 		public abstract T Lerp(float t, T start, T end);
-		public struct Frame<T> {
+		public struct Frame {
 			public float time;
 			public T value;
 			public Frame(float time, T value) {
@@ -23,8 +23,8 @@ namespace MathMrV {
 			}
 		}
 		public bool Wrap = false;
-		public IList<Frame<T>> curve;
-		public ValueOverTime(IList<Frame<T>> curve) {
+		public IList<Frame> curve;
+		public ValueOverTime(IList<Frame> curve) {
 			this.curve = curve;
 		}
 		public bool TryGetValue(float time, out T value) {
@@ -49,8 +49,8 @@ namespace MathMrV {
 				value = curve[curve.Count - 1].value;
 				return true;
 			}
-			Frame<T> prev = curve[index - 1];
-			Frame<T> next = curve[index];
+			Frame prev = curve[index - 1];
+			Frame next = curve[index];
 			float normalizedTimeProgress = CalculateProgress(time, prev.time, next.time);
 			value = Lerp(normalizedTimeProgress, prev.value, next.value);
 			return true;
