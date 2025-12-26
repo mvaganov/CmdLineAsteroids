@@ -44,28 +44,29 @@ namespace asteroids {
 			out Vec2 closestPoint, out Vec2 circleToPointDelta, out float closestDistanceSq)) {
 				float depthOfCircleOverlap = circle.Radius - MathF.Sqrt(closestDistanceSq);
 				Vec2 normal = circleToPointDelta.Normal;
-				return new CollisionData(this, null, closestPoint, normal, depthOfCircleOverlap, null);
+				return CollisionData.Commission(this, null, closestPoint, normal, depthOfCircleOverlap);
 			}
 			return null;
 		}
+
 		public CollisionData IsColliding(MobilePolygon other) {
 			if (!GetCollisionBoundingCircle().IsColliding(other.GetCollisionBoundingCircle())) {
 				return null;
 			}
-			List<Polygon.CollisionData> collisions = null;
+			List<CollisionData> collisions = null;
 			bool isColliding = other.Polygon.TryGetPolyCollision(Polygon, ref collisions);
 			if (isColliding) {
 				Vec2 point = Vec2.Zero, normal = Vec2.Zero;
 				float depth = 0;
 				List<Vec2> contacts = null;
 				for (int i = 0; i < collisions.Count; ++i) {
-					Polygon.CollisionData data = collisions[i];
-					IList<Vec2> convexContacts = data.CalculateContacts();
+					CollisionData data = collisions[i];
+					IList<Vec2> convexContacts = Polygon.CalculateIntersections(data);
 					if (convexContacts != null) {
 						if  (contacts == null) { contacts = new List<Vec2>(); }
 						contacts.AddRange(convexContacts);
 					}
-					point += data.CalculateEstimateCollisionPoint();
+					point += Polygon.CalculateEstimateCollisionPoint(data);
 					depth += data.Depth;
 					normal += data.Normal;
 				}
@@ -75,7 +76,8 @@ namespace asteroids {
 					normal.Normalize();
 					depth /= collisions.Count;
 				}
-				return new CollisionData(this, other, point, normal, depth, contacts);
+				collisions.ForEach(CollisionData.Decommission);
+				return CollisionData.Commission(this, other, point, normal, depth, contacts:contacts);
 			}
 			return null;
 		}

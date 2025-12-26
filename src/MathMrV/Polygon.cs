@@ -1,8 +1,9 @@
-﻿using ConsoleMrV;
+﻿using collision;
+using ConsoleMrV;
 using System;
 
 namespace MathMrV {
-	public partial class Polygon {
+	public partial class Polygon : ICollidable {
 		public Geometry2D model;
 		private Vec2 _directionUnitVector;
 		private Vec2 _position;
@@ -21,7 +22,10 @@ namespace MathMrV {
 			get => _directionUnitVector.NormalToDegrees();
 			set { _directionUnitVector = Vec2.NormalFromDegrees(value); SetDirty(); }
 		}
-		public Polygon(Geometry2D polygonShape) {
+
+    public byte TypeId { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+    public Polygon(Geometry2D polygonShape) {
 			model = polygonShape;
 			_directionUnitVector = Vec2.UnitX;
 			_cachedBoundBoxMax = _cachedBoundBoxMin = _position = Vec2.Zero;
@@ -65,5 +69,9 @@ namespace MathMrV {
 			}
 			_cacheValid = true;
 		}
-	}
+
+    public CollisionData IsColliding(ICollidable collidable) {
+      throw new NotImplementedException(); // TODO move MobilePolygon collision code into here
+    }
+  }
 }

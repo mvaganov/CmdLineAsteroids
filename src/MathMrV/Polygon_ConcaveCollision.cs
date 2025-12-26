@@ -1,4 +1,5 @@
-﻿using ConsoleMrV;
+﻿using collision;
+using ConsoleMrV;
 using System;
 using System.Collections.Generic;
 
@@ -49,28 +50,6 @@ namespace MathMrV {
 			return indexA + 1 == indexB || (indexB == 0 && indexA == (_cachedPoints.Length-1));
 		}
 
-		public struct CollisionData {
-			public Polygon objectA, objectB;
-			public bool IsColliding;
-			public Vec2 Normal; // direction to push B out of A
-			public int ObjectAConvexIndex;
-			public int ObjectBConvexIndex;
-			public float Depth; // How far to push
-			public void Init() {
-				IsColliding = false;
-				Depth = float.MaxValue;
-				Normal = Vec2.Zero;
-			}
-			public IList<Vec2> CalculateContacts() {
-				return Polygon.GetIntersections(objectA, ObjectAConvexIndex, objectB, ObjectBConvexIndex);
-			}
-			public Vec2 CalculateEstimateCollisionPoint() {
-				Circle circleA = objectA.GetCollisionBoundingCircle(ObjectAConvexIndex);
-				Circle circleB = objectB.GetCollisionBoundingCircle(ObjectBConvexIndex);
-				Circle.TryGetCircleCollision(circleA, circleB, out Vec2 estimatedCollisionPoint);
-				return estimatedCollisionPoint;
-			}
-		}
 		public bool TryGetPolyCollision(Polygon other, ref List<CollisionData> collisionDatas) {
 			UpdateCacheAsNeeded();
 			other.UpdateCacheAsNeeded();
@@ -79,10 +58,9 @@ namespace MathMrV {
 
 		private static bool TryGetPolygonCollision(Polygon mainPoly, Polygon otherPoly, ref List<CollisionData> collisionDatas) {
 			bool foundCollision = false;
+			CollisionData result = null;
 			for (int mainConvex = 0; mainConvex < mainPoly.model.ConvexHull.IndexLists.Length; mainConvex++) {
 				for (int otherConvex = 0; otherConvex < otherPoly.model.ConvexHull.IndexLists.Length; otherConvex++) {
-					CollisionData result = new CollisionData();
-					result.Init();
 					bool collisionJustHappened = CheckCollisionOfSubMeshes(mainPoly, otherPoly, mainConvex, otherConvex, ref result)
 					&& CheckCollisionOfSubMeshes(otherPoly, mainPoly, otherConvex, mainConvex, ref result);
 					if (collisionJustHappened) {
@@ -100,23 +78,43 @@ namespace MathMrV {
 			return foundCollision;
 		}
 
-		public static IList<Vec2> GetIntersections(Polygon a, int convexHullA, Polygon b, int convexHullB) {
+		public static IList<Vec2> CalculateIntersections(CollisionData data) {
+			Polygon self = data.Self as Polygon;
+			if (self == null) return null;
+			Polygon other = data.Other as Polygon;
+			if (other == null) return null;
+			return CalculateIntersections(self, other, data.ColliderIndexSelf, data.ColliderIndexOther);
+		}
+		public static IList<Vec2> CalculateIntersections(Polygon self, Polygon other, int colliderIndexSelf, int colliderIndexOther) {
 			List<Vec2> intersections = new List<Vec2>();
-			int[] subMesh = a.model.ConvexHull.IndexLists[convexHullA];
-			for (int i = 0; i < subMesh.Length; ++i) {
-				int indexA = subMesh[i];
-				int indexB = subMesh[(i+1) % subMesh.Length];
-				bool segmentIsOnEdgeOfMainPolygon = a.IsIndexPairConsecutive(indexA, indexB);
+			int[] subColliderIndexes = self.model.ConvexHull.IndexLists[colliderIndexSelf];
+			for (int i = 0; i < subColliderIndexes.Length; ++i) {
+				int indexA = subColliderIndexes[i];
+				int indexB = subColliderIndexes[(i+1) % subColliderIndexes.Length];
+				bool segmentIsOnEdgeOfMainPolygon = self.IsIndexPairConsecutive(indexA, indexB);
 				if (!segmentIsOnEdgeOfMainPolygon) { continue; }
-				Vec2 lineStart = b.ConvertPointToLocalSpace(a.GetPoint(indexA));
-				Vec2 lineEnd = b.ConvertPointToLocalSpace(a.GetPoint(indexB));
-				if (b.model.TryGetCrossingSegment(lineStart, lineEnd, convexHullB, intersections)) {
+				Vec2 lineStart = other.ConvertPointToLocalSpace(self.GetPoint(indexA));
+				Vec2 lineEnd = other.ConvertPointToLocalSpace(self.GetPoint(indexB));
+				if (other.model.TryGetCrossingSegment(lineStart, lineEnd, colliderIndexOther, intersections)) {
 				}
 			}
 			for (int i = 0; i < intersections.Count; ++i) {
-				intersections[i] = b.ConvertLocalPositionToWorldSpace(intersections[i]);
+				intersections[i] = other.ConvertLocalPositionToWorldSpace(intersections[i]);
 			}
 			return intersections;
+		}
+		public static Vec2 CalculateEstimateCollisionPoint(CollisionData data) {
+			Polygon self = data.Self as Polygon;
+			if (self == null) return Vec2.NaN;
+			Polygon other = data.Other as Polygon;
+			if (other == null) return Vec2.NaN;
+			return CalculateEstimateCollisionPoint(self, other, data.ColliderIndexSelf, data.ColliderIndexOther);
+		}
+		public static Vec2 CalculateEstimateCollisionPoint(Polygon self, Polygon other, int colliderIndexSelf, int colliderIndexOther) {
+			Circle circleA = self.GetCollisionBoundingCircle(colliderIndexSelf);
+			Circle circleB = other.GetCollisionBoundingCircle(colliderIndexOther);
+			Circle.TryGetCircleCollision(circleA, circleB, out Vec2 estimatedCollisionPoint);
+			return estimatedCollisionPoint;
 		}
 
 		private static bool CheckCollisionOfSubMeshes(Polygon mainPoly, Polygon otherPoly, int mainConvex, int otherConvex, ref CollisionData result) {
@@ -132,15 +130,13 @@ namespace MathMrV {
 				bool noOverlapCollisionImpossible = minA >= maxB || minB >= maxA;
 				if (noOverlapCollisionImpossible) { return false; }
 				float collisionDepthOnAxis = Math.Min(maxB - minA, maxA - minB);
-				bool foundBestCollisionOptionSoFar = collisionDepthOnAxis < result.Depth;
+				bool foundBestCollisionOptionSoFar = result == null || collisionDepthOnAxis < result.Depth;
 				if (foundBestCollisionOptionSoFar && mainPoly.IsIndexPairConsecutive(index0, index1)) {
-					result.Depth = collisionDepthOnAxis;
-					result.Normal = edgeNormal;
-					result.objectA = mainPoly;
-					result.objectB = otherPoly;
-					// specific contact points can be calculated later with relevant convex polygon IDs
-					result.ObjectAConvexIndex = mainConvex;
-					result.ObjectBConvexIndex = otherConvex;
+					if (result == null) {
+						result = CollisionData.Commission();
+					}
+					result.Init(mainPoly, otherPoly, normal:edgeNormal, depth:collisionDepthOnAxis,
+						colliderIndexSelf: mainConvex, colliderIndexOther: otherConvex); // TODO make sure this gets decommissioned...
 				}
 			}
 			return true;

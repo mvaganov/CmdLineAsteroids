@@ -569,6 +569,7 @@ namespace asteroids {
 			void Update() {
 				Time.Update();
 				Time.UpdateAverageDeltaTime();
+				CollisionData.ClearCollisions();
 				keyInput.TriggerKeyBinding();
 				if (updating) {
 					//spacePartition.DoCollisionLogicAndResolve(collideList, collisionRules);

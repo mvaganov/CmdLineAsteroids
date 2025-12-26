@@ -1,4 +1,6 @@
-﻿using System;
+﻿using asteroids;
+using MathMrV;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -28,13 +30,20 @@ namespace collision {
 			set => throw new NotImplementedException();
 		}
 		public CollisionDatabase() {
-			collisionListPool.Setup(CreateCollisionList, CommisionCollisionList,
-				DecommisionCollisionList, DestroyCollisionList);
+			collisionListPool.Setup(CreateCollisionList, CommissionCollisionList,
+				DecommissionCollisionList, DestroyCollisionList);
 		}
 		private static List<CollisionData> CreateCollisionList() => new List<CollisionData>();
-		private static void CommisionCollisionList(List<CollisionData> list) { list.Clear(); }
-		private static void DecommisionCollisionList(List<CollisionData> list) { list.Clear(); }
+		private static void CommissionCollisionList(List<CollisionData> list) { ClearCollList(list); }
+		private static void DecommissionCollisionList(List<CollisionData> list) { ClearCollList(list); }
 		private static void DestroyCollisionList(List<CollisionData> list) { }
+		private static void ClearCollList(List<CollisionData> list) {
+			for(int i = list.Count -1; i > 0; --i) {
+				CollisionData.Decommission(list[i]);
+				list.RemoveAt(i);
+			}
+			list.Clear();
+		}
 		public void Clear() { collisionsPerAgent.Clear(); collisionLists.Clear(); collisionListPool.Clear(); }
 		public void AddCollision(CollisionData data) {
 			if (!collisionsPerAgent.TryGetValue(data.Self, out List<CollisionData> collisions)) {
@@ -124,22 +133,6 @@ namespace collision {
 				}
 			}
 		}
-		//public IEnumerator<CollisionData> GetEnumerator() => new Enumerator(this);
-		//public class Enumerator : IEnumerator<CollisionData> {
-		//	CollisionDatabase database;
-		//	private int subList, index;
-		//	public Enumerator(CollisionDatabase database) { this.database = database; Reset(); }
-		//	public void Reset() { subList = 0; index = -1; }
-		//	public void Dispose() { }
-		//	public CollisionData Current => database.collisionLists[subList][index]; object IEnumerator.Current => Current;
-		//	public bool MoveNext() {
-		//		if (subList >= database.collisionLists.Count) { return false; }
-		//		++index;
-		//		List<CollisionData> collisions = database.collisionLists[subList];
-		//		if (index >= collisions.Count) { ++subList; index = -1; return MoveNext(); }
-		//		return true;
-		//	}
-		//}
-	}
+  }
 
 }
