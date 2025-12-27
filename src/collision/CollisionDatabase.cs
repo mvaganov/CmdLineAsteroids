@@ -38,10 +38,10 @@ namespace collision {
 		private static void DecommissionCollisionList(List<CollisionData> list) { ClearCollList(list); }
 		private static void DestroyCollisionList(List<CollisionData> list) { }
 		private static void ClearCollList(List<CollisionData> list) {
-			for(int i = list.Count -1; i > 0; --i) {
-				CollisionData.Decommission(list[i]);
-				list.RemoveAt(i);
-			}
+			//for(int i = list.Count -1; i > 0; --i) {
+			//	CollisionData.Decommission(list[i]);
+			//	list.RemoveAt(i);
+			//}
 			list.Clear();
 		}
 		public void Clear() { collisionsPerAgent.Clear(); collisionLists.Clear(); collisionListPool.Clear(); }

@@ -63,17 +63,25 @@ namespace MathMrV {
 				for (int otherConvex = 0; otherConvex < otherPoly.model.ConvexHull.IndexLists.Length; otherConvex++) {
 					bool collisionJustHappened = CheckCollisionOfSubMeshes(mainPoly, otherPoly, mainConvex, otherConvex, ref result)
 					&& CheckCollisionOfSubMeshes(otherPoly, mainPoly, otherConvex, mainConvex, ref result);
+					if (result != null) {
+						result.IsColliding = collisionJustHappened;
+						result._source = Log.StackPosition(1) + "unsure if this hits...";
+					}
 					if (collisionJustHappened) {
-						result.IsColliding = true;
 						if (collisionDatas == null) { collisionDatas = new List<CollisionData>(); }
 						Vec2 direction = otherPoly._position - mainPoly._position;
 						if (Vec2.Dot(direction, result.Normal) < 0) {
 							result.Normal = -result.Normal;
 						}
+						result._source = Log.StackPosition(2);
 						collisionDatas.Add(result);
 						foundCollision |= collisionJustHappened;
+						result = null;
 					}
 				}
+			}
+			if (result != null && !result.IsColliding) {
+				CollisionData.Decommission(result);
 			}
 			return foundCollision;
 		}

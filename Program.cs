@@ -305,12 +305,13 @@ namespace asteroids {
 				graphics.DrawLine(playerControl.Position, lineEnd, lineWidth);
 			}
 
+			int collisionCount = 0;
 			// additional labels, overlay GUI
 			postDraw.Add(DebugDraw);
 			postDraw.Add(DrawScore);
 			void DrawScore() {
 				graphics.WriteAt(ConsoleGlyph.Convert($"score: {playerScore}    DT:{Time.DeltaTimeMsAverage}   \n" +
-					$"ammo: {playerAmmo}\nhp: {playerHp}/{playerMaxHp}  {playerControl.Speed}:{playerCharacter.Velocity.Length()}"), 0, (int)graphics.Size.Y - 3, true);
+					$"ammo: {playerAmmo}\nhp: {playerHp}/{playerMaxHp}  {playerControl.Speed}:{playerCharacter.Velocity.Length()}  coll:{collisionCount}"), 0, (int)graphics.Size.Y - 3, true);
 			}
 			void DebugDraw() {
 				LabelList(projectilePool, ConsoleColor.Magenta);
@@ -485,6 +486,7 @@ namespace asteroids {
 					//player.AngularVelocity = 0;
 					//asteroid.AngularVelocity = 0;
 					//SpecialDebugPoints = collision.Contacts;
+					//collision.Release();
 				};
 			}
 
@@ -494,16 +496,18 @@ namespace asteroids {
 					Collision.SeparateObjects(objA, objB, collision.Normal, collision.Depth);
 					Collision.BounceVelocities(objA, objB, collision.Normal);
 					//Collision.BounceVelocitiesAndTorque(objA, objB, collision.Point, collision.Normal);
+					//collision.Release();
 				};
 			}
 			Action CollideProjectileAndAsteroid(CollisionData collision) {
 				collision.Get(out MobilePolygon projectile, out MobileCircle asteroid);
 				return () => {
 					explosion.Emit(10, projectile.Position, projectile.Color, 0);
-					PleayerBrokeAsteroid(asteroid, collision, -projectile.Velocity.Normal);
+					PlayerBrokeAsteroid(asteroid, collision, -projectile.Velocity.Normal);
 					if (projectile.IsActive) {
 						projectilePool.DecommissionDelayed(projectile);
 					}
+					//collision.Release();
 				};
 			}
 			Action CollidePlayerAndAsteroid(CollisionData collision) {
@@ -521,11 +525,12 @@ namespace asteroids {
 					//Collision.BounceVelocities(player, asteroid, collision.Normal);
 					Collision.BounceVelocitiesAndTorque(player, asteroid, collision.Point, collision.Normal);
 					if (asteroidDestroyed) {
-						PleayerBrokeAsteroid(asteroid, collision, -asteroid.Velocity.Normal);
+						PlayerBrokeAsteroid(asteroid, collision, -asteroid.Velocity.Normal);
 					}
+					//collision.Release();
 				};
 			}
-			void PleayerBrokeAsteroid(MobileCircle asteroid, CollisionData collision, Vec2 velocityOfPowerup) {
+			void PlayerBrokeAsteroid(MobileCircle asteroid, CollisionData collision, Vec2 velocityOfPowerup) {
 				bool brokenIntoMoreAsteroids = BreakApartAsteroid(asteroid, collision.Point);
 				if (!brokenIntoMoreAsteroids) {
 					CreatePowerup(asteroid.Position, velocityOfPowerup);
@@ -534,11 +539,15 @@ namespace asteroids {
 			}
 			Action CollidePlayerAndPowerup(CollisionData collision) {
 				collision.Get(out MobilePolygon player, out MobileCircle powerup);
-				if (player != playerControl.Target) { return null; }
+				if (player != playerControl.Target) {
+					//collision.Release();
+					return null;
+				}
 				return () => {
 					powerupPool.DecommissionDelayed(powerup);
 					playerAmmo += 5;
 					if (++playerHp > playerMaxHp) { playerHp = playerMaxHp; }
+					//collision.Release();
 				};
 			}
 
@@ -569,13 +578,14 @@ namespace asteroids {
 			void Update() {
 				Time.Update();
 				Time.UpdateAverageDeltaTime();
-				CollisionData.ClearCollisions();
+				collisionCount = CollisionData.GetCollisionCount();
 				keyInput.TriggerKeyBinding();
 				if (updating) {
 					//spacePartition.DoCollisionLogicAndResolve(collideList, collisionRules);
 					spacePartition.Populate(collideList);
 					spacePartition.CalculateCollisionsAndResolve(collisionRules, recycleCollisionDatabse?collisionDatabase:null);
 					//CollisionLogic.DoCollisionLogicAndResolve(collideList, collisionRules);
+					//CollisionData.ClearCollisions();
 					gameObjects.ForEach(o => o.Update());
 					postUpdate.ForEach(a => a.Invoke());
 					particleSystems.ForEach(ps => ps.Update());

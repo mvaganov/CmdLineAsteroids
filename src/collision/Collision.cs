@@ -85,21 +85,28 @@ namespace collision {
 		}
 		private static CollisionData CreateCollision() => new CollisionData();
 		private static void CommissionCollision(CollisionData data) => data.Init();
-		public static void ClearCollisions() {
+		public static int GetCollisionCount() {
 			int count = collisionPool.Count;
-			if (count > 0) {
-				Console.Write($"{count}");
-			}
+			return count;
+		}
+		public static int ClearCollisions() {
+			int count = collisionPool.Count;
 			collisionPool.Clear();
+			return count;
 		}
 		public static CollisionData Commission(ICollidable self = null, ICollidable other = null, Vec2 point = default, Vec2 normal = default,
 			float depth = float.MaxValue, int colliderIndexSelf = -1, int colliderIndexOther = -1, IList<Vec2> contacts = null) {
 			CollisionData data = collisionPool.Commission();
 			data.Init(self, other, point, normal, depth, colliderIndexSelf, colliderIndexOther, contacts);
+			data._source = Log.StackPosition(2);
 			return data;
 		}
 		public static void Decommission(CollisionData data) {
 			collisionPool.Decommission(data);
+		}
+
+		internal void Release() {
+			Decommission(this);
 		}
 	}
 
@@ -134,13 +141,9 @@ namespace collision {
 		}
 		public static CollisionData DetermineCollisionLogicForPair(ICollidable a, ICollidable b,
 			Dictionary<(ColliderID,ColliderID), List<Function>> rules) {
-			if (!rules.TryGetValue((a.TypeId, b.TypeId), out List<Function> collisionFunctions)) {
-				return null;
-			}
+			if (!rules.TryGetValue((a.TypeId, b.TypeId), out List<Function> collisionFunctions)) { return null; }
 			CollisionData collision = a.IsColliding(b);
-			if (collision == null) {
-				return null;
-			}
+			if (collision == null) { return null; }
 			collision.SetParticipants(a, b);
 			collision.CollisionFunctions = collisionFunctions;
 			return collision;
@@ -151,13 +154,13 @@ namespace collision {
 			}
 		}
 
-		public static void DoCollisionLogicAndResolve<T>(IList<T> collidables,
-			Dictionary<(ColliderID,ColliderID), List<Function>> rules) where T : ICollidable {
-			List<CollisionData> collisionData = new List<CollisionData>();
-			CalculateCollisions(collidables, rules, collisionData);
-			List<ToResolve> collisionResolutions = new List<ToResolve>();
-			CalculateCollisionResolution(collisionData, collisionResolutions);
-			collisionResolutions.ForEach(cr => cr.resolution.Invoke());
-		}
+		//public static void DoCollisionLogicAndResolve<T>(IList<T> collidables,
+		//	Dictionary<(ColliderID,ColliderID), List<Function>> rules) where T : ICollidable {
+		//	List<CollisionData> collisionData = new List<CollisionData>();
+		//	CalculateCollisions(collidables, rules, collisionData);
+		//	List<ToResolve> collisionResolutions = new List<ToResolve>();
+		//	CalculateCollisionResolution(collisionData, collisionResolutions);
+		//	collisionResolutions.ForEach(cr => cr.resolution.Invoke());
+		//}
 	}
 }
