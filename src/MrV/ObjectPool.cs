@@ -218,10 +218,25 @@ public class ObjectPool<T> : IList<T> {
 	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 	public int IndexOf(T item) => allObjects.IndexOf(item);
 	public void Insert(int index, T item) => throw new System.NotImplementedException();
-	public void RemoveAt(int index) => throw new System.NotImplementedException();
+	/// <summary>
+	/// Allows removal of an object from the memory pooled eco-system, in case the object has a complex lifecycle
+	/// </summary>
+	public void RemoveAt(int index) {
+		if (index >= Count) { --freeObjectCount; }
+		allObjects.RemoveAt(index);
+	}
 	public void Add(T item) => throw new System.NotImplementedException();
 	public bool Contains(T item) => IndexOf(item) != -1;
-	public bool Remove(T item) => throw new System.NotImplementedException();
+	/// <inheritdoc cref="RemoveAt(int)"/>
+	public bool Remove(T item) {
+		int index = IndexOf(item);
+		if (index < 0) { return false; }
+		RemoveAt(index);
+		return true;
+	}
+	public void RemoveCommisioned() {
+		allObjects.RemoveRange(0, Count);
+	}
 	public void CopyTo(T[] array, int arrayIndex) {
 		for(int i = arrayIndex, index = 0; i < array.Length && index < Count; ++i, ++index) {
 			array[i] = this[index];

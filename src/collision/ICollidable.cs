@@ -1,5 +1,5 @@
 ﻿using MathMrV;
-using ColliderID = System.Byte; // Alias Directive instead of Generic (Template)
+using ColliderID = System.Byte; // Alias Directive instead of Generic (aka template)
 
 namespace collision {
 	public interface ICollidable {

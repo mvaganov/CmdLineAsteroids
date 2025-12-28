@@ -3,9 +3,11 @@ using ConsoleMrV;
 using MathMrV;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using ColliderID = System.Byte;
 
 namespace collision {
+	public class CollisionRules : Dictionary<(ColliderID, ColliderID), List<CollisionLogic.Function>> { }
 	public class CollisionData {
 		public ICollidable Self;
 		public ICollidable Other;
@@ -15,9 +17,13 @@ namespace collision {
 		public int ColliderIndexSelf = -1;
 		public int ColliderIndexOther = -1;
 		public IList<Vec2> Contacts;
-		public List<CollisionLogic.Function> CollisionFunctions;
+		/// <summary>
+		/// functions from the collision system that generate the function that resolves this collision
+		/// </summary>
+		internal ReadOnlyCollection<CollisionLogic.Function> PrefetchedCollisionRules;
 		public bool IsColliding;
-		private static ObjectPool<CollisionData> collisionPool =
+
+		public static ObjectPool<CollisionData> collisionPool =
 			new ObjectPool<CollisionData>();
 		public string _source;
 
@@ -33,7 +39,7 @@ namespace collision {
 			ColliderIndexSelf = colliderIndexSelf;
 			ColliderIndexOther = colliderIndexOther;
 			Contacts = contacts;
-			if (CollisionFunctions != null) { CollisionFunctions.Clear(); }
+			PrefetchedCollisionRules = null;
 			IsColliding = false;
 			_source = Log.StackPosition(2);
 		}
@@ -70,9 +76,14 @@ namespace collision {
 		}
 		public override bool Equals(object obj) => obj is CollisionData cd && Equals(cd);
 		public bool Equals(CollisionData other) => Self == other.Self && Other == other.Other && Point == other.Point;
-		public void CalculateCollisionResults(List<CollisionLogic.ToResolve> out_collisionResolutions) {
-			for (int i = 0; i < CollisionFunctions.Count; i++) {
-				CollisionLogic.Function f = CollisionFunctions[i];
+		public void CalculateCollisionResults(List<CollisionLogic.ToResolve> out_collisionResolutions, CollisionRules rules) {
+			if (PrefetchedCollisionRules == null
+			&& !rules.TryGetValue((Self.TypeId, Other.TypeId), out List<CollisionLogic.Function> collisionFunctions)) {
+				throw new InvalidOperationException($"no rules for collision of types {Self.TypeId} and {Other.TypeId}");
+			}
+				
+			for (int i = 0; i < PrefetchedCollisionRules.Count; i++) {
+				CollisionLogic.Function f = PrefetchedCollisionRules[i];
 				Action collisionResult = f.Invoke(this);
 				if (collisionResult != null) {
 					out_collisionResolutions.Add((this, collisionResult));
@@ -126,8 +137,8 @@ namespace collision {
 			public override bool Equals(object obj) => obj is ToResolve other && Equals(other);
 			public bool Equals(ToResolve other) => collision.Equals(other.collision);
 		}
-		public static void CalculateCollisions<T>(IList<T> collidables,
-			Dictionary<(ColliderID,ColliderID), List<Function>> rules, IList<CollisionData> out_collisionData) where T : ICollidable {
+		public static void CalculateCollisions<T>(IList<T> collidables, CollisionRules rules,
+		IList<CollisionData> out_collisionData) where T : ICollidable {
 			for (int objectAIndex = 0; objectAIndex < collidables.Count; objectAIndex++) {
 				ICollidable objectA = collidables[objectAIndex];
 				for (int objectBIndex = objectAIndex + 1; objectBIndex < collidables.Count; objectBIndex++) {
@@ -139,28 +150,19 @@ namespace collision {
 				}
 			}
 		}
-		public static CollisionData DetermineCollisionLogicForPair(ICollidable a, ICollidable b,
-			Dictionary<(ColliderID,ColliderID), List<Function>> rules) {
+		public static CollisionData DetermineCollisionLogicForPair(ICollidable a, ICollidable b, CollisionRules rules) {
 			if (!rules.TryGetValue((a.TypeId, b.TypeId), out List<Function> collisionFunctions)) { return null; }
 			CollisionData collision = a.IsColliding(b);
 			if (collision == null) { return null; }
 			collision.SetParticipants(a, b);
-			collision.CollisionFunctions = collisionFunctions;
+			collision.PrefetchedCollisionRules = collisionFunctions.AsReadOnly();
 			return collision;
 		}
-		public static void CalculateCollisionResolution(IList<CollisionData> collisionData, List<ToResolve> out_collisionResolutions) {
+		public static void CalculateCollisionResolution(IList<CollisionData> collisionData, List<ToResolve> out_collisionResolutions,
+		CollisionRules rules) {
 			foreach(CollisionData collision in collisionData) {
-				collision.CalculateCollisionResults(out_collisionResolutions);
+				collision.CalculateCollisionResults(out_collisionResolutions, rules);
 			}
 		}
-
-		//public static void DoCollisionLogicAndResolve<T>(IList<T> collidables,
-		//	Dictionary<(ColliderID,ColliderID), List<Function>> rules) where T : ICollidable {
-		//	List<CollisionData> collisionData = new List<CollisionData>();
-		//	CalculateCollisions(collidables, rules, collisionData);
-		//	List<ToResolve> collisionResolutions = new List<ToResolve>();
-		//	CalculateCollisionResolution(collisionData, collisionResolutions);
-		//	collisionResolutions.ForEach(cr => cr.resolution.Invoke());
-		//}
 	}
 }

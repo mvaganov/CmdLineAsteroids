@@ -2,8 +2,6 @@
 using MathMrV;
 using System;
 using System.Collections.Generic;
-using ColliderID = System.Byte;
-using ColliderPair = System.Tuple<System.Byte, System.Byte>;
 
 namespace collision {
 	/// <summary>
@@ -35,7 +33,7 @@ namespace collision {
 			root.Populate(collideList, mem);
 			EnsureTopLevelRootIfCellsExpandOut();
 		}
-		public void CalculateCollisionsAndResolve(Dictionary<(ColliderID,ColliderID), List<CollisionLogic.Function>> collisionRules, CollisionDatabase collisionDatabase) {
+		public void CalculateCollisionsAndResolve(CollisionRules collisionRules, CollisionDatabase collisionDatabase) {
 			root.CalculateCollisionsAndResolve(collisionRules, collisionDatabase);
 		}
 		private void EnsureTopLevelRootIfCellsExpandOut() {
@@ -306,8 +304,7 @@ namespace collision {
 			Insert(elementList, mem);
 		}
 
-		public void FindCollisions(Dictionary<(ColliderID,ColliderID), List<CollisionLogic.Function>> rules, 
-			IList<CollisionData> collisionData) {
+		public void FindCollisions(CollisionRules rules, IList<CollisionData> collisionData) {
 			if (elements != null) {
 				CollisionLogic.CalculateCollisions(elements as IList<ICollidable>, rules, collisionData);
 			}
@@ -322,8 +319,7 @@ namespace collision {
 			}
 		}
 
-		public void FindCollisions(Dictionary<(ColliderID,ColliderID), List<CollisionLogic.Function>> rules,
-	CollisionDatabase collisionDatabase) {
+		public void FindCollisions(CollisionRules rules, CollisionDatabase collisionDatabase) {
 			if (elements != null) {
 				CollisionLogic.CalculateCollisions(elements as IList<ICollidable>, rules, collisionDatabase);
 			}
@@ -338,28 +334,20 @@ namespace collision {
 			}
 		}
 
-		public List<CollisionLogic.ToResolve> CalculateCollisionResolutions(Dictionary<(ColliderID,ColliderID),
-		List<CollisionLogic.Function>> rules, CollisionDatabase collisionDatabase) {
+		public List<CollisionLogic.ToResolve> CalculateCollisionResolutions(CollisionRules rules, CollisionDatabase collisionDatabase) {
 			IList<CollisionData> collisionData;
-			if (false) {
-				List<CollisionData> collisionDataList = new List<CollisionData>();
-				FindCollisions(rules, collisionDataList);
-				collisionData = collisionDataList;
-				// TODO empty duplicates
+			if (collisionDatabase == null) {
+				collisionDatabase = new CollisionDatabase();
 			} else {
-				if (collisionDatabase == null) {
-					collisionDatabase = new CollisionDatabase();
-				} else {
-					collisionDatabase.Clear();
-				}
-				FindCollisions(rules, collisionDatabase);
-				collisionData = collisionDatabase;
+				collisionDatabase.Clear();
 			}
+			FindCollisions(rules, collisionDatabase);
+			collisionData = collisionDatabase;
 			List<CollisionLogic.ToResolve> collisionResolutions = new List<CollisionLogic.ToResolve>();
-			CollisionLogic.CalculateCollisionResolution(collisionData, collisionResolutions);
+			CollisionLogic.CalculateCollisionResolution(collisionData, collisionResolutions, rules);
 			return collisionResolutions;
 		}
-		public void CalculateCollisionsAndResolve(Dictionary<(ColliderID,ColliderID), List<CollisionLogic.Function>> rules, CollisionDatabase collisionDatabase) {
+		public void CalculateCollisionsAndResolve(CollisionRules rules, CollisionDatabase collisionDatabase) {
 			List<CollisionLogic.ToResolve> collisionsToResolve = CalculateCollisionResolutions(rules, collisionDatabase);
 			if (collisionsToResolve == null || collisionsToResolve.Count == 0) {
 				return;

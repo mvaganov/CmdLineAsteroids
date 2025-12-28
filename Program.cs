@@ -311,7 +311,7 @@ namespace asteroids {
 			postDraw.Add(DrawScore);
 			void DrawScore() {
 				graphics.WriteAt(ConsoleGlyph.Convert($"score: {playerScore}    DT:{Time.DeltaTimeMsAverage}   \n" +
-					$"ammo: {playerAmmo}\nhp: {playerHp}/{playerMaxHp}  {playerControl.Speed}:{playerCharacter.Velocity.Length()}  coll:{collisionCount}"), 0, (int)graphics.Size.Y - 3, true);
+					$"ammo: {playerAmmo}\nhp: {playerHp}/{playerMaxHp}  coll:{collisionCount}  {playerControl.Speed:0.00}"), 0, (int)graphics.Size.Y - 3, true);
 			}
 			void DebugDraw() {
 				LabelList(projectilePool, ConsoleColor.Magenta);
@@ -354,11 +354,11 @@ namespace asteroids {
 
 			// initialize key binding for system and tests
 			keyInput.BindKey((char)27, quit);
-			keyInput.BindKey('p', toggleUpdating);
+			keyInput.BindKey('u', toggleUpdating);
 			keyInput.BindKey('v', toggleVisible);
 			keyInput.BindKey('t', toggleThrottle);
 			keyInput.BindKey('r', toggleRecycleCollisionDatabase);
-			keyInput.BindKey('u', toggleShowSpacePartition);
+			keyInput.BindKey('p', toggleShowSpacePartition);
 			keyInput.BindKey('y', toggleBigDeltatTimeSampleSize);
 			keyInput.BindKey('.', ki => cameraLookAhead = !cameraLookAhead);
 			keyInput.BindKey('-', zoomOut);
@@ -454,7 +454,7 @@ namespace asteroids {
 			}
 
 			(byte, byte) CollRule(AsteroidType a, AsteroidType b) => ((byte)a, (byte)b);
-			var collisionRules = new Dictionary<(byte, byte), List<CollisionLogic.Function>>() {
+			CollisionRules collisionRules = new CollisionRules() {
 				[CollRule(AsteroidType.Asteroid, AsteroidType.Asteroid)] = new List<CollisionLogic.Function>() {
 					CollideAsteroids
 				},
@@ -486,7 +486,6 @@ namespace asteroids {
 					//player.AngularVelocity = 0;
 					//asteroid.AngularVelocity = 0;
 					//SpecialDebugPoints = collision.Contacts;
-					//collision.Release();
 				};
 			}
 
@@ -496,7 +495,6 @@ namespace asteroids {
 					Collision.SeparateObjects(objA, objB, collision.Normal, collision.Depth);
 					Collision.BounceVelocities(objA, objB, collision.Normal);
 					//Collision.BounceVelocitiesAndTorque(objA, objB, collision.Point, collision.Normal);
-					//collision.Release();
 				};
 			}
 			Action CollideProjectileAndAsteroid(CollisionData collision) {
@@ -507,7 +505,6 @@ namespace asteroids {
 					if (projectile.IsActive) {
 						projectilePool.DecommissionDelayed(projectile);
 					}
-					//collision.Release();
 				};
 			}
 			Action CollidePlayerAndAsteroid(CollisionData collision) {
@@ -527,7 +524,6 @@ namespace asteroids {
 					if (asteroidDestroyed) {
 						PlayerBrokeAsteroid(asteroid, collision, -asteroid.Velocity.Normal);
 					}
-					//collision.Release();
 				};
 			}
 			void PlayerBrokeAsteroid(MobileCircle asteroid, CollisionData collision, Vec2 velocityOfPowerup) {
@@ -540,14 +536,12 @@ namespace asteroids {
 			Action CollidePlayerAndPowerup(CollisionData collision) {
 				collision.Get(out MobilePolygon player, out MobileCircle powerup);
 				if (player != playerControl.Target) {
-					//collision.Release();
 					return null;
 				}
 				return () => {
 					powerupPool.DecommissionDelayed(powerup);
 					playerAmmo += 5;
 					if (++playerHp > playerMaxHp) { playerHp = playerMaxHp; }
-					//collision.Release();
 				};
 			}
 
@@ -578,14 +572,14 @@ namespace asteroids {
 			void Update() {
 				Time.Update();
 				Time.UpdateAverageDeltaTime();
-				collisionCount = CollisionData.GetCollisionCount();
 				keyInput.TriggerKeyBinding();
 				if (updating) {
 					//spacePartition.DoCollisionLogicAndResolve(collideList, collisionRules);
 					spacePartition.Populate(collideList);
 					spacePartition.CalculateCollisionsAndResolve(collisionRules, recycleCollisionDatabse?collisionDatabase:null);
+					//CollisionData.collisionPool.RemoveCommisioned();
 					//CollisionLogic.DoCollisionLogicAndResolve(collideList, collisionRules);
-					//CollisionData.ClearCollisions();
+					collisionCount = CollisionData.ClearCollisions();
 					gameObjects.ForEach(o => o.Update());
 					postUpdate.ForEach(a => a.Invoke());
 					particleSystems.ForEach(ps => ps.Update());
