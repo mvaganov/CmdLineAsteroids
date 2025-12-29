@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
@@ -11,22 +12,32 @@ namespace MrV.CommandLine {
 		public KeyResponseRecord(KeyType key, KeyResponse response, string note) {
 			Key = key; Response = response; Note = note;
 		}
+		public static implicit operator KeyResponseRecord<KeyType>((KeyType key, KeyResponse response, string note) tuple)
+			=> new KeyResponseRecord<KeyType>(tuple.key, tuple.response, tuple.note);
 	}
-	public class Dispatcher<KeyType> {
-		protected List<KeyType> eventsToProcess = new List<KeyType>();
-		protected Dictionary<KeyType, List<KeyResponseRecord<KeyType>>> dispatchTable
+	public class Dispatcher<KeyType> : IEnumerable<KeyResponseRecord<KeyType>> {
+		public List<KeyType> EventsToProcess = new List<KeyType>();
+		public Dictionary<KeyType, List<KeyResponseRecord<KeyType>>> DispatchTable
 			= new Dictionary<KeyType, List<KeyResponseRecord<KeyType>>>();
+		public Dispatcher() { }
+		public Dispatcher(IEnumerable<KeyResponseRecord<KeyType>> events) { BindKeyResponse(events); }
+		public void BindKeyResponse(IEnumerable<KeyResponseRecord<KeyType>> records) {
+			foreach (var record in records) { BindKeyResponse(record); }
+		}
+		public void UnbindKeyResponse(IEnumerable<KeyResponseRecord<KeyType>> records) {
+			foreach (var record in records) { UnbindKeyResponse(record); }
+		}
 		public void BindKeyResponse(KeyType key, KeyResponse response, string note) {
 			BindKeyResponse(new KeyResponseRecord<KeyType>(key, response, note));
 		}
-		public void BindKeyResponse(KeyResponseRecord<KeyType> keyResponseRecord) {
-			if (!dispatchTable.TryGetValue(keyResponseRecord.Key, out List<KeyResponseRecord<KeyType>> responses)) {
-				dispatchTable[keyResponseRecord.Key] = responses = new List<KeyResponseRecord<KeyType>>();
+		public void BindKeyResponse(KeyResponseRecord<KeyType> record) {
+			if (!DispatchTable.TryGetValue(record.Key, out List<KeyResponseRecord<KeyType>> responses)) {
+				DispatchTable[record.Key] = responses = new List<KeyResponseRecord<KeyType>>();
 			}
-			responses.Add(keyResponseRecord);
+			responses.Add(record);
 		}
 		public void UnbindKeyResponse(KeyResponseRecord<KeyType> keyResponseRecord) {
-			if (!dispatchTable.TryGetValue(keyResponseRecord.Key, out List<KeyResponseRecord<KeyType>> responses)) {
+			if (!DispatchTable.TryGetValue(keyResponseRecord.Key, out List<KeyResponseRecord<KeyType>> responses)) {
 				return;
 			}
 			for(int i = responses.Count-1; i >= 0; --i) {
@@ -35,27 +46,26 @@ namespace MrV.CommandLine {
 				}
 			}
 		}
-		public void AddEvent(KeyType key) => eventsToProcess.Add(key);
+		public void AddEvent(KeyType key) => EventsToProcess.Add(key);
 		public void ConsumeEvents() {
-			List<KeyType> processNow = new List<KeyType>(eventsToProcess);
-			eventsToProcess.Clear();
+			if (EventsToProcess.Count == 0) { return; }
+			List<KeyType> processNow = new List<KeyType>(EventsToProcess);
+			EventsToProcess.Clear();
 			for (int i = 0; i < processNow.Count; i++) {
 				KeyType key = processNow[i];
-				if (dispatchTable.TryGetValue(key, out List<KeyResponseRecord<KeyType>> responses)) {
+				if (DispatchTable.TryGetValue(key, out List<KeyResponseRecord<KeyType>> responses)) {
 					responses.ForEach(responseRecord => responseRecord.Response.Invoke());
 				}
 			}
 		}
-		public void Add(Dispatcher<KeyType> child) {
-			foreach(var kvp in child.dispatchTable) {
-				kvp.Value.ForEach(BindKeyResponse);
+		public IEnumerator<KeyResponseRecord<KeyType>> GetEnumerator() {
+			foreach(var eventsPerKey in DispatchTable) {
+				foreach(var e in eventsPerKey.Value) {
+					yield return e;
+				}
 			}
 		}
-		public void Remove(Dispatcher<KeyType> child) {
-			foreach (var kvp in child.dispatchTable) {
-				kvp.Value.ForEach(UnbindKeyResponse);
-			}
-		}
+		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 	}
 	public class KeyInput : Dispatcher<char> {
 		private static KeyInput _instance;
@@ -63,6 +73,8 @@ namespace MrV.CommandLine {
 			get => _instance != null ? _instance : _instance = new KeyInput();
 			set => _instance = value;
 		}
+		public KeyInput() { }
+		public KeyInput(IEnumerable<KeyResponseRecord<char>> events) : base(events) {}
 		public static void Bind(char keyPress, KeyResponse response, string note)
 			=> Instance.BindKeyResponse(keyPress, response, note);
 		public static void Read() => Instance.ReadConsoleKeys();
@@ -76,7 +88,7 @@ namespace MrV.CommandLine {
 		}
 		public override string ToString() {
 			StringBuilder sb = new StringBuilder();
-			foreach (var kvp in dispatchTable) {
+			foreach (var kvp in DispatchTable) {
 				string listKeyResponses = string.Join(", ", kvp.Value.ConvertAll(r => r.Note));
 				sb.Append($"'{kvp.Key}': {listKeyResponses}\n");
 			}

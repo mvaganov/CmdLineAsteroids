@@ -26,8 +26,10 @@ namespace asteroids {
 			bool throttle = true;
 			bool showSpacePartition = false;
 			bool recycleCollisionMemory = true;
+			bool showControls = false;
 			float targetFps = 20;
 			int targetMsDelay = (int)(1000 / targetFps);
+			KeyResponseRecord<char>[] playerInput = null;
 
 			// particle systems
 			ParticleSystem explosion = new ParticleSystem((.25f, .5f), (1, 2), (2, 3),
@@ -74,6 +76,7 @@ namespace asteroids {
 			postUpdate.Add(PlayerDeathWatch);
 			void PlayerDeathWatch() {
 				if (playerHp <= 0 && playerControl.Target.IsActive) {
+					KeyInput.Instance.UnbindKeyResponse(playerInput);
 					playerHp = 0;
 					playerControl.Target.IsActive = false;
 					explosion.Emit(100, playerControl.Position, ConsoleColor.Blue, (1, 4), (1, 2));
@@ -167,12 +170,6 @@ namespace asteroids {
 					T obj = objects[i];
 					obj.Name = prefix + i;
 				}
-			}
-			postUpdate.Add(AlwaysRotateAllProjectiles);
-			void AlwaysRotateAllProjectiles() {
-				//for (int i = 0; i < projectilePool.Count; i++) {
-				//	//projectilePool[i].RotationRadians += Time.DeltaTimeSeconds * projectileRotation;
-				//}
 			}
 
 			// initialize asteroids
@@ -309,6 +306,7 @@ namespace asteroids {
 			// additional labels, overlay GUI
 			postDraw.Add(DebugDraw);
 			postDraw.Add(DrawScore);
+			postDraw.Add(ControlsOverlay);
 			void DrawScore() {
 				graphics.WriteAt(ConsoleGlyph.Convert($"score: {playerScore}    DT:{Time.DeltaTimeMsAverage}   \n" +
 					$"ammo: {playerAmmo}\nhp: {playerHp}/{playerMaxHp}  coll:{collisionCount}  {playerControl.Speed:0.00}"), 0, (int)graphics.Size.Y - 3, true);
@@ -323,7 +321,22 @@ namespace asteroids {
 					for (int i = 0; i < SpecialDebugPoints.Count; ++i) {
 						Vec2 point = SpecialDebugPoints[i];
 						char c = (i < 10) ? (char)('0' + i) : (char)('A' + (i - 10));
-						graphics.WriteAt(ConsoleGlyph.Convert($"{c}", ConsoleColor.Gray, ConsoleColor.Red), point);
+						graphics.WriteAt(ConsoleGlyph.Convert($"{c}", ConsoleColor.Gray, ConsoleColor.Red), point, false);
+					}
+				}
+			}
+			void ControlsOverlay() {
+				if (!showControls) { return; }
+				int row = 0, col = 0;
+				foreach(var keyBind in KeyInput.Instance) {
+					string keyName = keyBind.Key switch {
+						(char)27 => "esc", ' ' => "space",
+						_ => keyBind.Key.ToString()
+					};
+					graphics.WriteAt($"{keyName} : {keyBind.Note}", col, row++, true);
+					if (row >= graphics.Height) {
+						col += graphics.Width / 2;
+						row = 0;
 					}
 				}
 			}
@@ -359,8 +372,14 @@ namespace asteroids {
 			KeyInput.Bind('t', () => throttle = !throttle, "toggle throttle");
 			KeyInput.Bind('r', () => recycleCollisionMemory = !recycleCollisionMemory, "toggle recycle collision memory");
 			KeyInput.Bind('p', () => showSpacePartition = !showSpacePartition, "toggle space partition visibility");
+			KeyInput.Bind('c', () => showControls = !showControls, "toggle show controls");
 			KeyInput.Bind('y', toggleBigDeltatTimeSampleSize, "toggle big deltaTime sample size");
+			KeyInput.Bind('R', RestartGame, "restart game");
 			KeyInput.Bind('.', () => cameraLookAhead = !cameraLookAhead, "toggle camera lookahead");
+			KeyInput.Bind('i', () => userCameraOffset += -Vec2.UnitY * graphics.Scale, "shift camera left");
+			KeyInput.Bind('j', () => userCameraOffset += -Vec2.UnitX * graphics.Scale, "shift camera left");
+			KeyInput.Bind('k', () => userCameraOffset += Vec2.UnitY * graphics.Scale, "shift camera left");
+			KeyInput.Bind('l', () => userCameraOffset += Vec2.UnitX * graphics.Scale, "shift camera left");
 			KeyInput.Bind('-', zoomOut, "zoom out");
 			KeyInput.Bind('=', zoomIn, "zoom in");
 			void toggleBigDeltatTimeSampleSize() {
@@ -380,32 +399,29 @@ namespace asteroids {
 			}
 
 			// player keybinding
-			KeyInput.Bind('w', playerForward, "player forward");
-			KeyInput.Bind('s', playerBrakes, "player brakes");
-			KeyInput.Bind('a', playerTurnLeft, "player turn left");
-			KeyInput.Bind('d', playerTurnRight, "player turn right");
-			KeyInput.Bind('q', playerSpinLeft, "player spin left (CCW)");
-			KeyInput.Bind('e', playerSpinRight, "player spin right (CW)");
-			KeyInput.Bind('R', RestartGame, "player Restart");
-			KeyInput.Bind(' ', playerShoot, "player shoot projectile");
-			KeyInput.Bind('1', () => playerMove(3 / 4f), "player move down left");
-			KeyInput.Bind('2', () => playerMove(2 / 4f), "player move down");
-			KeyInput.Bind('3', () => playerMove(1 / 4f), "player move down right");
-			KeyInput.Bind('4', () => playerMove(4 / 4f), "player move left");
-			KeyInput.Bind('5', playerBrakes, "player brakes");
-			KeyInput.Bind('6', () => playerMove(0 / 4f), "player move right");
-			KeyInput.Bind('7', () => playerMove(-3 / 4f), "player move up left");
-			KeyInput.Bind('8', () => playerMove(-2 / 4f), "player move up");
-			KeyInput.Bind('9', () => playerMove(-1 / 4f), "player move up right");
-			KeyInput.Bind('I', () => playerControl.Position += -Vec2.UnitY, "shift player up");
-			KeyInput.Bind('J', () => playerControl.Position += -Vec2.UnitX, "shift player left");
-			KeyInput.Bind('K', () => playerControl.Position += Vec2.UnitY, "shift player down");
-			KeyInput.Bind('L', () => playerControl.Position += Vec2.UnitX, "shift player right");
-			KeyInput.Bind('i', () => userCameraOffset += -Vec2.UnitY * graphics.Scale, "shift camera left");
-			KeyInput.Bind('j', () => userCameraOffset += -Vec2.UnitX * graphics.Scale, "shift camera left");
-			KeyInput.Bind('k', () => userCameraOffset += Vec2.UnitY * graphics.Scale, "shift camera left");
-			KeyInput.Bind('l', () => userCameraOffset += Vec2.UnitX * graphics.Scale, "shift camera left");
-			KeyInput.Bind('O', () => playerHp = playerMaxHp = 100000, "player super HP");
+			playerInput = new KeyResponseRecord<char>[] {
+				('w', playerForward, "player forward"),
+				('s', playerBrakes, "player brakes"),
+				('a', playerTurnLeft, "player turn left"),
+				('d', playerTurnRight, "player turn right"),
+				('q', playerSpinLeft, "player spin right (CCW)"),
+				('e', playerSpinRight, "player spin right (CW)"),
+				(' ', playerShoot, "player shoot projectile"),
+				('1', () => playerMove(3 / 4f), "player move down left"),
+				('2', () => playerMove(2 / 4f), "player move down"),
+				('3', () => playerMove(1 / 4f), "player move down right"),
+				('4', () => playerMove(4 / 4f), "player move left"),
+				('5', playerBrakes, "player brakes"),
+				('6', () => playerMove(0 / 4f), "player move right"),
+				('7', () => playerMove(-3 / 4f), "player move up left"),
+				('8', () => playerMove(-2 / 4f), "player move up"),
+				('9', () => playerMove(-1 / 4f), "player move up right"),
+				('I', () => playerControl.Position += -Vec2.UnitY, "shift player up"),
+				('J', () => playerControl.Position += -Vec2.UnitX, "shift player left"),
+				('K', () => playerControl.Position += Vec2.UnitY, "shift player down"),
+				('L', () => playerControl.Position += Vec2.UnitX, "shift player right"),
+				('O', () => playerHp = playerMaxHp = 100000, "player super HP"),
+			};
 			void playerMove(float normalizedRadian) {
 				playerControl.SmoothRotateTarget(MathF.PI * normalizedRadian, playerAutoRotationAngularVelocity);
 				Thrust();
@@ -541,6 +557,7 @@ namespace asteroids {
 				RestartPlayer();
 				StartAsteroids();
 				playerTriggerAfterDeath = RestartGame;
+				KeyInput.Instance.BindKeyResponse(playerInput);
 			}
 			RestartGame();
 

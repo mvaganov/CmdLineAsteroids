@@ -87,9 +87,9 @@ namespace ConsoleMrV {
 		public void WriteAt(string text, Vec2 position, bool useNewBgColor = false) =>
 			WriteAt(ConsoleGlyph.Convert(text), position, useNewBgColor);
 
-		public void WriteAt(ConsoleGlyph[] text, Vec2 position, bool useConsoleGlyphBgColor = true) {
+		public void WriteAt(ConsoleGlyph[] text, Vec2 position, bool useNewBgColor = true) {
 			Vec2 consolePosition = GetConsolePosition(position);
-			WriteAt(text, (int)consolePosition.X, (int)consolePosition.Y, useConsoleGlyphBgColor);
+			WriteAt(text, (int)consolePosition.X, (int)consolePosition.Y, useNewBgColor);
 		}
 
 		public void DrawSupersampledShape(Func<Vec2, bool> isInsideShape, Vec2 aabbMin, Vec2 aabbMax) {

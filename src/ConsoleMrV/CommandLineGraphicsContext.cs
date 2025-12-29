@@ -38,9 +38,9 @@ namespace ConsoleMrV {
 			}
 		}
 
-		public Vec2 WriteAt(string text, int col, int row) => WriteAt(ConsoleGlyph.Convert(text), col, row);
-		public Vec2 WriteAt(ConsoleGlyph[] text, int col, int row) => WriteAt(text, col, row, false);
-		public Vec2 WriteAt(ConsoleGlyph[] text, int col, int row, bool useNewBgColor) {
+		public Vec2 WriteAt(string text, int col, int row, bool useNewBgColor = false)
+			=> WriteAt(ConsoleGlyph.Convert(text), col, row, useNewBgColor);
+		public Vec2 WriteAt(ConsoleGlyph[] text, int col, int row, bool useNewBgColor = false) {
 			for (int i = 0; i < text.Length; i++) {
 				ConsoleGlyph g = text[i];
 				switch (g.Letter) {
@@ -50,8 +50,7 @@ namespace ConsoleMrV {
 			}
 			return new Vec2(col, row);
 		}
-		public void WriteAt(ConsoleGlyph glyph, int col, int row) => WriteAt(glyph, col, row, true);
-		public void WriteAt(ConsoleGlyph glyph, int col, int row, bool useNewBgColor) {
+		public void WriteAt(ConsoleGlyph glyph, int col, int row, bool useNewBgColor = true) {
 			if (!IsValidCoordinate(col, row)) {
 				return;
 			}
