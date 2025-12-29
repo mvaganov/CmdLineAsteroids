@@ -2,6 +2,7 @@
 using ConsoleMrV;
 using MathMrV;
 using MrV;
+using MrV.CommandLine;
 using MrV.Physics;
 using System;
 using System.Collections.Generic;
@@ -13,7 +14,6 @@ namespace asteroids {
 			// initialize system
 			Random random = new Random();
 			CommandLineCanvas graphics = new CommandLineCanvas(80, 25, (0.5f, 1));
-			KeyInput keyInput = new KeyInput();
 			List<IGameObject> gameObjects = new List<IGameObject>();
 			List<ICollidable> collideList = new List<ICollidable>();
 			List<Action> preDraw = new List<Action>();
@@ -25,7 +25,7 @@ namespace asteroids {
 			bool visible = true;
 			bool throttle = true;
 			bool showSpacePartition = false;
-			bool recycleCollisionDatabse = true;
+			bool recycleCollisionMemory = true;
 			float targetFps = 20;
 			int targetMsDelay = (int)(1000 / targetFps);
 
@@ -353,70 +353,59 @@ namespace asteroids {
 			}
 
 			// initialize key binding for system and tests
-			keyInput.BindKey((char)27, quit);
-			keyInput.BindKey('u', toggleUpdating);
-			keyInput.BindKey('v', toggleVisible);
-			keyInput.BindKey('t', toggleThrottle);
-			keyInput.BindKey('r', toggleRecycleCollisionDatabase);
-			keyInput.BindKey('p', toggleShowSpacePartition);
-			keyInput.BindKey('y', toggleBigDeltatTimeSampleSize);
-			keyInput.BindKey('.', ki => cameraLookAhead = !cameraLookAhead);
-			keyInput.BindKey('-', zoomOut);
-			keyInput.BindKey('=', zoomIn);
-			void quit(KeyInput ki) => running = false;
-			void toggleUpdating(KeyInput ki) => updating = !updating;
-			void toggleVisible(KeyInput ki) => visible = !visible;
-			void toggleThrottle(KeyInput ki) => throttle = !throttle;
-			void toggleShowSpacePartition(KeyInput ki) => showSpacePartition = !showSpacePartition;
-			void toggleRecycleCollisionDatabase(KeyInput ki) => recycleCollisionDatabse = !recycleCollisionDatabse;
-			void toggleBigDeltatTimeSampleSize(KeyInput ki) {
+			KeyInput.Bind((char)27, () => running = false, "quit");
+			KeyInput.Bind('u', () => updating = !updating, "toggle updating");
+			KeyInput.Bind('v', () => visible = !visible, "toggle visible");
+			KeyInput.Bind('t', () => throttle = !throttle, "toggle throttle");
+			KeyInput.Bind('r', () => recycleCollisionMemory = !recycleCollisionMemory, "toggle recycle collision memory");
+			KeyInput.Bind('p', () => showSpacePartition = !showSpacePartition, "toggle space partition visibility");
+			KeyInput.Bind('y', toggleBigDeltatTimeSampleSize, "toggle big deltaTime sample size");
+			KeyInput.Bind('.', () => cameraLookAhead = !cameraLookAhead, "toggle camera lookahead");
+			KeyInput.Bind('-', zoomOut, "zoom out");
+			KeyInput.Bind('=', zoomIn, "zoom in");
+			void toggleBigDeltatTimeSampleSize() {
 				if (Time.DeltaTimeSampleCount < 100) {
 					Time.DeltaTimeSampleCount = 200;
 				} else {
 					Time.DeltaTimeSampleCount = 20;
 				}
 			}
-			void zoomIn(KeyInput ki) {
-				if (targetScaleY < 1f/128) { return; }
-				targetScaleY /= 1.5f;
-			}
-			void zoomOut(KeyInput ki) {
+			void zoomOut() {
 				if (targetScaleY > 128) { return; }
 				targetScaleY *= 1.5f;
 			}
+			void zoomIn() {
+				if (targetScaleY < 1f/128) { return; }
+				targetScaleY /= 1.5f;
+			}
 
 			// player keybinding
-			keyInput.BindKey('w', playerForward);
-			keyInput.BindKey('s', playerBrakes);
-			keyInput.BindKey('a', playerTurnLeft);
-			keyInput.BindKey('d', playerTurnRight);
-			keyInput.BindKey('q', playerSpinLeft);
-			keyInput.BindKey('e', playerSpinRight);
-			keyInput.BindKey('R', playerRestartGame);
-			keyInput.BindKey(' ', playerShoot);
-			keyInput.BindKey('1', k => playerMove(3 / 4f));
-			keyInput.BindKey('2', k => playerMove(2 / 4f));
-			keyInput.BindKey('3', k => playerMove(1 / 4f));
-			keyInput.BindKey('4', k => playerMove(4 / 4f));
-			keyInput.BindKey('5', playerBrakes);
-			keyInput.BindKey('6', k => playerMove(0 / 4f));
-			keyInput.BindKey('7', k => playerMove(-3 / 4f));
-			keyInput.BindKey('8', k => playerMove(-2 / 4f));
-			keyInput.BindKey('9', k => playerMove(-1 / 4f));
-			keyInput.BindKey('b', testMove);
-			void testMove(KeyInput k) {
-				playerCharacter.Velocity = -Vec2.UnitX;
-				playerControl.Velocity = Vec2.UnitX;
-			}
-			keyInput.BindKey('I', k => playerControl.Position += -Vec2.UnitY);
-			keyInput.BindKey('J', k => playerControl.Position += -Vec2.UnitX);
-			keyInput.BindKey('K', k => playerControl.Position += Vec2.UnitY);
-			keyInput.BindKey('L', k => playerControl.Position += Vec2.UnitX);
-			keyInput.BindKey('i', k => userCameraOffset += -Vec2.UnitY * graphics.Scale);
-			keyInput.BindKey('j', k => userCameraOffset += -Vec2.UnitX * graphics.Scale);
-			keyInput.BindKey('k', k => userCameraOffset += Vec2.UnitY * graphics.Scale);
-			keyInput.BindKey('l', k => userCameraOffset += Vec2.UnitX * graphics.Scale);
-			keyInput.BindKey('O', k => playerHp = playerMaxHp = 100000);
+			KeyInput.Bind('w', playerForward, "player forward");
+			KeyInput.Bind('s', playerBrakes, "player brakes");
+			KeyInput.Bind('a', playerTurnLeft, "player turn left");
+			KeyInput.Bind('d', playerTurnRight, "player turn right");
+			KeyInput.Bind('q', playerSpinLeft, "player spin left (CCW)");
+			KeyInput.Bind('e', playerSpinRight, "player spin right (CW)");
+			KeyInput.Bind('R', RestartGame, "player Restart");
+			KeyInput.Bind(' ', playerShoot, "player shoot projectile");
+			KeyInput.Bind('1', () => playerMove(3 / 4f), "player move down left");
+			KeyInput.Bind('2', () => playerMove(2 / 4f), "player move down");
+			KeyInput.Bind('3', () => playerMove(1 / 4f), "player move down right");
+			KeyInput.Bind('4', () => playerMove(4 / 4f), "player move left");
+			KeyInput.Bind('5', playerBrakes, "player brakes");
+			KeyInput.Bind('6', () => playerMove(0 / 4f), "player move right");
+			KeyInput.Bind('7', () => playerMove(-3 / 4f), "player move up left");
+			KeyInput.Bind('8', () => playerMove(-2 / 4f), "player move up");
+			KeyInput.Bind('9', () => playerMove(-1 / 4f), "player move up right");
+			KeyInput.Bind('I', () => playerControl.Position += -Vec2.UnitY, "shift player up");
+			KeyInput.Bind('J', () => playerControl.Position += -Vec2.UnitX, "shift player left");
+			KeyInput.Bind('K', () => playerControl.Position += Vec2.UnitY, "shift player down");
+			KeyInput.Bind('L', () => playerControl.Position += Vec2.UnitX, "shift player right");
+			KeyInput.Bind('i', () => userCameraOffset += -Vec2.UnitY * graphics.Scale, "shift camera left");
+			KeyInput.Bind('j', () => userCameraOffset += -Vec2.UnitX * graphics.Scale, "shift camera left");
+			KeyInput.Bind('k', () => userCameraOffset += Vec2.UnitY * graphics.Scale, "shift camera left");
+			KeyInput.Bind('l', () => userCameraOffset += Vec2.UnitX * graphics.Scale, "shift camera left");
+			KeyInput.Bind('O', () => playerHp = playerMaxHp = 100000, "player super HP");
 			void playerMove(float normalizedRadian) {
 				playerControl.SmoothRotateTarget(MathF.PI * normalizedRadian, playerAutoRotationAngularVelocity);
 				Thrust();
@@ -426,24 +415,24 @@ namespace asteroids {
 				playerControl.AutoStopWithoutThrust = false;
 				playerControl.ThrustDuration = playerMinThrustDuration;
 			}
-			void playerForward(KeyInput ki) {
+			void playerForward() {
 				Thrust();
 				playerControl.AngularVelocity = 0;
 			}
-			void playerBrakes(KeyInput ki) {
+			void playerBrakes() {
 				playerControl.Brakes();
 				playerControl.AngularVelocity = 0;
 			}
-			void playerTurnLeft(KeyInput keyInput) { playerControl.RotationDegrees -= playerRotationAnglularVelocity; }
-			void playerTurnRight(KeyInput keyInput) { playerControl.RotationDegrees += playerRotationAnglularVelocity; }
-			void playerSpinLeft(KeyInput keyInput) { playerSpinToggle(-playerFreeSpinAngularVelocity); }
-			void playerSpinRight(KeyInput keyInput) { playerSpinToggle(playerFreeSpinAngularVelocity); }
+			void playerTurnLeft() { playerControl.RotationDegrees -= playerRotationAnglularVelocity; }
+			void playerTurnRight() { playerControl.RotationDegrees += playerRotationAnglularVelocity; }
+			void playerSpinLeft() { playerSpinToggle(-playerFreeSpinAngularVelocity); }
+			void playerSpinRight() { playerSpinToggle(playerFreeSpinAngularVelocity); }
 			void playerSpinToggle(float newSpinDirection) {
 				bool wasSpinningBeforeNewDirectionGiven = playerControl.AngularVelocity != 0;
 				playerControl.ClearRotationTarget();
 				playerControl.AngularVelocity = wasSpinningBeforeNewDirectionGiven ? 0 : newSpinDirection;
 			}
-			void playerShoot(KeyInput ki) {
+			void playerShoot() {
 				if (playerAmmo <= 0 || Time.TimeMs < playerShootNextPossibleMs) { return; }
 				MobileObject projectile = projectilePool.Commission();
 				projectile.Position = playerControl.Position + playerControl.Direction * (playerPolyVerts[0].X + 1);
@@ -454,26 +443,26 @@ namespace asteroids {
 			}
 
 			(byte, byte) CollRule(AsteroidType a, AsteroidType b) => ((byte)a, (byte)b);
-			CollisionRules collisionRules = new CollisionRules() {
-				[CollRule(AsteroidType.Asteroid, AsteroidType.Asteroid)] = new List<CollisionLogic.Function>() {
+			CollisionRules collisionRules = new CollisionRules(new Dictionary<(byte, byte), List<CollisionRules.Function>> {
+				[CollRule(AsteroidType.Asteroid, AsteroidType.Asteroid)] = new List<CollisionRules.Function>() {
 					CollideAsteroids
 				},
-				[CollRule(AsteroidType.Projectile, AsteroidType.Asteroid)] = new List<CollisionLogic.Function>() {
+				[CollRule(AsteroidType.Projectile, AsteroidType.Asteroid)] = new List<CollisionRules.Function>() {
 					CollideProjectileAndAsteroid
 				},
-				[CollRule(AsteroidType.Player, AsteroidType.Asteroid)] = new List<CollisionLogic.Function>() {
+				[CollRule(AsteroidType.Player, AsteroidType.Asteroid)] = new List<CollisionRules.Function>() {
 					CollidePlayerAndAsteroid
 				},
-				[CollRule(AsteroidType.Player, AsteroidType.Powerup)] = new List<CollisionLogic.Function>() {
+				[CollRule(AsteroidType.Player, AsteroidType.Powerup)] = new List<CollisionRules.Function>() {
 					CollidePlayerAndPowerup
 				},
-				[CollRule(AsteroidType.Player, AsteroidType.Player)] = new List<CollisionLogic.Function>() {
+				[CollRule(AsteroidType.Player, AsteroidType.Player)] = new List<CollisionRules.Function>() {
 					CollidePlayers
 				},
-				[CollRule(AsteroidType.Player, AsteroidType.Projectile)] = new List<CollisionLogic.Function>() {
+				[CollRule(AsteroidType.Player, AsteroidType.Projectile)] = new List<CollisionRules.Function>() {
 					CollidePlayers
 				},
-			};
+			});
 			Action CollidePlayers(CollisionData collision) {
 				return () => {
 					collision.Get(out MobilePolygon player, out MobilePolygon asteroid);
@@ -545,7 +534,6 @@ namespace asteroids {
 				};
 			}
 
-			void playerRestartGame(KeyInput keyInput) => RestartGame();
 			void RestartGame() {
 				asteroidPool.Clear();
 				projectilePool.Clear();
@@ -558,10 +546,10 @@ namespace asteroids {
 
 			SpacePartition<ICollidable> spacePartition = new SpacePartition<ICollidable>(WorldMin, WorldMax, 3, 3, 3, GetCircle);
 			Circle GetCircle(ICollidable collidable) => collidable.GetCollisionBoundingCircle();
-			CollisionDatabase collisionDatabase = new CollisionDatabase();
+			CollisionsPerAgent collisionDatabase = new CollisionsPerAgent();
 
 			while (running) {
-				keyInput.UpdateKeyInput();
+				KeyInput.Read();
 				Update();
 				Draw();
 				if (throttle) {
@@ -572,14 +560,9 @@ namespace asteroids {
 			void Update() {
 				Time.Update();
 				Time.UpdateAverageDeltaTime();
-				keyInput.TriggerKeyBinding();
+				KeyInput.TriggerEvents();
 				if (updating) {
-					//spacePartition.DoCollisionLogicAndResolve(collideList, collisionRules);
-					spacePartition.Populate(collideList);
-					spacePartition.CalculateCollisionsAndResolve(collisionRules, recycleCollisionDatabse?collisionDatabase:null);
-					//CollisionData.collisionPool.RemoveCommisioned();
-					//CollisionLogic.DoCollisionLogicAndResolve(collideList, collisionRules);
-					collisionCount = CollisionData.ClearCollisions();
+					collisionCount = CollisionLogic.Update(collideList, spacePartition, collisionRules, recycleCollisionMemory ? collisionDatabase : null);
 					gameObjects.ForEach(o => o.Update());
 					postUpdate.ForEach(a => a.Invoke());
 					particleSystems.ForEach(ps => ps.Update());
@@ -601,7 +584,9 @@ namespace asteroids {
 						o.Draw(graphics);
 					});
 				}
-				//spacePartition.draw(graphics, DrawFunctionCollidable);
+				if (showSpacePartition) {
+					spacePartition.Draw(graphics, DrawFunctionCollidable);
+				}
 				postDraw.ForEach(a => a.Invoke());
 				graphics.PrintModifiedCharactersOnly();
 				graphics.FinishedRender();
@@ -610,6 +595,7 @@ namespace asteroids {
 
 			void DrawFunctionCollidable(CommandLineCanvas canvas, SpacePartitionCell<ICollidable> spacePartition, ICollidable obj) {
 				Circle c = obj.GetCollisionBoundingCircle();
+				canvas.SetColor(ConsoleColor.Black);
 				canvas.DrawLine(spacePartition.Position, c.Center);
 			}
 		}

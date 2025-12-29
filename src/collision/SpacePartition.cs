@@ -33,7 +33,7 @@ namespace collision {
 			root.Populate(collideList, mem);
 			EnsureTopLevelRootIfCellsExpandOut();
 		}
-		public void CalculateCollisionsAndResolve(CollisionRules collisionRules, CollisionDatabase collisionDatabase) {
+		public void CalculateCollisionsAndResolve(CollisionRules collisionRules, CollisionsPerAgent collisionDatabase) {
 			root.CalculateCollisionsAndResolve(collisionRules, collisionDatabase);
 		}
 		private void EnsureTopLevelRootIfCellsExpandOut() {
@@ -304,7 +304,7 @@ namespace collision {
 			Insert(elementList, mem);
 		}
 
-		public void FindCollisions(CollisionRules rules, IList<CollisionData> collisionData) {
+		public void FindCollisions(CollisionRules rules, CollisionsPerAgent collisionData) {
 			if (elements != null) {
 				CollisionLogic.CalculateCollisions(elements as IList<ICollidable>, rules, collisionData);
 			}
@@ -319,35 +319,18 @@ namespace collision {
 			}
 		}
 
-		public void FindCollisions(CollisionRules rules, CollisionDatabase collisionDatabase) {
-			if (elements != null) {
-				CollisionLogic.CalculateCollisions(elements as IList<ICollidable>, rules, collisionDatabase);
-			}
-			if (subPartition != null) {
-				int rows = subPartition.GetLength(0);
-				int cols = subPartition.GetLength(1);
-				for (int r = 0; r < rows; ++r) {
-					for (int c = 0; c < cols; ++c) {
-						subPartition[r, c].FindCollisions(rules, collisionDatabase);
-					}
-				}
-			}
-		}
-
-		public List<CollisionLogic.ToResolve> CalculateCollisionResolutions(CollisionRules rules, CollisionDatabase collisionDatabase) {
-			IList<CollisionData> collisionData;
-			if (collisionDatabase == null) {
-				collisionDatabase = new CollisionDatabase();
+		public List<CollisionLogic.ToResolve> CalculateCollisionResolutions(CollisionRules rules, CollisionsPerAgent collisionsPerAgent) {
+			if (collisionsPerAgent == null) {
+				collisionsPerAgent = new CollisionsPerAgent();
 			} else {
-				collisionDatabase.Clear();
+				collisionsPerAgent.Clear();
 			}
-			FindCollisions(rules, collisionDatabase);
-			collisionData = collisionDatabase;
+			FindCollisions(rules, collisionsPerAgent);
 			List<CollisionLogic.ToResolve> collisionResolutions = new List<CollisionLogic.ToResolve>();
-			CollisionLogic.CalculateCollisionResolution(collisionData, collisionResolutions, rules);
+			CollisionLogic.CalculateCollisionResolution(collisionsPerAgent, collisionResolutions, rules);
 			return collisionResolutions;
 		}
-		public void CalculateCollisionsAndResolve(CollisionRules rules, CollisionDatabase collisionDatabase) {
+		public void CalculateCollisionsAndResolve(CollisionRules rules, CollisionsPerAgent collisionDatabase) {
 			List<CollisionLogic.ToResolve> collisionsToResolve = CalculateCollisionResolutions(rules, collisionDatabase);
 			if (collisionsToResolve == null || collisionsToResolve.Count == 0) {
 				return;

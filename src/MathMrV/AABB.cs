@@ -4,8 +4,8 @@ namespace MathMrV {
 	public struct AABB {
 		public static AABB zero = new AABB(0, 0, 0, 0);
 		public Vec2 Min, Max;
-		public float CenterX => (Min.X + Min.Y) / 2;
-		public float CenterY => (Min.Y + Min.Y) / 2;
+		public float CenterX => (Min.X + Max.X) / 2;
+		public float CenterY => (Min.Y + Max.Y) / 2;
 		public Vec2 Center => new Vec2(CenterX, CenterY);
 		public float Width => (Max.X - Min.X);
 		public float Height => (Max.Y - Min.Y);

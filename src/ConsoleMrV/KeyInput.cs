@@ -1,84 +1,86 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
-namespace ConsoleMrV {
-	public class KeyInput {
-		public static KeyInput Instance;
-		public List<char> Keys = new List<char>();
-		public Dictionary<char, List<Action<KeyInput>>> keyBinding = new Dictionary<char, List<Action<KeyInput>>>();
-		private List<List<Action<KeyInput>>> toExecuteThisFrame = new List<List<Action<KeyInput>>>();
-
-		public KeyInput() {
-			if (Instance == null) {
-				Instance = this;
+namespace MrV.CommandLine {
+	public delegate void KeyResponse();
+	public struct KeyResponseRecord<KeyType> {
+		public KeyType Key;
+		public KeyResponse Response;
+		public string Note;
+		public KeyResponseRecord(KeyType key, KeyResponse response, string note) {
+			Key = key; Response = response; Note = note;
+		}
+	}
+	public class Dispatcher<KeyType> {
+		protected List<KeyType> eventsToProcess = new List<KeyType>();
+		protected Dictionary<KeyType, List<KeyResponseRecord<KeyType>>> dispatchTable
+			= new Dictionary<KeyType, List<KeyResponseRecord<KeyType>>>();
+		public void BindKeyResponse(KeyType key, KeyResponse response, string note) {
+			BindKeyResponse(new KeyResponseRecord<KeyType>(key, response, note));
+		}
+		public void BindKeyResponse(KeyResponseRecord<KeyType> keyResponseRecord) {
+			if (!dispatchTable.TryGetValue(keyResponseRecord.Key, out List<KeyResponseRecord<KeyType>> responses)) {
+				dispatchTable[keyResponseRecord.Key] = responses = new List<KeyResponseRecord<KeyType>>();
+			}
+			responses.Add(keyResponseRecord);
+		}
+		public void UnbindKeyResponse(KeyResponseRecord<KeyType> keyResponseRecord) {
+			if (!dispatchTable.TryGetValue(keyResponseRecord.Key, out List<KeyResponseRecord<KeyType>> responses)) {
+				return;
+			}
+			for(int i = responses.Count-1; i >= 0; --i) {
+				if (responses[i].Note == keyResponseRecord.Note) {
+					responses.RemoveAt(i);
+				}
 			}
 		}
-		public int Count => Keys.Count;
-		public char this[int index] => GetChar(index);
-		public char GetChar(int index) => Keys[index];
-		public KeyInput get_instance() {
-			if (Instance != null) {
-				return Instance;
+		public void AddEvent(KeyType key) => eventsToProcess.Add(key);
+		public void ConsumeEvents() {
+			List<KeyType> processNow = new List<KeyType>(eventsToProcess);
+			eventsToProcess.Clear();
+			for (int i = 0; i < processNow.Count; i++) {
+				KeyType key = processNow[i];
+				if (dispatchTable.TryGetValue(key, out List<KeyResponseRecord<KeyType>> responses)) {
+					responses.ForEach(responseRecord => responseRecord.Response.Invoke());
+				}
 			}
-			Instance = new KeyInput();
-			return Instance;
 		}
-		public void Update() {
-			UpdateKeyInput();
-			TriggerKeyBinding();
+		public void Add(Dispatcher<KeyType> child) {
+			foreach(var kvp in child.dispatchTable) {
+				kvp.Value.ForEach(BindKeyResponse);
+			}
 		}
-		public void UpdateKeyInput() {
-			ClearKeys();
+		public void Remove(Dispatcher<KeyType> child) {
+			foreach (var kvp in child.dispatchTable) {
+				kvp.Value.ForEach(UnbindKeyResponse);
+			}
+		}
+	}
+	public class KeyInput : Dispatcher<char> {
+		private static KeyInput _instance;
+		public static KeyInput Instance {
+			get => _instance != null ? _instance : _instance = new KeyInput();
+			set => _instance = value;
+		}
+		public static void Bind(char keyPress, KeyResponse response, string note)
+			=> Instance.BindKeyResponse(keyPress, response, note);
+		public static void Read() => Instance.ReadConsoleKeys();
+		public static void TriggerEvents() => Instance.ConsumeEvents();
+		public static void Add(char key) => Instance.AddEvent(key);
+		public void ReadConsoleKeys() {
 			while (Console.KeyAvailable) {
 				ConsoleKeyInfo key = Console.ReadKey();
-				Keys.Add(key.KeyChar);
+				AddEvent(key.KeyChar);
 			}
 		}
-		public void TriggerKeyBinding() {
-			for(int i = 0; i < Keys.Count; i++) {
-				if (keyBinding.TryGetValue(Keys[i], out List<Action<KeyInput>> actions)) {
-					toExecuteThisFrame.Add(actions);
-				}
+		public override string ToString() {
+			StringBuilder sb = new StringBuilder();
+			foreach (var kvp in dispatchTable) {
+				string listKeyResponses = string.Join(", ", kvp.Value.ConvertAll(r => r.Note));
+				sb.Append($"'{kvp.Key}': {listKeyResponses}\n");
 			}
-			toExecuteThisFrame.ForEach(actions => actions.ForEach(a => a.Invoke(this)));
-			toExecuteThisFrame.Clear();
-		}
-		public void ClearKeys() { Keys.Clear(); }
-		public bool HasKey(char keyChar) {
-			return GetKeyIndex(keyChar) != -1;
-		}
-		public int GetKeyIndex(char keyChar) {
-			for (int i = 0; i < Keys.Count; ++i) {
-				if (Keys[i] == keyChar) {
-					return i;
-				}
-			}
-			return -1;
-		}
-		public List<Action<KeyInput>> BindKey(char key, Action<KeyInput> action) {
-			if (!keyBinding.TryGetValue(key, out List<Action<KeyInput>> actions)) {
-				actions = new List<Action<KeyInput>>();
-				keyBinding[key] = actions;
-			}
-			actions.Add(action);
-			return actions;
-		}
-		/// <param name="key"></param>
-		/// <param name="action">if null, removes all actions bound to this key</param>
-		/// <returns></returns>
-		public int Unbind(char key, Action<object> action) {
-			int removedCount = 0;
-			if (!keyBinding.TryGetValue(key, out List<Action<KeyInput>> actions)) {
-				return removedCount;
-			}
-			for(int i = actions.Count - 1; i >= 0; --i) {
-				if (action != null && actions[i] != action) {
-					continue;
-				}
-				actions.RemoveAt(i);
-				removedCount += 1;
-			}
-			return removedCount;
+			return sb.ToString();
 		}
 	}
 }
