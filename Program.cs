@@ -11,8 +11,8 @@ namespace asteroids {
 	public class Program {
 		enum AsteroidType : byte { None, Player, Asteroid, Projectile, Powerup }
 		static void Main(string[] args) {
+			float targetFps = 20;
 			// initialize system
-			Random random = new Random();
 			CommandLineCanvas graphics = new CommandLineCanvas(80, 25, (0.5f, 1));
 			List<IGameObject> gameObjects = new List<IGameObject>();
 			List<ICollidable> collideList = new List<ICollidable>();
@@ -27,15 +27,13 @@ namespace asteroids {
 			bool showSpacePartition = false;
 			bool recycleCollisionMemory = true;
 			bool showControls = false;
-			float targetFps = 20;
+			bool showObjects = false;
 			int targetMsDelay = (int)(1000 / targetFps);
-			KeyResponseRecord<char>[] playerInput = null;
 
 			// particle systems
 			ParticleSystem explosion = new ParticleSystem((.25f, .5f), (1, 2), (2, 3),
-				ParticleSystem.Kind.Explosion, ConsoleColor.Red, 0, ValueOverTime.GrowAndShrink);
-			ParticleSystem marker = new ParticleSystem(.25f, .5f, 0,
-				ParticleSystem.Kind.None, ConsoleColor.Magenta, 0, null);
+				ParticleSystem.ParticleKind.Explosion, ConsoleColor.Red, 0, ValueOverTime.GrowAndShrink);
+			ParticleSystem marker = new ParticleSystem(.25f, .5f);
 			ParticleSystem.OnParticleCommission = particle => gameObjects.Add(particle);
 			ParticleSystem.OnParticleDecommission = particle => gameObjects.Remove(particle);
 			List<ParticleSystem> particleSystems = new List<ParticleSystem>() { marker, explosion };
@@ -45,29 +43,34 @@ namespace asteroids {
 			Geometry2D derelictVesselGeom = new Geometry2D(derelictVesselVerts);
 			Geometry2D playerPolyGeom = new Geometry2D(playerPolyVerts);
 
-			float playerRotationAnglularVelocity = 5;
-			long playerShootCooldownMs = 50;
-			long playerShootNextPossibleMs = Time.TimeMs + playerShootCooldownMs;
-			long playerScore = 0;
-			int playerAmmo = 10;
-			float playerMaxHp = 10;
-			float playerHp = playerMaxHp;
 			MobilePolygon npcCharacter = new MobilePolygon(derelictVesselGeom);
 			npcCharacter.Name = "test";
 			npcCharacter.TypeId = (int)AsteroidType.Player;
 			npcCharacter.Color = ConsoleColor.DarkGray;
 			npcCharacter.Position = (10, 5);
 			npcCharacter.RotationDegrees = -90;
+
+			float playerAutoRotationAngularVelocity = MathF.PI * 4;
+			float playerFreeSpinAngularVelocity = MathF.PI * 2;
+			float playerMinThrustDuration = 1f / 2;
+			float playerRotationAnglularVelocity = 5;
+			long playerShootCooldownMs = 50;
+			long playerScore = 0;
+			int playerAmmo = 10;
+			float playerMaxHp = 10;
+			float playerHp = playerMaxHp;
+			long playerShootNextPossibleMs = Time.TimeMs + playerShootCooldownMs;
 			MobilePolygon playerCharacter = new MobilePolygon(playerPolyGeom);
 			playerCharacter.Name = "player";
 			playerCharacter.TypeId = (int)AsteroidType.Player;
 			playerCharacter.Color = ConsoleColor.Blue;
 			MobileObjectController playerControl = new MobileObjectController(playerCharacter);
-			float playerAutoRotationAngularVelocity = MathF.PI * 4;
-			float playerFreeSpinAngularVelocity = MathF.PI * 2;
-			float playerMinThrustDuration = 1f / 2;
+			KeyResponseRecord<char>[] playerInput = null;
 			playerControl.MaxSpeed = 10;
 			playerControl.DirectionMatchesVelocity = true;
+			playerControl.OnActivated += () => KeyInput.Instance.BindKeyResponse(playerInput);
+			playerControl.OnDeactivated += () => KeyInput.Instance.UnbindKeyResponse(playerInput);
+
 			List<IGameObject> playerObjects = new List<IGameObject>() { playerCharacter, npcCharacter };
 			gameObjects.AddRange(playerObjects);
 			gameObjects.Add(playerControl);
@@ -76,7 +79,6 @@ namespace asteroids {
 			postUpdate.Add(PlayerDeathWatch);
 			void PlayerDeathWatch() {
 				if (playerHp <= 0 && playerControl.Target.IsActive) {
-					KeyInput.Instance.UnbindKeyResponse(playerInput);
 					playerHp = 0;
 					playerControl.Target.IsActive = false;
 					explosion.Emit(100, playerControl.Position, ConsoleColor.Blue, (1, 4), (1, 2));
@@ -103,7 +105,7 @@ namespace asteroids {
 			}
 
 			// camera
-			bool cameraLookAhead = false;
+			bool cameraLookAhead = false; // causes nausea
 			float targetScaleY = 1;
 			Vec2 userCameraOffset = Vec2.Zero;
 			preDraw.Add(CameraFollowsPlayer);
@@ -123,7 +125,6 @@ namespace asteroids {
 				} else {
 					graphics.Offset = screenAnchor;
 				}
-				//graphics.PivotAsPercentage = graphics.GetConsolePosition(player.Position).Scaled((1/graphics.Width, 1/graphics.Height));
 				Vec2 scaleChangePerFrame = graphics.Scale * 0.1f;
 				if (graphics.Scale.Y + scaleChangePerFrame.Y < targetScaleY) {
 					graphics.Scale += scaleChangePerFrame;
@@ -251,7 +252,6 @@ namespace asteroids {
 				powerup.IsActive = false;
 				gameObjects.Remove(powerup);
 				collideList.Remove(powerup);
-				NameObjectsByIndex(powerupPool, ".");
 			}, powerup => {
 				powerup.TypeId = (int)AsteroidType.None;
 				powerup.Color = ConsoleColor.Magenta;
@@ -302,21 +302,20 @@ namespace asteroids {
 				graphics.DrawLine(playerControl.Position, lineEnd, lineWidth);
 			}
 
-			int collisionCount = 0;
 			// additional labels, overlay GUI
 			postDraw.Add(DebugDraw);
 			postDraw.Add(DrawScore);
+			postDraw.Add(ObjectListOverlay);
 			postDraw.Add(ControlsOverlay);
 			void DrawScore() {
 				graphics.WriteAt(ConsoleGlyph.Convert($"score: {playerScore}    DT:{Time.DeltaTimeMsAverage}   \n" +
-					$"ammo: {playerAmmo}\nhp: {playerHp}/{playerMaxHp}  coll:{collisionCount}  {playerControl.Speed:0.00}"), 0, (int)graphics.Size.Y - 3, true);
+					$"ammo: {playerAmmo}\nhp: {playerHp}/{playerMaxHp}"), 0, (int)graphics.Size.Y - 3, true);
 			}
 			void DebugDraw() {
 				LabelList(projectilePool, ConsoleColor.Magenta);
 				LabelList(playerObjects, ConsoleColor.Green);
 				LabelList(asteroidPool, ConsoleColor.DarkYellow);
 				LabelList(powerupPool, ConsoleColor.Green);
-				//dampenRotation(npcCharacter, 1);
 				if (SpecialDebugPoints != null) {
 					for (int i = 0; i < SpecialDebugPoints.Count; ++i) {
 						Vec2 point = SpecialDebugPoints[i];
@@ -340,18 +339,16 @@ namespace asteroids {
 					}
 				}
 			}
-			void dampenRotation(MobileObject npcCharacter, float dampenSpeed) {
-				float spin = MathF.Abs(npcCharacter.AngularVelocity);
-				const float spinEpsilon = 1f / (1 << 16);
-				if (spin > spinEpsilon) {
-					float dampen = Time.DeltaTimeSeconds * dampenSpeed;
-					if (dampen > spin) {
-						npcCharacter.AngularVelocity = 0;
-					} else {
-						if (npcCharacter.AngularVelocity > 0) {
-							dampen *= -1;
-						}
-						npcCharacter.AngularVelocity += dampen;
+			void ObjectListOverlay() {
+				if (!showObjects) { return; }
+				int row = 0, col = 0;
+				foreach (var obj in gameObjects) {
+					string name = obj.Name;
+					if (string.IsNullOrEmpty(name)) { name = "?"; }
+					graphics.WriteAt(ConsoleGlyph.Convert($"{name}", obj.IsActive?ConsoleColor.Green:ConsoleColor.DarkBlue), col, row++, true);
+					if (row >= graphics.Height) {
+						col += graphics.Width / 8;
+						row = 0;
 					}
 				}
 			}
@@ -373,6 +370,7 @@ namespace asteroids {
 			KeyInput.Bind('r', () => recycleCollisionMemory = !recycleCollisionMemory, "toggle recycle collision memory");
 			KeyInput.Bind('p', () => showSpacePartition = !showSpacePartition, "toggle space partition visibility");
 			KeyInput.Bind('c', () => showControls = !showControls, "toggle show controls");
+			KeyInput.Bind('o', () => showObjects = !showObjects, "toggle show objects");
 			KeyInput.Bind('y', toggleBigDeltatTimeSampleSize, "toggle big deltaTime sample size");
 			KeyInput.Bind('R', RestartGame, "restart game");
 			KeyInput.Bind('.', () => cameraLookAhead = !cameraLookAhead, "toggle camera lookahead");
@@ -420,7 +418,7 @@ namespace asteroids {
 				('J', () => playerControl.Position += -Vec2.UnitX, "shift player left"),
 				('K', () => playerControl.Position += Vec2.UnitY, "shift player down"),
 				('L', () => playerControl.Position += Vec2.UnitX, "shift player right"),
-				('O', () => playerHp = playerMaxHp = 100000, "player super HP"),
+				('^', () => playerHp = playerMaxHp = 100000, "player super HP"),
 			};
 			void playerMove(float normalizedRadian) {
 				playerControl.SmoothRotateTarget(MathF.PI * normalizedRadian, playerAutoRotationAngularVelocity);
@@ -439,8 +437,14 @@ namespace asteroids {
 				playerControl.Brakes();
 				playerControl.AngularVelocity = 0;
 			}
-			void playerTurnLeft() { playerControl.RotationDegrees -= playerRotationAnglularVelocity; }
-			void playerTurnRight() { playerControl.RotationDegrees += playerRotationAnglularVelocity; }
+			void playerTurnLeft() {
+				playerControl.RotationDegrees -= playerRotationAnglularVelocity;
+				graphics.Rotation = graphics.Rotation.RotatedDegrees(-playerRotationAnglularVelocity);
+			}
+			void playerTurnRight() {
+				playerControl.RotationDegrees += playerRotationAnglularVelocity;
+				graphics.Rotation = graphics.Rotation.RotatedDegrees(playerRotationAnglularVelocity);
+			}
 			void playerSpinLeft() { playerSpinToggle(-playerFreeSpinAngularVelocity); }
 			void playerSpinRight() { playerSpinToggle(playerFreeSpinAngularVelocity); }
 			void playerSpinToggle(float newSpinDirection) {
@@ -483,14 +487,7 @@ namespace asteroids {
 				return () => {
 					collision.Get(out MobilePolygon player, out MobilePolygon asteroid);
 					Collision.SeparateObjects(player, asteroid, collision.Normal, collision.Depth);
-					//Collision.BounceVelocities(player, asteroid, collision.Normal);
-					//SpecialDebugPoints = new Vec2[] { collision.Point, collision.Point + collision.Normal };
 					Collision.BounceVelocitiesAndTorque(player, asteroid, collision.Point, collision.Normal);
-					//player.Velocity = Vec2.Zero;
-					//asteroid.Velocity = Vec2.Zero;
-					//player.AngularVelocity = 0;
-					//asteroid.AngularVelocity = 0;
-					//SpecialDebugPoints = collision.Contacts;
 				};
 			}
 
@@ -499,7 +496,6 @@ namespace asteroids {
 					collision.Get(out MobileCircle objA, out MobileCircle objB);
 					Collision.SeparateObjects(objA, objB, collision.Normal, collision.Depth);
 					Collision.BounceVelocities(objA, objB, collision.Normal);
-					//Collision.BounceVelocitiesAndTorque(objA, objB, collision.Point, collision.Normal);
 				};
 			}
 			Action CollideProjectileAndAsteroid(CollisionData collision) {
@@ -524,7 +520,6 @@ namespace asteroids {
 						playerControl.ClearRotationTarget();
 					}
 					Collision.SeparateObjects(player, asteroid, collision.Normal, collision.Depth);
-					//Collision.BounceVelocities(player, asteroid, collision.Normal);
 					Collision.BounceVelocitiesAndTorque(player, asteroid, collision.Point, collision.Normal);
 					if (asteroidDestroyed) {
 						PlayerBrokeAsteroid(asteroid, collision, -asteroid.Velocity.Normal);
@@ -557,7 +552,6 @@ namespace asteroids {
 				RestartPlayer();
 				StartAsteroids();
 				playerTriggerAfterDeath = RestartGame;
-				KeyInput.Instance.BindKeyResponse(playerInput);
 			}
 			RestartGame();
 
@@ -579,7 +573,7 @@ namespace asteroids {
 				Time.UpdateAverageDeltaTime();
 				KeyInput.TriggerEvents();
 				if (updating) {
-					collisionCount = CollisionLogic.Update(collideList, spacePartition, collisionRules, recycleCollisionMemory ? collisionDatabase : null);
+					CollisionLogic.Update(collideList, spacePartition, collisionRules, recycleCollisionMemory ? collisionDatabase : null);
 					gameObjects.ForEach(o => o.Update());
 					postUpdate.ForEach(a => a.Invoke());
 					particleSystems.ForEach(ps => ps.Update());

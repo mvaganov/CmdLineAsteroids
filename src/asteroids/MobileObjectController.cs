@@ -6,7 +6,7 @@ using System;
 namespace asteroids {
 	public class MobileObjectController : IGameObject {
 		private MobileObject _target;
-		private string _name;
+		private string _name = "*";
 		private float _thrustDuration = 0;
 		private float _maxSpeed = 1;
 		private float _acceleration = 10;
@@ -35,17 +35,29 @@ namespace asteroids {
 				}
 			}
 		}
-		public MobileObject Target { get => _target; set => _target = value; }
+		public MobileObject Target { get => _target; set { _target = value; _name = "*" + _target.Name; } }
 		public string Name { get => _name; set => _name = value; }
 		public Vec2 Position { get => _target.Position; set => _target.Position = value; }
 		public Vec2 Direction { get => _target.Direction; set => _target.Direction = value; }
-		public bool IsActive { get => _active; set => _active = value; }
+		public bool IsActive {
+			get => _active;
+			set {
+				if (_active && value == false) {
+					OnDeactivated?.Invoke();
+				} else if (!_active && value == true) {
+					OnActivated?.Invoke();
+				}
+				_active = value;
+			}
+		}
 		public bool IsVisible { get => _target.IsVisible; set => _target.IsVisible = value; }
 		public ConsoleColor Color { get => _target.Color; set => _target.Color = value; }
 		public float RotationDegrees { get => _target.RotationDegrees; set => _target.RotationDegrees = value; }
 		public float RotationRadians { get => _target.RotationRadians; set => _target.RotationRadians = value; }
+		public Action OnActivated { get; internal set; }
+		public Action OnDeactivated { get; internal set; }
 
-		public MobileObjectController(MobileObject target) { _target = target; }
+		public MobileObjectController(MobileObject target) { Target = target; }
 		public void Update() {
 			if (AngularVelocity != 0) {
 				float currentRadians = _target.Direction.NormalToRadians();

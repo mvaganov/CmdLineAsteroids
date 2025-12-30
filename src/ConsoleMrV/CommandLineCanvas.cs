@@ -14,20 +14,33 @@ namespace ConsoleMrV {
 		public static ConsoleGlyph[][] AntiAliasedGradientPerColor;
 		public ConsoleGlyph[] AntiAliasedGradient;
 		private Vec2 _scale;
+		private Vec2 _rotation = Vec2.NormalFromRadians(0);
 		private Vec2 _originOffsetULCorner;
-		private Vec2 _pivotAsPercentage; // percentage, for zoom around a target
+		private Vec2 _pivotAsPercentage = new Vec2(0.5f, 0.5f); // percentage, for zoom around a target
 
 		public Vec2 Scale {
 			get => _scale;
 			set {
-				_originOffsetULCorner = GetNextOriginOffsetAfterScale(Size, _originOffsetULCorner, _scale, value, _pivotAsPercentage);
+				Vec2 worldPositionOfScreenCenter = GetWorldPosition(_pivotAsPercentage * Size);
+				// TODO refactor this code.
+				_originOffsetULCorner = GetNextOriginOffsetAfterScale(Size, _originOffsetULCorner.Rotated(Rotation), _scale, value, _pivotAsPercentage).Unrotated(Rotation);
 				_scale = value;
+				//Vec2 screenPositionOfWorldCenter = GetScreenPosition(worldPositionOfScreenCenter);
+				//Vec2 howWrongIsTheCamera = _originOffsetULCorner - screenPositionOfWorldCenter;
+				//_originOffsetULCorner += howWrongIsTheCamera;
+			}
+		}
+		public Vec2 Rotation {
+			get => _rotation;
+			set {
+				_rotation = value;
 			}
 		}
 		public Vec2 PivotAsPercentage { get => _pivotAsPercentage; set { _pivotAsPercentage = value; } }
 		public Vec2 Offset { get => _originOffsetULCorner; set => _originOffsetULCorner = value; }
 		private static Vec2 GetNextOriginOffsetAfterScale(Vec2 size, Vec2 ulCornerOrigin, Vec2 currentScale,
 		Vec2 nextScale, Vec2 pivotAsPercentage) {
+			
 			Vec2 currentPivotOffset = new Vec2(pivotAsPercentage.X * size.X * currentScale.X, 
 			                                   pivotAsPercentage.Y * size.Y * currentScale.Y);
 			Vec2 pivotPosition = ulCornerOrigin + currentPivotOffset;
@@ -35,6 +48,10 @@ namespace ConsoleMrV {
 			                                pivotAsPercentage.Y * size.Y * nextScale.Y);
 			return pivotPosition - nextPivotOffset;
 		}
+		//public static Vec2 GetWorldPositionOfScreenCoordinate(Vec2 screenCoordinate) {
+			
+		//	screenCoordinate
+		//}
 
 		static CommandLineCanvas() {
 			AntiAliasedGradientPerColor = GenerateAntiAliasedGradientPerColorMapForConsoleColors();
@@ -72,7 +89,6 @@ namespace ConsoleMrV {
 
 		public CommandLineCanvas(int width, int height, Vec2 scale = default) : base(width, height) {
 			if (scale == default) { scale = Vec2.One; }
-			_pivotAsPercentage = new Vec2(0.5f, 0.5f);
 			_scale = scale;
 			SetColor(ConsoleColor.White);
 		}
@@ -81,56 +97,84 @@ namespace ConsoleMrV {
 			AntiAliasedGradient = AntiAliasedGradientPerColor[(int)color];
 		}
 
-		public Vec2 GetConsolePosition(Vec2 canvasPosition) =>
-			(canvasPosition - _originOffsetULCorner) / _scale;
+		public Vec2 GetScreenPosition(Vec2 worldPosition) =>
+			(worldPosition - _originOffsetULCorner).Unrotated(_rotation) / _scale;
+
+		public Vec2 GetWorldPosition(Vec2 screenPosition) =>
+			(screenPosition * _scale).Rotated(_rotation) + _originOffsetULCorner;
 
 		public void WriteAt(string text, Vec2 position, bool useNewBgColor = false) =>
 			WriteAt(ConsoleGlyph.Convert(text), position, useNewBgColor);
 
 		public void WriteAt(ConsoleGlyph[] text, Vec2 position, bool useNewBgColor = true) {
-			Vec2 consolePosition = GetConsolePosition(position);
+			Vec2 consolePosition = GetScreenPosition(position);
 			WriteAt(text, (int)consolePosition.X, (int)consolePosition.Y, useNewBgColor);
 		}
 
+		public void DrawSupersampledShape1(Func<Vec2, bool> isInsideShape, Vec2 aabbMin, Vec2 aabbMax) {
+			DrawBasicShape(isInsideShape, new ConsoleGlyph(ConsoleColor.White));
+		}
+		public void DrawBasicShape(Func<Vec2, bool> isInsideShape, ConsoleGlyph color) {
+			Vec2 stepX = _rotation * _scale.X;
+			Vec2 stepY = _rotation.Perpendicular() * _scale.Y;
+			for (int y = 0; y < Height; ++y) {
+				Vec2 point = _originOffsetULCorner + (stepY * y);
+				for (int x = 0; x < Width; ++x) {
+					if (isInsideShape.Invoke(point)) {
+						this[x, y] = color;
+					}
+					point += stepX;
+				}
+			}
+		}
 		public void DrawSupersampledShape(Func<Vec2, bool> isInsideShape, Vec2 aabbMin, Vec2 aabbMax) {
 			aabbMin.Floor();
 			aabbMax.Ceil();
-			Vec2 renderMin = aabbMin - _originOffsetULCorner;
-			Vec2 renderMax = aabbMax - _originOffsetULCorner;
-			renderMin.InverseScale(_scale);
-			renderMax.InverseScale(_scale);
+			AABB box = new AABB(aabbMin, aabbMax);
+			Vec2[] corners = new Vec2[4];
+			box.GetCorners(corners);
+			for(int i = 0; i < corners.Length; ++i) {
+				corners[i] -= _originOffsetULCorner;
+				corners[i].Unrotate(_rotation);
+				corners[i] /= _scale;
+			}
+			AABB renderBox = AABB.CalculateBounds(corners);
+			Vec2 renderMin = renderBox.Min;
+			Vec2 renderMax = renderBox.Max;
 			renderMin.Floor();
 			renderMax.Ceil();
 			if (renderMin.X < 0) { renderMin.X = 0; }
-			if (renderMin.Y < 0) { renderMin.X = 0; }
+			if (renderMin.Y < 0) { renderMin.Y = 0; }
 			if (renderMax.X > Width) { renderMax.X = Width; }
 			if (renderMax.Y > Height) { renderMax.Y = Height; }
+			Vec2 stepX = _rotation * _scale.X;
+			Vec2 stepY = _rotation.Perpendicular() * _scale.Y;
+			const int SUPERSAMPLE = 2;
+			Vec2 superSampleX = stepX / SUPERSAMPLE;
+			Vec2 superSampleY = stepY / SUPERSAMPLE;
 			for (int y = (int)renderMin.Y; y < renderMax.Y; ++y) {
+				Vec2 worldPoint = _originOffsetULCorner + (stepY * y) + (stepX * renderMin.X);
 				for (int x = (int)renderMin.X; x < renderMax.X; ++x) {
-					Vec2 supersample = Vec2.Zero;
-					const int SUPERSAMPLE = 2;
 					int samplesFound = 0;
 					for (int row = 0; row < SUPERSAMPLE; ++row) {
-						supersample.X = 0;
+						Vec2 supersample = worldPoint + (superSampleY * row);
 						for (int col = 0; col < SUPERSAMPLE; ++col) {
-							Vec2 point = ((x + supersample.X) * _scale.X, (y + supersample.Y) * _scale.Y);
-							point += _originOffsetULCorner;
-							if (isInsideShape.Invoke(point)) {
+							if (isInsideShape.Invoke(supersample)) {
 								samplesFound++;
 							}
-							supersample.X += 1f / SUPERSAMPLE;
+							supersample += superSampleX;
 						}
-						supersample.Y += 1f / SUPERSAMPLE;
 					}
 					if (samplesFound > 0) {
-						if (x >= 0 && y >= 0 && x < Width && y < Height) {
+						//if (x >= 0 && y >= 0 && x < Width && y < Height) {
 							int sampleIndex = samplesFound;
 							if (sampleIndex >= AntiAliasedGradient.Length) {
 								sampleIndex = AntiAliasedGradient.Length - 1;
 							}
 							this[x, y] = AntiAliasedGradient[sampleIndex];
-						}
+						//}
 					}
+					worldPoint += stepX;
 				}
 			}
 		}

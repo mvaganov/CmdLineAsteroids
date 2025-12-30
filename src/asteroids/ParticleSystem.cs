@@ -11,8 +11,8 @@ namespace asteroids {
 		public RangeF ParticleLifetime;
 		public RangeF ParticleSize;
 		public RangeF ParticleSpeed;
-		public RangeF Radius;
-		public Kind kind;
+		public RangeF SpawnRadius;
+		public ParticleKind Kind;
 		public float RestartTimer = -1;
 		private float CurrentTimer;
 		public int BurstSize = 10;
@@ -20,7 +20,7 @@ namespace asteroids {
 		public static Action<Particle> OnParticleCommission;
 		public static Action<Particle> OnParticleDecommission;
 
-		public enum Kind {
+		public enum ParticleKind {
 			None, Explosion
 		}
 
@@ -33,14 +33,21 @@ namespace asteroids {
 			set => ParticlePool.DecommissionDelegate = value;
 		}
 
-		public ParticleSystem(RangeF particleLifetime, RangeF particleSize, RangeF particleSpeed, Kind kind, ConsoleColor color, RangeF radius, ValueOverTime sizeOverLifetime) {
+		public ParticleSystem(
+		RangeF particleLifetime,
+		RangeF particleSize,
+		RangeF particleSpeed = default,
+		ParticleKind kind = ParticleKind.None,
+		ConsoleColor color = ConsoleColor.Magenta,
+		RangeF spawnRadius = default,
+		ValueOverTime sizeOverLifetime = null) {
 			ParticlePool.Setup(CreateParticle, CommissionParticle, DecommissionParticle, DestroyParticle);
 			this.ParticleLifetime = particleLifetime;
 			this.ParticleSize = particleSize;
 			this.ParticleSpeed = particleSpeed;
-			this.kind = kind;
+			this.Kind = kind;
 			this.Color = color;
-			this.Radius = radius;
+			this.SpawnRadius = spawnRadius;
 			this.SizeOverLifetime = sizeOverLifetime;
 		}
 		public void Update() {
@@ -76,12 +83,12 @@ namespace asteroids {
 		public void Emit(int count, Vec2 position, ConsoleColor color, RangeF radius = null, RangeF particleSize = null) {
 			Vec2 lastPosition = Position;
 			ConsoleColor lastColor = Color;
-			RangeF lastRadius = Radius;
+			RangeF lastRadius = SpawnRadius;
 			RangeF lastParticleSize = ParticleSize;
 			Position = position;
 			Color = color;
 			if (radius != null) {
-				Radius = radius;
+				SpawnRadius = radius;
 			}
 			if (particleSize != null) {
 				ParticleSize = particleSize;
@@ -89,7 +96,7 @@ namespace asteroids {
 			Emit(count);
 			Position = lastPosition;
 			Color = lastColor;
-			Radius = lastRadius;
+			SpawnRadius = lastRadius;
 			ParticleSize = lastParticleSize;
 		}
 		public void Absorb(Particle p) {
@@ -105,11 +112,11 @@ namespace asteroids {
 			particle.Velocity = Vec2.Zero;
 			particle.Color = Color;
 			particle.Lifetime = ParticleLifetime.Value();
-			switch (kind) {
-				case Kind.Explosion:
+			switch (Kind) {
+				case ParticleKind.Explosion:
 					Vec2 direction = Vec2.NormalFromDegrees(360 * Rand.Number);
 					particle.Velocity = direction * ParticleSpeed.Value();
-					particle.Position = Position + direction * Radius.Value();
+					particle.Position = Position + direction * SpawnRadius.Value();
 					break;
 			}
 			OnParticleCommission?.Invoke(particle);

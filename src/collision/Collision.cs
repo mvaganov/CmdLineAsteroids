@@ -175,14 +175,10 @@ namespace collision {
 			}
 		}
 
-		public static int Update(List<ICollidable> collideList, SpacePartition<ICollidable> spacePartition, CollisionRules collisionRules, CollisionsPerAgent collisionResults) {
-			//spacePartition.DoCollisionLogicAndResolve(collideList, collisionRules);
+		public static void Update(List<ICollidable> collideList, SpacePartition<ICollidable> spacePartition, CollisionRules collisionRules, CollisionsPerAgent collisionResults) {
 			spacePartition.Populate(collideList);
 			spacePartition.CalculateCollisionsAndResolve(collisionRules, collisionResults);
-			//CollisionData.collisionPool.RemoveCommisioned();
-			//CollisionLogic.DoCollisionLogicAndResolve(collideList, collisionRules);
-			int unprocessedCollisions = CollisionData.ClearCollisions();
-			return unprocessedCollisions;
+			CollisionData.ClearCollisions();
 		}
 	}
 }

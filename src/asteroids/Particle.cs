@@ -5,7 +5,7 @@ using System;
 
 namespace asteroids {
 	public class Particle : IGameObject {
-		public string _name;
+		public string _name = "?P";
 		public Circle circle;
 		public bool Disabled;
 		private Vec2 _velocity;

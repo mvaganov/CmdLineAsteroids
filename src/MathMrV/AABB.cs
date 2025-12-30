@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace MathMrV {
 	public struct AABB {
-		public static AABB zero = new AABB(0, 0, 0, 0);
+		public static AABB Zero = new AABB(0, 0, 0, 0);
 		public Vec2 Min, Max;
 		public float CenterX => (Min.X + Max.X) / 2;
 		public float CenterY => (Min.Y + Max.Y) / 2;
@@ -94,5 +95,21 @@ namespace MathMrV {
 		public bool Equals(AABB aabb) => Min == aabb.Min && Max == aabb.Max;
 		public static bool operator==(AABB aabb1, AABB aabb2) => aabb1.Equals(aabb2);
 		public static bool operator!=(AABB aabb1, AABB aabb2) => !aabb1.Equals(aabb2);
+		public void GetCorners(Vec2[] corners) {
+			corners[0] = Min;
+			corners[1] = new Vec2(Max.X, Min.Y);
+			corners[2] = Max;
+			corners[3] = new Vec2(Min.X, Max.Y);
+		}
+		public static AABB CalculateBounds(IEnumerable<Vec2> points) {
+			IEnumerator<Vec2> enumerator = points.GetEnumerator();
+			if (!enumerator.MoveNext()) { return Zero; }
+			Vec2 center = enumerator.Current;
+			AABB bounds = new AABB(center, center);
+			while (enumerator.MoveNext()) {
+				bounds.Add(enumerator.Current);
+			}
+			return bounds;
+		}
 	}
 }
