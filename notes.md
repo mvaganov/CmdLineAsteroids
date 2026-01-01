@@ -3927,6 +3927,11 @@ namespace MrV.GameEngine {
 }
 ```
 
+### voice
+this is an abstract class, which means it doesn't concretely define everything. it creates some common implementations, and also requires child classes to define other details.
+
+every mobile object is a GameObject, so it needs name and state details. the point of a Mobile object is to define mobility, so it has velocity implemented. however, position and direction are left abstract, so they can be defined in other ways. 
+
 ---
 
 ## TODO finish the script. notes below:
