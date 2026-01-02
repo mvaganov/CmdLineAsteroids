@@ -22,37 +22,27 @@ namespace ConsoleMrV {
 			get => _scale;
 			set {
 				Vec2 worldPositionOfScreenCenter = GetWorldPosition(_pivotAsPercentage * Size);
-				// TODO refactor this code.
-				_originOffsetULCorner = GetNextOriginOffsetAfterScale(Size, _originOffsetULCorner.Rotated(Rotation), _scale, value, _pivotAsPercentage).Unrotated(Rotation);
 				_scale = value;
-				//Vec2 screenPositionOfWorldCenter = GetScreenPosition(worldPositionOfScreenCenter);
-				//Vec2 howWrongIsTheCamera = _originOffsetULCorner - screenPositionOfWorldCenter;
-				//_originOffsetULCorner += howWrongIsTheCamera;
+				SetScreenFocus(worldPositionOfScreenCenter);
 			}
 		}
 		public Vec2 Rotation {
 			get => _rotation;
 			set {
+				Vec2 worldPositionOfScreenCenter = GetWorldPosition(_pivotAsPercentage * Size);
 				_rotation = value;
+				SetScreenFocus(worldPositionOfScreenCenter);
 			}
 		}
 		public Vec2 PivotAsPercentage { get => _pivotAsPercentage; set { _pivotAsPercentage = value; } }
 		public Vec2 Offset { get => _originOffsetULCorner; set => _originOffsetULCorner = value; }
-		private static Vec2 GetNextOriginOffsetAfterScale(Vec2 size, Vec2 ulCornerOrigin, Vec2 currentScale,
-		Vec2 nextScale, Vec2 pivotAsPercentage) {
-			
-			Vec2 currentPivotOffset = new Vec2(pivotAsPercentage.X * size.X * currentScale.X, 
-			                                   pivotAsPercentage.Y * size.Y * currentScale.Y);
-			Vec2 pivotPosition = ulCornerOrigin + currentPivotOffset;
-			Vec2 nextPivotOffset = new Vec2(pivotAsPercentage.X * size.X * nextScale.X,
-			                                pivotAsPercentage.Y * size.Y * nextScale.Y);
-			return pivotPosition - nextPivotOffset;
+		public void SetScreenFocus(Vec2 worldPosition) {
+			Vec2 halfScreen = Size * _pivotAsPercentage;
+			Vec2 scaledOffset = halfScreen * Scale;
+			scaledOffset.Rotate(Rotation);
+			Vec2 screenAnchor = worldPosition - scaledOffset;
+			_originOffsetULCorner = screenAnchor;
 		}
-		//public static Vec2 GetWorldPositionOfScreenCoordinate(Vec2 screenCoordinate) {
-			
-		//	screenCoordinate
-		//}
-
 		static CommandLineCanvas() {
 			AntiAliasedGradientPerColor = GenerateAntiAliasedGradientPerColorMapForConsoleColors();
 		}

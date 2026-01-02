@@ -681,9 +681,9 @@ src/MrV/Geometry/Circle.cs
 ```
 namespace MrV.Geometry {
 	public struct Circle {
-		public Vec2 center;
-		public float radius;
-		public Circle(Vec2 position, float radius) { this.center = position; this.radius = radius; }
+		public Vec2 Center;
+		public float Radius;
+		public Circle(Vec2 position, float radius) { Center = position; Radius = radius; }
 		public override string ToString() => $"({center}, r:{radius})";
 	}
 }
@@ -748,7 +748,7 @@ Program.cs
 ```
 ...
 		public static void DrawCircle(Circle c, char letterToPrint) {
-			DrawCircle(c.center, c.radius);
+			DrawCircle(c.Center, c.Radius);
 		}
 		public static void DrawCircle(Vec2 pos, float radius, char letterToPrint) {
 			Vec2 extent = (radius, radius); // Vec2 knows how to convert from a tuple of floats
@@ -1579,7 +1579,7 @@ namespace MrV.CommandLine {
 			DrawShape(null, aabb.Min, aabb.Max, letterToPrint);
 		}
 		public void DrawCircle(Circle c, char letterToPrint) {
-			DrawCircle(c.center, c.radius, letterToPrint);
+			DrawCircle(c.Center, c.Radius, letterToPrint);
 		}
 		public void DrawCircle(Vec2 pos, float radius, char letterToPrint) {
 			Vec2 extent = new Vec2(radius, radius);
@@ -2456,11 +2456,16 @@ src/Program.cs
 			void Draw() {
 				Vec2 scale = (0.5f, 1);
 				graphics.Clear();
-				graphics.DrawRectangle(0, 0, width, height, ConsoleGlyph.Default);
-				graphics.DrawRectangle((2, 3), new Vec2(20, 15), ConsoleColor.Red);
-				graphics.DrawRectangle(new AABB((10, 1), (15, 20)), ConsoleColor.Green);
-				graphics.DrawCircle(position, radius, ConsoleColor.Blue);
-				graphics.DrawPolygon(polygonShape, ConsoleColor.Yellow);
+				graphics.SetColor(ConsoleGlyph.Default);
+				graphics.DrawRectangle(0, 0, width, height);
+				graphics.SetColor(ConsoleColor.Red);
+				graphics.DrawRectangle((2, 3), new Vec2(20, 15));
+				graphics.SetColor(ConsoleColor.Green);
+				graphics.DrawRectangle(new AABB((10, 1), (15, 20)));
+				graphics.SetColor(ConsoleColor.Blue);
+				graphics.DrawCircle(position, radius);
+				graphics.SetColor(ConsoleColor.Yellow);
+				graphics.DrawPolygon(polygonShape);
 				graphics.PrintModifiedOnly();
 				graphics.SwapBuffers();
 				Console.SetCursorPosition(0, (int)height);
@@ -2496,6 +2501,8 @@ src/MrV/DrawBuffer_geometry.cs
 ...
 	public partial class DrawBuffer {
 		public static ConsoleColorPair[,] AntiAliasColorMap;
+		public ConsoleGlyph _currentColor;
+		public void SetColor(ConsoleGlyph color) => _currentColor = color;
 		static DrawBuffer() {
 			int countColors = 16;
 			int maxSuperSample = 4;
@@ -2519,7 +2526,7 @@ src/MrV/DrawBuffer_geometry.cs
 
 		public Vec2 ShapeScale = new Vec2(0.5f, 1);
 		public delegate bool IsInsideShapeDelegate(Vec2 position);
-		public void DrawShape(IsInsideShapeDelegate isInsideShape, Vec2 start, Vec2 end, ConsoleGlyph glyphToPrint) {
+		public void DrawShape(IsInsideShapeDelegate isInsideShape, Vec2 start, Vec2 end) {
 			Vec2 renderStart = start;
 			Vec2 renderEnd = end;
 			renderStart.InverseScale(ShapeScale);
@@ -2544,8 +2551,8 @@ src/MrV/DrawBuffer_geometry.cs
 						countSamples = TotalSamplesPerGlyph;
 					}
 					if (countSamples == 0) { continue; }
-					ConsoleGlyph glyph = glyphToPrint;
-					glyph.Back = AntiAliasColorMap[(int)glyphToPrint.Back, countSamples - 1].Back;
+					ConsoleGlyph glyph = _currentColor;
+					glyph.Back = AntiAliasColorMap[(int)_currentColor.Back, countSamples - 1].Back;
 					WriteAt(glyph, y, x);
 				}
 			}
@@ -2558,6 +2565,8 @@ The first part of the class, the static constructor, initializes the `AntiAliasC
 
 I must admit that this implementation of anti-aliasing is very naive, and doesn't take color mixing from overlapping geometry into account.
 	This is an intentional choice made in the robustness vs accessability tradeoff I mentioned at the beginning of the tutorial.
+
+An important thing to note is that I'm changing the pattern for draw methods now. I'm removing the `letterToPrint` argument from functions, and using `_currentColor`. to change the color, there is a `SetColor` method. this is more similar to other graphics APIs.
 
 because all of the draw methods use `DrawShape`, we can accomplish all of our Anti-Aliasing by only modifying that one method.
 
@@ -2664,17 +2673,18 @@ namespace MrV.GameEngine {
 			Color = color;
 		}
 		public void Draw(GraphicsContext g) {
-			g.DrawCircle(Circle, Color);
+			g.SetColor(Color);
+			g.DrawCircle(Circle);
 			float speed = Velocity.Length();
 			if (speed > 0) {
 				Vec2 direction = Velocity / speed;
-				Vec2 rayStart = Circle.center + direction * Circle.radius;
-				g.DrawLine(rayStart, rayStart + Velocity, 0.5f, Color);
+				Vec2 rayStart = Circle.Center + direction * Circle.Radius;
+				g.DrawLine(rayStart, rayStart + Velocity, 0.5f);
 			}
 		}
 		public void Update() {
 			Vec2 moveThisFrame = Velocity * Time.DeltaTimeSec;
-			Circle.center += moveThisFrame;
+			Circle.Center += moveThisFrame;
 		}
 	}
 }
@@ -2705,7 +2715,8 @@ src/Program
 
 ```
 ...
-				graphics.DrawPolygon(polygonShape, ConsoleColor.Yellow);
+				graphics.SetColor(ConsoleColor.Yellow);
+				graphics.DrawPolygon(polygonShape);
 				particle.Draw(graphics);
 				graphics.PrintModifiedOnly();
 ...
@@ -2744,7 +2755,8 @@ One particle seems to work. More particles will be required for the simulation g
 
 ```
 ...
-				graphics.DrawPolygon(polygonShape, ConsoleColor.Yellow);
+				graphics.SetColor(ConsoleColor.Yellow);
+				graphics.DrawPolygon(polygonShape);
 				for (int i = 0; i < particles.Length; ++i) {
 					particles[i].Draw(graphics);
 				}
@@ -2867,7 +2879,7 @@ src/MrV/GameEngine/Particle.cs
 		public float OriginalSize;
 		public Particle(Circle circle, Vec2 velocity, ConsoleColor color, float lifetime) {
 			Circle = circle;
-			OriginalSize = circle.radius;
+			OriginalSize = circle.Radius;
 			Velocity = velocity;
 			Color = color;
 			Enabled = true;
@@ -2876,12 +2888,13 @@ src/MrV/GameEngine/Particle.cs
 		}
 		public void Draw(GraphicsContext g) {
 			if (!Enabled) { return; }
-			g.DrawCircle(Circle, Color);
+			g.SetColor(Color);
+			g.DrawCircle(Circle);
 			//float speed = Velocity.Length();
 			//if (speed > 0) {
 			//	Vec2 direction = Velocity / speed;
-			//	Vec2 rayStart = Circle.center + direction * Circle.radius;
-			//	g.DrawLine(rayStart, rayStart + Velocity, 0.5f, Color);
+			//	Vec2 rayStart = Circle.Center + direction * Circle.Radius;
+			//	g.DrawLine(rayStart, rayStart + Velocity, 0.5f);
 			//}
 		}
 		public void Update() {
@@ -2892,7 +2905,7 @@ src/MrV/GameEngine/Particle.cs
 				return;
 			}
 			Vec2 moveThisFrame = Velocity * Time.DeltaTimeSec;
-			Circle.center += moveThisFrame;
+			Circle.Center += moveThisFrame;
 		}
 	}
 ...
@@ -2946,7 +2959,7 @@ src/MrV/GameEngine/Particle.cs
 		}
 		public void Init(Circle circle, Vec2 velocity, ConsoleColor color, float lifetime) {
 			Circle = circle;
-			OriginalSize = circle.radius;
+			OriginalSize = circle.Radius;
 			Velocity = velocity;
 			Color = color;
 			Enabled = true;
@@ -3090,7 +3103,7 @@ src/Program.cs
 					particles[i].Update();
 					float timeProgress = particles[i].LifetimeCurrent / particles[i].LifetimeMax;
 					if (growAndShrink.TryGetValue(timeProgress, out float nextRadius)) {
-						particles[i].Circle.radius = nextRadiusPercentage * particles[i].OriginalSize;
+						particles[i].Circle.Radius = nextRadiusPercentage * particles[i].OriginalSize;
 					}
 				}
 ...
@@ -3291,7 +3304,8 @@ a nice side effect of using this new system is that we can easily create more th
 src/MrV/Program.cs
 ```
 ...
-				graphics.DrawPolygon(polygonShape, ConsoleColor.Yellow);
+				graphics.SetColor(ConsoleColor.Yellow);
+				graphics.DrawPolygon(polygonShape);
 				for (int i = 0; i < particlesPool.Count; ++i) {
 					particlesPool[i].Draw(graphics);
 				}
@@ -3313,7 +3327,7 @@ src/MrV/Program.cs
 					particlesPool[i].Update();
 					float timeProgress = particlesPool[i].LifetimeCurrent / particlesPool[i].LifetimeMax;
 					if (growAndShrink.TryGetValue(timeProgress, out float nextRadiusPercentage)) {
-						particlesPool[i].Circle.radius = nextRadiusPercentage * particlesPool[i].OriginalSize;
+						particlesPool[i].Circle.Radius = nextRadiusPercentage * particlesPool[i].OriginalSize;
 					}
 					if (timeProgress >= 1) {
 						particlesPool.DecommissionDelayedAtIndex(i);
@@ -3403,13 +3417,13 @@ namespace MrV.GameEngine {
 			particle.Enabled = true;
 			particle.LifetimeCurrent = 0;
 			particle.OriginalSize = ParticleSize.Random;
-			particle.Circle.radius = particle.OriginalSize * GetSizeAtTime(0);
+			particle.Circle.Radius = particle.OriginalSize * GetSizeAtTime(0);
 			particle.Velocity = default;
 			particle.Color = Color;
 			particle.LifetimeMax = ParticleLifetime.Random;
 			Vec2 direction = Vec2.ConvertDegrees(360 * Rand.Number);
 			particle.Velocity = direction * ParticleSpeed.Random;
-			particle.Circle.center = Position + direction * SpawnRadius.Random;
+			particle.Circle.Center = Position + direction * SpawnRadius.Random;
 		}
 		public void DecommissionParticle(Particle particle) {
 			particle.Enabled = false;
@@ -3429,7 +3443,7 @@ namespace MrV.GameEngine {
 				// possible to update decommissioned object. cost of updating stale object assumed less than servicing decommissions every iteration.
 				ParticlePool[i].Update();
 				float timeProgress = ParticlePool[i].LifetimeCurrent / ParticlePool[i].LifetimeMax;
-				ParticlePool[i].Circle.radius = GetSizeAtTime(timeProgress) * ParticlePool[i].OriginalSize;
+				ParticlePool[i].Circle.Radius = GetSizeAtTime(timeProgress) * ParticlePool[i].OriginalSize;
 				if (timeProgress >= 1) {
 					ParticlePool.DecommissionDelayedAtIndex(i);
 				}
@@ -3471,7 +3485,8 @@ initialization of the `Particle`s is much simpler now
 src/Program.cs
 ```
 ...
-				graphics.DrawPolygon(polygonShape, ConsoleColor.Yellow);
+				graphics.SetColor(ConsoleColor.Yellow);
+				graphics.DrawPolygon(polygonShape);
 				particles.Draw(graphics);
 				graphics.PrintModifiedOnly();
 ...
@@ -3578,7 +3593,7 @@ the math for calculating the center position, and moving the offset to center on
 ### scene
 ```
 ...
-		public void DrawShape(IsInsideShapeDelegate isInsideShape, Vec2 start, Vec2 end, ConsoleGlyph glyphToPrint) {
+		public void DrawShape(IsInsideShapeDelegate isInsideShape, Vec2 start, Vec2 end) {
 			Vec2 renderStart = start - _originOffsetULCorner;
 			Vec2 renderEnd = end - _originOffsetULCorner;
 			renderStart.InverseScale(ShapeScale);
@@ -3649,11 +3664,16 @@ src/LowFiRockBlaster
 			List<Action<GraphicsContext>> drawPreProcessing = new List<Action<GraphicsContext>>();
 			List<Action<GraphicsContext>> drawPostProcessing = new List<Action<GraphicsContext>>();
 			void TestGraphics(GraphicsContext graphics) {
-				graphics.DrawRectangle(0, 0, width, height, ConsoleGlyph.Default);
-				graphics.DrawRectangle((2, 3), new Vec2(20, 15), ConsoleColor.Red);
-				graphics.DrawRectangle(new AABB((10, 1), (15, 20)), ConsoleColor.Green);
-				graphics.DrawCircle(position, radius, ConsoleColor.Blue);
-				graphics.DrawPolygon(polygonShape, ConsoleColor.Yellow);
+				graphics.SetColor(ConsoleGlyph.Default);
+				graphics.DrawRectangle(0, 0, width, height);
+				graphics.SetColor(ConsoleColor.Red);
+				graphics.DrawRectangle((2, 3), new Vec2(20, 15));
+				graphics.SetColor(ConsoleColor.Green);
+				graphics.DrawRectangle(new AABB((10, 1), (15, 20)));
+				graphics.SetColor(ConsoleColor.Blue);
+				graphics.DrawCircle(position, radius);
+				graphics.SetColor(ConsoleColor.Yellow);
+				graphics.DrawPolygon(polygonShape);
 			}
 			drawPreProcessing.Add(TestGraphics);
 			drawPostProcessing.Add(particles.Draw);
@@ -3928,9 +3948,11 @@ namespace MrV.GameEngine {
 ```
 
 ### voice
-this is an abstract class, which means it doesn't concretely define everything. it creates some common implementations, and also requires child classes to define other details.
+this is an abstract class, which means it doesn't concretely define everything. it creates some common code and requires child classes to define other abstract details.
 
-every mobile object is a GameObject, so it needs name and state details. the point of a Mobile object is to define mobility, so it has velocity implemented. however, position and direction are left abstract, so they can be defined in other ways. 
+every mobile object is a GameObject, so it needs name and state details. the point of a *Mobile* object is to define mobility, so it has velocity implemented. however, position and direction are left abstract, so they can be defined in other ways. virtual functions and properties let child classes override code that can also use this common code.
+
+the TypeId property is notable, it will be used to differentiate the objects at runtime. this will be especially important with collision resolution. using type reflection to do that is possible in C#, but it would require more code, and it would be slower as the class hierarchy grows.
 
 ---
 

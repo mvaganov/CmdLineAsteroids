@@ -13,7 +13,7 @@ namespace asteroids {
 		static void Main(string[] args) {
 			float targetFps = 20;
 			// initialize system
-			CommandLineCanvas graphics = new CommandLineCanvas(80, 25, (0.5f, 1));
+			CommandLineCanvas graphics = new CommandLineCanvas(80, 25, (0.5f, -1));
 			List<IGameObject> gameObjects = new List<IGameObject>();
 			List<ICollidable> collideList = new List<ICollidable>();
 			List<Action> preDraw = new List<Action>();
@@ -94,7 +94,7 @@ namespace asteroids {
 				playerControl.Position = Vec2.Zero;
 				playerControl.Velocity = Vec2.Zero;
 				playerControl.AngularVelocity = 0;
-				playerControl.RotationRadians = 0;
+				playerControl.RotationDegrees = 90;
 				playerControl.IsActive = true;
 				playerControl.Target.IsActive = true;
 
@@ -106,30 +106,28 @@ namespace asteroids {
 
 			// camera
 			bool cameraLookAhead = false; // causes nausea
-			float targetScaleY = 1;
+			float targetScaleY = graphics.Scale.Y;
 			Vec2 userCameraOffset = Vec2.Zero;
 			preDraw.Add(CameraFollowsPlayer);
 			void CameraFollowsPlayer() {
-				Vec2 halfScreen = graphics.Size / 2;
-				Vec2 screenAnchor = playerControl.Position - (halfScreen * graphics.Scale) + userCameraOffset;
+				Vec2 screenAnchor = playerControl.Position;
 				if (cameraLookAhead) {
 					Vec2 cameraTargetScreenOffset = screenAnchor + playerControl.Velocity * (graphics.Scale.Y / 2);
 					Vec2 delta = cameraTargetScreenOffset - graphics.Offset;
 					float dist = delta.Length();
 					float cameraSpeed = 1;
 					if (dist < cameraSpeed) {
-						graphics.Offset = cameraTargetScreenOffset;
+						screenAnchor = cameraTargetScreenOffset;
 					} else {
-						graphics.Offset += delta / (dist * cameraSpeed);
+						screenAnchor = graphics.Offset + delta / (dist * cameraSpeed);
 					}
-				} else {
-					graphics.Offset = screenAnchor;
 				}
+				graphics.SetScreenFocus(screenAnchor);
 				Vec2 scaleChangePerFrame = graphics.Scale * 0.1f;
-				if (graphics.Scale.Y + scaleChangePerFrame.Y < targetScaleY) {
+				if (MathF.Abs(graphics.Scale.Y + scaleChangePerFrame.Y) < MathF.Abs(targetScaleY)) {
 					graphics.Scale += scaleChangePerFrame;
 				}
-				if (graphics.Scale.Y - scaleChangePerFrame.Y > targetScaleY) {
+				if (MathF.Abs(graphics.Scale.Y - scaleChangePerFrame.Y) > MathF.Abs(targetScaleY)) {
 					graphics.Scale -= scaleChangePerFrame;
 				}
 			}
@@ -298,7 +296,7 @@ namespace asteroids {
 			void ShowPlayerDirectionUnderlay() {
 				if (!visible) { return; }
 				graphics.SetColor(ConsoleColor.DarkGray);
-				Vec2 lineEnd = playerControl.Position + playerControl.Direction * (lineLength * graphics.Scale.Y);
+				Vec2 lineEnd = playerControl.Position + playerControl.Direction * (lineLength * MathF.Abs(graphics.Scale.Y));
 				graphics.DrawLine(playerControl.Position, lineEnd, lineWidth);
 			}
 
@@ -388,11 +386,11 @@ namespace asteroids {
 				}
 			}
 			void zoomOut() {
-				if (targetScaleY > 128) { return; }
+				if (MathF.Abs(targetScaleY) > 128) { return; }
 				targetScaleY *= 1.5f;
 			}
 			void zoomIn() {
-				if (targetScaleY < 1f/128) { return; }
+				if (MathF.Abs(targetScaleY) < 1f/128) { return; }
 				targetScaleY /= 1.5f;
 			}
 
@@ -405,15 +403,15 @@ namespace asteroids {
 				('q', playerSpinLeft, "player spin right (CCW)"),
 				('e', playerSpinRight, "player spin right (CW)"),
 				(' ', playerShoot, "player shoot projectile"),
-				('1', () => playerMove(3 / 4f), "player move down left"),
-				('2', () => playerMove(2 / 4f), "player move down"),
-				('3', () => playerMove(1 / 4f), "player move down right"),
+				('1', () => playerMove(-3 / 4f), "player move down left"),
+				('2', () => playerMove(-2 / 4f), "player move down"),
+				('3', () => playerMove(-1 / 4f), "player move down right"),
 				('4', () => playerMove(4 / 4f), "player move left"),
 				('5', playerBrakes, "player brakes"),
 				('6', () => playerMove(0 / 4f), "player move right"),
-				('7', () => playerMove(-3 / 4f), "player move up left"),
-				('8', () => playerMove(-2 / 4f), "player move up"),
-				('9', () => playerMove(-1 / 4f), "player move up right"),
+				('7', () => playerMove(3 / 4f), "player move up left"),
+				('8', () => playerMove(2 / 4f), "player move up"),
+				('9', () => playerMove(1 / 4f), "player move up right"),
 				('I', () => playerControl.Position += -Vec2.UnitY, "shift player up"),
 				('J', () => playerControl.Position += -Vec2.UnitX, "shift player left"),
 				('K', () => playerControl.Position += Vec2.UnitY, "shift player down"),
@@ -421,7 +419,8 @@ namespace asteroids {
 				('^', () => playerHp = playerMaxHp = 100000, "player super HP"),
 			};
 			void playerMove(float normalizedRadian) {
-				playerControl.SmoothRotateTarget(MathF.PI * normalizedRadian, playerAutoRotationAngularVelocity);
+				graphics.PivotAsPercentage = (0.5f, 0.5f);
+				playerControl.SmoothRotateTarget(MathF.PI * normalizedRadian + graphics.Rotation.NormalToRadians(), playerAutoRotationAngularVelocity);
 				Thrust();
 				playerControl.AutoStopWithoutThrust = true;
 			}
@@ -437,13 +436,12 @@ namespace asteroids {
 				playerControl.Brakes();
 				playerControl.AngularVelocity = 0;
 			}
-			void playerTurnLeft() {
-				playerControl.RotationDegrees -= playerRotationAnglularVelocity;
-				graphics.Rotation = graphics.Rotation.RotatedDegrees(-playerRotationAnglularVelocity);
-			}
-			void playerTurnRight() {
-				playerControl.RotationDegrees += playerRotationAnglularVelocity;
-				graphics.Rotation = graphics.Rotation.RotatedDegrees(playerRotationAnglularVelocity);
+			void playerTurnLeft() => playerRotationChange(playerRotationAnglularVelocity);
+			void playerTurnRight() => playerRotationChange(-playerRotationAnglularVelocity);
+			void playerRotationChange(float rotationDelta) {
+				graphics.PivotAsPercentage = (0.5f, 0.75f);
+				playerControl.RotationDegrees += rotationDelta;
+				graphics.Rotation = graphics.Rotation.RotatedDegrees(rotationDelta);
 			}
 			void playerSpinLeft() { playerSpinToggle(-playerFreeSpinAngularVelocity); }
 			void playerSpinRight() { playerSpinToggle(playerFreeSpinAngularVelocity); }
