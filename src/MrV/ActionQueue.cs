@@ -33,5 +33,23 @@ namespace MrV {
 			};
 			Enqueue(DoThisSoon);
 		}
+		public void Lerp(float seconds, Func<float, bool> progressCallback) {
+			long started = Time.TimeMs;
+			long totalMs = (long)(seconds * 1000);
+			long finish = started + totalMs;
+			void DoThisSoon() {
+				long now = Time.TimeMs;
+				if (now >= finish) {
+					progressCallback(1);
+					return;
+				}
+				long passed = now - started;
+				float progress = (float)passed / totalMs;
+				if (progressCallback(progress)) {
+					Enqueue(DoThisSoon);
+				}
+			}
+			DoThisSoon();
+		}
 	}
 }

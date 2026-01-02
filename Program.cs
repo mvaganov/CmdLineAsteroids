@@ -394,6 +394,7 @@ namespace asteroids {
 				targetScaleY /= 1.5f;
 			}
 
+			bool playerOrientedPivotAnimating = false;
 			// player keybinding
 			playerInput = new KeyResponseRecord<char>[] {
 				('w', playerForward, "player forward"),
@@ -419,10 +420,21 @@ namespace asteroids {
 				('^', () => playerHp = playerMaxHp = 100000, "player super HP"),
 			};
 			void playerMove(float normalizedRadian) {
-				graphics.PivotAsPercentage = (0.5f, 0.5f);
+				animatePlayerPivot(Vec2.Half);
 				playerControl.SmoothRotateTarget(MathF.PI * normalizedRadian + graphics.Rotation.NormalToRadians(), playerAutoRotationAngularVelocity);
 				Thrust();
 				playerControl.AutoStopWithoutThrust = true;
+			}
+			void animatePlayerPivot(Vec2 newPivot) {
+				if (playerOrientedPivotAnimating || graphics.PivotAsPercentage == newPivot) { return; }
+				playerOrientedPivotAnimating = true;
+				Vec2 oldPivot = graphics.PivotAsPercentage;
+				ActionQueue.Instance.Lerp(0.25f, progress => {
+					if (graphics == null) { return false; }
+					graphics.PivotAsPercentage = Vec2.Lerp(oldPivot, newPivot, progress);
+					if (progress == 1) { playerOrientedPivotAnimating = false; }
+					return true;
+				});
 			}
 			void Thrust() {
 				playerControl.AutoStopWithoutThrust = false;
@@ -438,10 +450,12 @@ namespace asteroids {
 			}
 			void playerTurnLeft() => playerRotationChange(playerRotationAnglularVelocity);
 			void playerTurnRight() => playerRotationChange(-playerRotationAnglularVelocity);
+			Vec2 playerOrientedPivot = (0.5f, 0.75f);
 			void playerRotationChange(float rotationDelta) {
-				graphics.PivotAsPercentage = (0.5f, 0.75f);
+				animatePlayerPivot(playerOrientedPivot);
 				playerControl.RotationDegrees += rotationDelta;
-				graphics.Rotation = graphics.Rotation.RotatedDegrees(rotationDelta);
+				float targetRotation = playerControl.RotationRadians - MathF.PI / 2;
+				graphics.Rotation = Vec2.NormalFromRadians(targetRotation);
 			}
 			void playerSpinLeft() { playerSpinToggle(-playerFreeSpinAngularVelocity); }
 			void playerSpinRight() { playerSpinToggle(playerFreeSpinAngularVelocity); }

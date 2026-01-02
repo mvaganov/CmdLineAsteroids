@@ -34,7 +34,14 @@ namespace ConsoleMrV {
 				SetScreenFocus(worldPositionOfScreenCenter);
 			}
 		}
-		public Vec2 PivotAsPercentage { get => _pivotAsPercentage; set { _pivotAsPercentage = value; } }
+		public Vec2 PivotAsPercentage {
+			get => _pivotAsPercentage;
+			set {
+				Vec2 worldPositionOfScreenCenter = GetWorldPosition(_pivotAsPercentage * Size);
+				_pivotAsPercentage = value;
+				SetScreenFocus(worldPositionOfScreenCenter);
+			}
+		}
 		public Vec2 Offset { get => _originOffsetULCorner; set => _originOffsetULCorner = value; }
 		public void SetScreenFocus(Vec2 worldPosition) {
 			Vec2 halfScreen = Size * _pivotAsPercentage;

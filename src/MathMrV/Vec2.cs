@@ -106,5 +106,9 @@ namespace MathMrV {
 			point = startA + (lineA * whereLineBCrossesOnLineA);
 			return true;
 		}
+		public static Vec2 Lerp(Vec2 start, Vec2 end, float percentageProgress) {
+			Vec2 delta = end - start;
+			return start + delta * percentageProgress;
+		}
 	}
 }
