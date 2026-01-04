@@ -3948,11 +3948,56 @@ namespace MrV.GameEngine {
 ```
 
 ### voice
-this is an abstract class, which means it doesn't concretely define everything. it creates some common code and requires child classes to define other abstract details.
+`MobileObject` is an abstract class, which means it doesn't concretely define everything. it creates some common code and requires child classes to define other abstract details.
 
-every mobile object is a GameObject, so it needs name and state details. the point of a *Mobile* object is to define mobility, so it has velocity implemented. however, position and direction are left abstract, so they can be defined in other ways. virtual functions and properties let child classes override code that can also use this common code.
+every mobile object is a GameObject, so it needs name and state details. the point of a *Mobile* object is to define mobility, so it has velocity implemented. however, position and direction are left abstract, so they can be defined by child classes. virtual functions and properties let child classes override code, while also being able to use this common code. This mixture of inherited and overridden code can be a source of confusion, so I'll try to limit how much I use this.
 
-the TypeId property is notable, it will be used to differentiate the objects at runtime. this will be especially important with collision resolution. using type reflection to do that is possible in C#, but it would require more code, and it would be slower as the class hierarchy grows.
+the TypeId property is notable. it will be used to differentiate the objects at runtime. this will be critically important with collision resolution. using type reflection to do that is possible in C#, but it would require more code, and it would be slower to process at runtime as the class hierarchy grows.
+
+//an argument can be made that using data type reflection for collision detection will reduce runtime bugs. I can agree with that argument. I would also argue that writing more type-specific code to use data type reflection will create more code, and more net bugs.
+
+The simplest, and most common object in this game will be a mobile circle.
+
+### scene
+stc/MrV/GameEngine/MobileCircle.cs
+```
+using MrV.CommandLine;
+using MrV.Geometry;
+
+namespace MrV.GameEngine {
+	public class MobileCircle : MobileObject {
+		private Circle Circle;
+		public override Vec2 Position { get => Circle.Center; set => Circle.Center = value; }
+		public override Vec2 Direction { get => Velocity.Normalized(); set { } }
+		public float Radius { get => Circle.Radius; set => Circle.Radius = value; }
+		public static bool DebugShowVelocity = false;
+		public MobileCircle(Circle circle) { Circle = circle; }
+		public override void Draw(GraphicsContext canvas) {
+			if (!_active) return;
+			canvas.SetColor(Color);
+			canvas.DrawCircle(Circle);
+			if (DebugShowVelocity) {
+				ShowDebugVelocity(canvas);
+			}
+		}
+		private void ShowDebugVelocity(GraphicsContext graphicsContext) {
+			float speed = Velocity.Length();
+			if (speed == 0) { return; }
+			Vec2 dir = Velocity / speed;
+			Vec2 start = Position + dir * Radius;
+			Vec2 end = start + Velocity;
+			graphicsContext.DrawLine(start, end, 1);
+		}
+	}
+}
+```
+
+### voice
+With this concrete class, we implement the `Position` and `Direction` properties. this will be used for very simple circle objects, which are geometrically the same in all orientations.`Direction` is almost ignored as a result. 
+
+the draw code has debugging visualizations. actually, almost half of this circle code is here for debugging. this is very common in my own programming projects, so common that I'm including it before even running into bugs related to circle direction.
+
+// TODO wordsmith here... I put extra effort into this kind of telemetry because I feel a need to understand my software at all times. computer programming is intellectually very difficult because the end result needs to be perfect for some purpose, and we probably don't know exactly what the purpose is yet, and we're really bad at being perfect.
 
 ---
 
