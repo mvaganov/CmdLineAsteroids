@@ -3959,45 +3959,53 @@ the TypeId property is notable. it will be used to differentiate the objects at 
 The simplest, and most common object in this game will be a mobile circle.
 
 ### scene
-stc/MrV/GameEngine/MobileCircle.cs
+src/MrV/GameEngine/MobileCircle.cs
 ```
 using MrV.CommandLine;
 using MrV.Geometry;
 
 namespace MrV.GameEngine {
 	public class MobileCircle : MobileObject {
-		private Circle Circle;
+		public Circle Circle;
 		public override Vec2 Position { get => Circle.Center; set => Circle.Center = value; }
-		public override Vec2 Direction { get => Velocity.Normalized(); set { } }
-		public float Radius { get => Circle.Radius; set => Circle.Radius = value; }
-		public static bool DebugShowVelocity = false;
+		public override Vec2 Direction { get => Vec2.ZeroDegrees; set { } }
 		public MobileCircle(Circle circle) { Circle = circle; }
 		public override void Draw(GraphicsContext canvas) {
-			if (!_active) return;
+			if (!_active) { return; }
 			canvas.SetColor(Color);
 			canvas.DrawCircle(Circle);
-			if (DebugShowVelocity) {
-				ShowDebugVelocity(canvas);
-			}
-		}
-		private void ShowDebugVelocity(GraphicsContext graphicsContext) {
-			float speed = Velocity.Length();
-			if (speed == 0) { return; }
-			Vec2 dir = Velocity / speed;
-			Vec2 start = Position + dir * Radius;
-			Vec2 end = start + Velocity;
-			graphicsContext.DrawLine(start, end, 1);
 		}
 	}
 }
 ```
 
 ### voice
-With this concrete class, we implement the `Position` and `Direction` properties. this will be used for very simple circle objects, which are geometrically the same in all orientations.`Direction` is almost ignored as a result. 
+With this concrete class, we implement the `Position` and `Direction` properties. this will be used for very simple circle objects, which are geometrically the same in all orientations, so `Direction` is almost meaningless, provided for completeness. the `ZeroDegrees` constant doesn't exist yet.
 
-the draw code has debugging visualizations. actually, almost half of this circle code is here for debugging. this is very common in my own programming projects, so common that I'm including it before even running into bugs related to circle direction.
+### scene
+src/MrV/Geometry/Vec2.cs
+```
+...
+		public static readonly Vec2 Zero = new Vec2(0, 0);
+		public static readonly Vec2 ZeroDegrees = new Vec2(1, 0);
+		public static readonly Vec2 One = new Vec2(1, 1);
+		public static readonly Vec2 UnitX = new Vec2(1, 0);
+		public static readonly Vec2 UnitY = new Vec2(0, 1);
+		public static bool operator ==(Vec2 a, Vec2 b) => a.Equals(b);
+		public static bool operator !=(Vec2 a, Vec2 b) => !a.Equals(b);
+		public bool Equals(Vec2 other) => other.X == X && other.Y == Y;
+		public bool EqualsEpsilon(Vec2 other) => MathF.Abs(other.X - X) < epsilon && MathF.Abs(other.Y - Y) < epsilon;
+		public override bool Equals(object obj) => obj is Vec2 vec2 && Equals(vec2);
+		public override int GetHashCode() => X.GetHashCode() ^ Y.GetHashCode();
+...
+```
 
-// TODO wordsmith here... I put extra effort into this kind of telemetry because I feel a need to understand my software at all times. computer programming is intellectually very difficult because the end result needs to be perfect for some purpose, and we probably don't know exactly what the purpose is yet, and we're really bad at being perfect.
+### voice
+In addition to the `ZeroDegrees` constant, I'm adding a few more important and common constants useful for vector math.
+
+I'm also adding the equals operator, and associated code.
+
+
 
 ---
 
@@ -4019,10 +4027,11 @@ TODO: Code is mostly done (prototype at https://github.com/mvaganov/CmdLineAster
 * code complexity is about to get crazy, and we'll need debugging. create a Log class with Assert.
 * add Welzl's algorithm for min bounding circle
 * add sub-collision circles to the Polygon, for finer collision detection
+  - separating axis theorem https://www.youtube.com/watch?v=dn0hUgsok9M
 * test with asteroids spawning around the player
 * give the asteroids velocity
 * test player being destroyed by asteroid collision
-* test asteroids being destroied by projectile
+* test asteroids being destroyed by projectile
 * test asteroids spawning X number of smaller asteroids
 * implement ammo variable for player
 * implement ammo pickup

@@ -35,6 +35,8 @@ namespace MathMrV {
 		public static bool operator ==(Vec2 a, Vec2 b) => a.Equals(b);
 		public static bool operator !=(Vec2 a, Vec2 b) => !a.Equals(b);
 		public bool Equals(Vec2 other) => other.X == X && other.Y == Y;
+		public bool ApproxEquals(Vec2 other, float epsilon = epsilon) =>
+			MathF.Abs(other.X - X) < epsilon && MathF.Abs(other.Y - Y) < epsilon;
 		public override bool Equals(object obj) => obj is Vec2 vec2 && Equals(vec2);
 		public override int GetHashCode() => X.GetHashCode() ^ Y.GetHashCode();
 		public override string ToString() => $"({X},{Y})";
@@ -81,6 +83,7 @@ namespace MathMrV {
 		public readonly static Vec2 UnitX = (1, 0);
 		public readonly static Vec2 UnitY = (0, 1);
 		public readonly static Vec2 NaN = (float.NaN, float.NaN);
+		public const float epsilon = 1f / (1 << 10);
 		public bool IsNaN() => IsNaN(this);
 		public static bool IsNaN(Vec2 vec) => float.IsNaN(vec.X) || float.IsNaN(vec.Y);
 		public bool IsZero() => IsZero(this);
